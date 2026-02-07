@@ -44,4 +44,4 @@ Development notes
 - The codebase uses vanilla ES modules; serve `index.html` from a static server during development to avoid module loading issues due to direct file access.
 - Check the browser DevTools Console and Network tab for errors related to module imports or missing assets.
 
-------------- Under Development---------------------
+--------------------------------------------------------------------------- Under Development -------------------------------------------------------------------
