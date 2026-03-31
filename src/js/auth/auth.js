@@ -117,6 +117,42 @@ export function openEditProfileModal() {
     document.getElementById('show-login').parentElement.classList.add('hidden');
     const signupButton = document.querySelector('#signup-form button[type="submit"]');
     signupButton.textContent = 'Save Changes';
+
+    // Add Cancel button logic for a better user experience
+    let cancelBtn = document.getElementById('cancel-edit-profile-btn');
+    if (!cancelBtn) {
+        cancelBtn = document.createElement('button');
+        cancelBtn.id = 'cancel-edit-profile-btn';
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'w-full bg-white/10 text-white font-bold py-3 px-6 rounded-lg mt-4 border border-white/20 hover:bg-white/20 transition-colors';
+        cancelBtn.textContent = 'Cancel Edit';
+        signupButton.parentNode.insertBefore(cancelBtn, signupButton.nextSibling);
+    }
+    cancelBtn.classList.remove('hidden');
+
+    const finishEdit = () => {
+        document.getElementById('show-login').parentElement.classList.remove('hidden');
+        document.querySelector('#signup-form h2').textContent = 'Create Account';
+        document.querySelector('#signup-form p').textContent = 'Start your journey with Attendora.';
+        signupButton.textContent = 'Sign Up';
+        document.getElementById('signup-form').onsubmit = handleSignup;
+        passwordInput.setAttribute('required', '');
+        confirmPasswordInput.setAttribute('required', '');
+        document.querySelector('#signup-form .mb-4:has(#signup-password)').classList.remove('hidden');
+        document.querySelector('#signup-form .mb-6:has(#signup-password-confirm)').classList.remove('hidden');
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+
+        // Restore dashboard view!
+        document.getElementById('auth-page').classList.add('hidden');
+        document.getElementById('dashboard-app').classList.remove('hidden');
+    };
+
+    cancelBtn.onclick = () => {
+        finishEdit();
+        // Since we didn't save, we should re-render UI to restore any temporary visual changes if there are any
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
+    };
+
     document.getElementById('signup-form').onsubmit = (e) => {
         e.preventDefault();
         const contact = document.getElementById('signup-contact').value;
@@ -134,15 +170,8 @@ export function openEditProfileModal() {
         state.userProfile.course = document.getElementById('signup-course').value;
         state.userProfile.year = document.getElementById('signup-year').value;
         saveData();
-        document.getElementById('show-login').parentElement.classList.remove('hidden');
-        document.querySelector('#signup-form h2').textContent = 'Create Account';
-        document.querySelector('#signup-form p').textContent = 'Start your journey with Attendora.';
-        signupButton.textContent = 'Sign Up';
-        document.getElementById('signup-form').onsubmit = handleSignup;
-        passwordInput.setAttribute('required', '');
-        confirmPasswordInput.setAttribute('required', '');
-        document.querySelector('#signup-form .mb-4:has(#signup-password)').classList.remove('hidden');
-        document.querySelector('#signup-form .mb-6:has(#signup-password-confirm)').classList.remove('hidden');
+        
+        finishEdit();
 
         // Use custom event or global to trigger UI update instead of direct main.js import
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
