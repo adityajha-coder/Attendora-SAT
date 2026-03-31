@@ -266,19 +266,85 @@ export async function handleTimetableScan(event) {
     const scanTimetableModal = document.getElementById('scan-timetable-modal');
     scanTimetableModal.querySelector('#scan-upload-view').classList.add('hidden');
     scanTimetableModal.querySelector('#scan-processing-view').classList.remove('hidden');
-    showToast("Note: Timetable scanning relies on a multimodal AI (vision). Using simulation...", "warning");
-    setTimeout(() => {
-        const mockScannedData = [
-            { day: 'Monday', start: '09:30', end: '10:20', name: 'Object-Oriented Programming', instructor: 'Dr. Jones', room: 'B301' },
-            { day: 'Monday', start: '10:20', end: '11:10', name: 'Digital Logic Circuit Design', instructor: 'Prof. Lee', room: 'L405' },
-            { day: 'Tuesday', start: '11:30', end: '13:00', name: 'Data Structures Lab', instructor: 'Ms. Chen', room: 'Lab A' },
-            { day: 'Wednesday', start: '09:30', end: '11:10', name: 'Discrete Mathematics', instructor: 'Dr. Jones', room: 'B301' },
-            { day: 'Thursday', start: '13:40', end: '15:20', name: 'Database Management', instructor: 'Prof. Lee', room: 'L405' },
-            { day: 'Friday', start: '14:30', end: '15:20', name: 'Indian Knowledge Systems', instructor: 'Dr. Khan', room: 'A102' },
-            { day: 'Friday', start: '15:20', end: '16:50', name: 'OOP Lab', instructor: 'Ms. Chen', room: 'Lab A' },
-        ];
-        renderCorrectionView(mockScannedData);
-    }, 2500); 
+    showToast("Analyzing timetable using AI...", "info");
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const base64Image = e.target.result;
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'openai/gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: 'You are a highly accurate data extraction AI. Extract the classes schedule from this timetable image grid. Return ONLY a valid JSON array of objects without any markdown formatting, backticks, or extra text. Use this exact structure for each object: {"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "Room Number"}. Map abbreviations to full day names like "Monday". Convert ALL PM times strictly to 24-hour HH:MM format (e.g., 1:40 is 13:40, 2:30 is 14:30, 4:10 is 16:10). If a class is split into groups (e.g. G1/G2), include the group name in the Class Name or create separate entries if possible. Read the bottom legend to map the full subject name and faculty name if they are abbreviated in the grid. Exclude "LUNCH", "BREAK", "LIB", or empty cells. Read the days on the left and the time periods on the top carefully to align every row and column. Do not skip any valid classes. Return [] if no classes are found.'
+                                },
+                                {
+                                    type: 'image_url',
+                                    image_url: {
+                                        url: base64Image
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error("OpenRouter API Error:", errorData);
+                throw new Error("API call failed.");
+            }
+
+            const data = await response.json();
+            const aiResponseText = data.choices[0].message.content.trim();
+            
+            let scannedData = [];
+            try {
+                // Strip possible markdown wrapping
+                const cleanedText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                scannedData = JSON.parse(cleanedText);
+            } catch (parseError) {
+                console.error("Failed to parse AI response: ", aiResponseText);
+                showToast("Failed to parse timetable data from AI.", "error");
+                scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+                scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+                return;
+            }
+
+            if (!Array.isArray(scannedData) || scannedData.length === 0) {
+                 showToast("No classes detected from the image.", "warning");
+                 scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+                 scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+                 return;
+            }
+
+            showToast("Timetable analyzed successfully!", "success");
+            renderCorrectionView(scannedData);
+
+        } catch (error) {
+            console.error('Error analyzing timetable:', error);
+            showToast("Error connecting to AI service. Please try simulating or check network.", "error");
+            scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+            scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+        }
+    };
+    reader.onerror = () => {
+        showToast("Error reading the image file.", "error");
+        scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+        scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
 }
 
 function renderCorrectionView(scannedData) {
