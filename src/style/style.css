@@ -156,6 +156,7 @@ select option {
 .toggle-checkbox:checked + .toggle-label { background-color: var(--primary-color-start); }
 
 .light-mode .hero-glow { text-shadow: none; }
+.light-mode .bg-gradient-to-r { background-image: none; }
 .light-mode .card:not(.no-hover):hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }

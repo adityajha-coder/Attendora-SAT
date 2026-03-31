@@ -1,7 +1,7 @@
 import { state, saveData, dateIsWithinTerm } from './state.js';
 import { calculateOverallAttendance, calculateStreak, calculateAttendanceForCourse, renderReports } from './attendance.js';
 import { showToast, showConfirmationModal, toggleModal } from './ui.js';
-import { updateAllViews, setCountdownInterval } from './main.js';
+import { updateAllViews } from './main.js';
 
 // We get countdownInterval from main.js dynamically or pass it
 let countdownInterval = null;

@@ -4,7 +4,7 @@ import { dashboardHtml } from './components/dashboard-html.js';
 import { modalsHtml } from './components/modals-html.js';
 import { handleNotificationToggle, checkNotificationStatus, requestNotificationPermission, handleSidebarNav, navigateTo, updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, exportHistoryToCSV, exportData, importData, renderOverviewCards, startOnboardingTour } from './app-helpers.js';
 import { debounce } from './utils.js';
-import { state, saveData, loadData, applyTheme, dateIsWithinTerm } from './state.js';
+import { state, saveData, loadData, applyTheme, applyLightMode, dateIsWithinTerm } from './state.js';
 import { renderThemePicker, setupDraggableOverviewCards, toggleModal, showToast, showConfirmationModal, filterGrid, filterTable, renderCalendar } from './ui.js';
 import { loginUser, handleSignup, openOtpModal, openResetPasswordModal, forgotPasswordContact, renderProfile, openEditProfileModal } from './auth.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule, updateDurationFeedback, handleDurationPreset } from './schedule.js';
@@ -171,6 +171,11 @@ function setupEventListeners() {
             renderThemePicker(); 
             saveData();
         }
+    });
+    
+    document.getElementById('theme-toggle').addEventListener('change', (e) => {
+        applyLightMode(e.target.checked);
+        saveData();
     });
 
     document.getElementById('dashboard-app').addEventListener('click', e => {
@@ -340,7 +345,13 @@ function setupEventListeners() {
 }
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then((registration) => {
+        registration.update().catch(() => {});
+    }).catch(() => {});
 }
 
-document.addEventListener('DOMContentLoaded', initializeApp);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
