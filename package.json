@@ -1,0 +1,20 @@
+{
+  "name": "attendora-sat",
+  "version": "1.0.0",
+  "description": "Smart Attendance Tracker",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
+  },
+  "keywords": [
+    "attendance",
+    "tracker",
+    "dashboard"
+  ],
+  "author": "",
+  "license": "ISC"
+}

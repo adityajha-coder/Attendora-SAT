@@ -1,55 +1,87 @@
 import { state, saveData } from './state.js';
 import { showToast, toggleModal } from './ui.js';
-import { updateAllViews, showDashboard } from './main.js';
 import { calculateGpa } from './academics.js';
 import { calculateOverallAttendance } from './attendance.js';
 import { ALL_ACHIEVEMENTS } from './gamification.js';
+import { auth, db } from './firebase.js';
+import { 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged,
+    sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { 
+    doc, 
+    setDoc, 
+    getDoc 
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 export let forgotPasswordContact = null;
 
-export const loginUser = (contact) => {
-    localStorage.setItem('loggedIn', 'true');
-    showDashboard();
+export const loginUser = async (email, password) => {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        showToast("Logged in successfully!", "success");
+        setTimeout(() => window.location.reload(), 1500);
+        return userCredential.user;
+    } catch (error) {
+        showToast(error.message, "error");
+        throw error;
+    }
 };
 
-export const handleSignup = (e) => {
+export const logoutUser = async () => {
+    try {
+        await signOut(auth);
+        localStorage.removeItem('loggedIn');
+        window.location.reload();
+    } catch (error) {
+        showToast("Error logging out: " + error.message, "error");
+    }
+};
+
+export const handleSignup = async (e) => {
     e.preventDefault();
+    const name = document.getElementById('signup-name').value;
+    const email = document.getElementById('signup-contact').value;
     const password = document.getElementById('signup-password').value;
     const confirmPassword = document.getElementById('signup-password-confirm').value;
-    const contact = document.getElementById('signup-contact').value;
+    const course = document.getElementById('signup-course').value;
+    const year = document.getElementById('signup-year').value;
 
     if (password !== confirmPassword) {
         showToast("Passwords do not match.", "error");
         return;
     }
 
-    if (!contact) {
-        showToast("Please provide your Mobile Number or Email address.", "error");
+    if (!email.includes('@')) {
+        showToast("Please use a valid email address for Firebase Auth.", "error");
         return;
     }
-    
-    state.userProfile = {
-        name: document.getElementById('signup-name').value,
-        contact: contact,
-        course: document.getElementById('signup-course').value,
-        year: document.getElementById('signup-year').value,
-    };
-    
-    openOtpModal(contact);
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Save additional user info to Firestore
+        await setDoc(doc(db, "users", user.uid), {
+            name,
+            email,
+            course,
+            year,
+            createdAt: new Date().toISOString()
+        });
+
+        state.userProfile = { name, contact: email, course, year };
+        saveData();
+        
+        showToast("Account created successfully!", "success");
+        setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+        showToast(error.message, "error");
+    }
 };
-
-export function openOtpModal(contact) {
-    document.getElementById('auth-page').classList.add('hidden');
-    const contactMethod = contact.includes('@') ? 'email' : 'mobile number';
-    document.getElementById('otp-instruction').textContent = `A 6-digit code has been sent to your ${contactMethod}. Enter it below (Hint: 123456).`;
-    toggleModal(document.getElementById('otp-modal'), true);
-}
-
-export function openResetPasswordModal(contact) {
-    const contactMethod = contact.includes('@') ? 'email' : 'mobile number';
-    document.getElementById('reset-code-instruction').textContent = `A 6-digit code has been sent to your ${contactMethod}. Enter it and set a new password (Hint: 123456).`;
-    toggleModal(document.getElementById('reset-password-modal'), true);
-}
 
 export function openEditProfileModal() {
     document.getElementById('auth-page').classList.remove('hidden');
@@ -78,7 +110,7 @@ export function openEditProfileModal() {
         const contact = document.getElementById('signup-contact').value;
         const name = document.getElementById('signup-name').value;
         if (!contact) {
-            showToast("Please provide your Mobile Number or Email address.", "error");
+            showToast("Please provide your Email address.", "error");
             return;
         }
         if (!name) {
@@ -99,8 +131,10 @@ export function openEditProfileModal() {
         confirmPasswordInput.setAttribute('required', '');
         document.querySelector('#signup-form .mb-4:has(#signup-password)').classList.remove('hidden');
         document.querySelector('#signup-form .mb-6:has(#signup-password-confirm)').classList.remove('hidden');
-        showDashboard();
-        updateAllViews();
+        
+        // Use custom event or global to trigger UI update instead of direct main.js import
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
+        
         showToast("Profile details updated!", "success");
     };
 }

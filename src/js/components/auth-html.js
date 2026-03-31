@@ -7,8 +7,8 @@ export const authHtml = `
                 <h2 class="text-3xl font-bold text-center mb-2 font-brand text-white">Welcome Back!</h2>
                 <p class="text-center text-gray-400 mb-6">Sign in to continue to Attendora.</p>
                 <div class="mb-4">
-                    <label for="login-contact" class="block mb-2 text-sm font-medium text-gray-300">Mobile Number / Email</label>
-                    <input type="text" id="login-contact" class="form-input" required placeholder="Enter mobile number or email">
+                    <label for="login-contact" class="block mb-2 text-sm font-medium text-gray-300">Email Address</label>
+                    <input type="email" id="login-contact" class="form-input" required placeholder="name@example.com">
                 </div>
                 <div class="mb-6">
                     <label for="login-password" class="block mb-2 text-sm font-medium text-gray-300">Password</label>
@@ -28,8 +28,8 @@ export const authHtml = `
                 </div>
                 
                 <div class="mb-6">
-                    <label for="signup-contact" class="block mb-2 text-sm font-medium text-gray-300">Mobile Number / Email (Required for sign-in)</label>
-                    <input type="text" id="signup-contact" class="form-input" required placeholder="Enter your mobile number or email address">
+                    <label for="signup-contact" class="block mb-2 text-sm font-medium text-gray-300">Email Address (Required for sign-in)</label>
+                    <input type="email" id="signup-contact" class="form-input" required placeholder="name@example.com">
                 </div>
                 
                 <div class="mb-4">

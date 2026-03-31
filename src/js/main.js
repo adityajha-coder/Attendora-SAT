@@ -6,7 +6,9 @@ import { handleNotificationToggle, checkNotificationStatus, requestNotificationP
 import { debounce } from './utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode, dateIsWithinTerm } from './state.js';
 import { renderThemePicker, setupDraggableOverviewCards, toggleModal, showToast, showConfirmationModal, filterGrid, filterTable, renderCalendar } from './ui.js';
-import { loginUser, handleSignup, openOtpModal, openResetPasswordModal, forgotPasswordContact, renderProfile, openEditProfileModal } from './auth.js';
+import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth.js';
+import { auth } from './firebase.js';
+import { onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule, updateDurationFeedback, handleDurationPreset } from './schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, calculateOverallAttendance, calculateStreak, calculateAttendanceForCourse, renderReports, renderCourses } from './attendance.js';
 import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, renderGpaCalculator, handleGpaFormSubmit, handleDeleteGpaCourse, openGpaModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './academics.js';
@@ -35,16 +37,28 @@ const showAuthPage = (showLogin = true) => {
     document.getElementById('signup-form').classList.toggle('hidden', showLogin);
 };
 
-const initializeApp = () => {
+const initializeAttendora = () => {
     document.getElementById('app').innerHTML = authHtml + landingHtml + dashboardHtml + modalsHtml;
 
     loadData();
     setupEventListeners();
-    if (localStorage.getItem('loggedIn')) {
-        showDashboard();
-    } else {
-        showLandingPage();
-    }
+
+    // Use Firebase auth state to decide initial view
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User is signed in — populate profile from Firestore data if needed
+            if (!state.userProfile.contact) {
+                state.userProfile.contact = user.email;
+                state.userProfile.name = state.userProfile.name || user.email.split('@')[0];
+                saveData();
+            }
+            localStorage.setItem('loggedIn', 'true');
+            showDashboard();
+        } else {
+            localStorage.removeItem('loggedIn');
+            showLandingPage();
+        }
+    });
 };
 
 const initializeDashboard = () => {
@@ -83,22 +97,26 @@ export const updateAllViews = () => {
 };
 
 function setupEventListeners() {
+    // Global Event Listeners to break circular dependencies
+    window.addEventListener('attendora-update-ui', () => {
+        updateAllViews();
+    });
+
     document.getElementById('show-signup').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(false); });
     document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(true); });
     document.getElementById('go-to-login-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(true); });
     document.getElementById('go-to-signup-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(false); });
     
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const contact = document.getElementById('login-contact').value;
-        if (!state.userProfile.contact) {
-            state.userProfile.contact = contact;
-            state.userProfile.name = contact.includes('@') ? contact.split('@')[0] : 'Guest';
-            state.userProfile.course = 'B.Tech CSE';
-            state.userProfile.year = '2';
-            saveData();
+        const email = document.getElementById('login-contact').value;
+        const password = document.getElementById('login-password').value;
+        try {
+            await loginUser(email, password);
+            localStorage.setItem('loggedIn', 'true');
+        } catch (err) {
+            // Error toast already shown by loginUser
         }
-        loginUser(contact);
     });
 
     document.getElementById('signup-form').addEventListener('submit', handleSignup);
@@ -276,8 +294,7 @@ function setupEventListeners() {
     setupDraggableOverviewCards();
 
     document.getElementById('logout-btn').addEventListener('click', () => {
-        localStorage.removeItem('loggedIn');
-        window.location.reload(); 
+        logoutUser();
     });
 
     document.getElementById('show-forgot-password').addEventListener('click', (e) => {
@@ -285,63 +302,22 @@ function setupEventListeners() {
         toggleModal(document.getElementById('forgot-password-modal'), true);
     });
 
-    document.getElementById('forgot-password-form').addEventListener('submit', (e) => {
+    document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const contact = document.getElementById('reset-contact').value;
-        if (!contact) {
-            showToast("Please enter a valid contact method.", "error");
+        const email = document.getElementById('reset-contact').value;
+        if (!email || !email.includes('@')) {
+            showToast("Please enter a valid email address.", "error");
             return;
         }
-        
-        showToast(`Verification code sent to ${contact}. (Hint: 123456)`, 'success');
-        toggleModal(document.getElementById('forgot-password-modal'), false);
-        openResetPasswordModal(contact);
+        try {
+            await sendPasswordResetEmail(auth, email);
+            showToast(`Password reset email sent to ${email}. Check your inbox.`, 'success');
+            toggleModal(document.getElementById('forgot-password-modal'), false);
+        } catch (error) {
+            showToast(error.message, "error");
+        }
     });
     
-    document.getElementById('reset-password-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const code = document.getElementById('reset-code-input').value;
-        const newPassword = document.getElementById('new-password').value;
-        const confirmPassword = document.getElementById('confirm-new-password').value;
-
-        if (code !== '123456') {
-            showToast("Invalid verification code.", "error");
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            showToast("New passwords do not match.", "error");
-            return;
-        }
-        
-        showToast(`Password successfully reset!`, 'success');
-        toggleModal(document.getElementById('reset-password-modal'), false);
-        showAuthPage(true); 
-    });
-
-    document.getElementById('back-to-login-btn').addEventListener('click', () => {
-        toggleModal(document.getElementById('reset-password-modal'), false);
-        showAuthPage(true); 
-    });
-
-    document.getElementById('otp-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const otp = document.getElementById('otp-input').value;
-        if (otp === '123456') { 
-            toggleModal(document.getElementById('otp-modal'), false);
-            saveData();
-            loginUser(state.userProfile.contact);
-            showToast("Account verified and setup complete!", "success");
-        } else {
-            showToast("Invalid OTP. Please try again or resend the code.", "error");
-        }
-    });
-
-    document.getElementById('resend-reset-code-btn').addEventListener('click', () => {
-        showToast("A new verification code has been sent.", "warning");
-    });
-    document.getElementById('resend-otp-btn').addEventListener('click', () => {
-        showToast("A new OTP has been sent to your registered contact.", "warning");
-    });
 }
 
 if ('serviceWorker' in navigator) {
@@ -351,7 +327,7 @@ if ('serviceWorker' in navigator) {
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
+    document.addEventListener('DOMContentLoaded', initializeAttendora);
 } else {
-    initializeApp();
+    initializeAttendora();
 }

@@ -1,62 +1,16 @@
 export const modalsHtml = `
-    <div id="otp-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
-        <div class="modal-content card max-w-sm w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
-            <h2 class="text-2xl font-bold text-white mb-4 text-center">Verify Account</h2>
-            <p id="otp-instruction" class="text-gray-300 mb-6 text-center">A 6-digit code has been sent to your email/mobile. Enter it below.</p>
-            <form id="otp-form">
-                <div class="mb-4">
-                    <label for="otp-input" class="block mb-2 text-sm font-medium text-gray-300">6-Digit Code</label>
-                    <input type="text" id="otp-input" class="form-input text-center text-xl tracking-widest" maxlength="6" required pattern="\d{6}">
-                </div>
-                <div class="flex justify-center gap-4">
-                    <button type="button" id="resend-otp-btn" class="bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Resend OTP">Resend</button>
-                    <button type="submit" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Verify OTP">Verify</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
     <div id="forgot-password-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
         <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
             <h2 class="text-2xl font-bold text-white mb-4">Forgot Password</h2>
             <form id="forgot-password-form">
-                <div id="forgot-password-step-1">
-                    <p class="text-gray-300 mb-6">Enter your registered Mobile Number or Email address.</p>
-                    <div class="mb-4">
-                        <label for="reset-contact" class="block mb-2 text-sm font-medium text-gray-300">Mobile/Email</label>
-                        <input type="text" id="reset-contact" class="form-input" required>
-                    </div>
-                    <div class="flex justify-end gap-4">
-                        <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
-                        <button type="submit" id="send-reset-code-btn" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Send Reset Code">Send Reset Code</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="reset-password-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
-        <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
-            <h2 class="text-2xl font-bold text-white mb-4">Reset Password</h2>
-            <form id="reset-password-form">
-                <p id="reset-code-instruction" class="text-gray-300 mb-6">A 6-digit code has been sent to your contact. Enter it and set a new password (Hint: 123456).</p>
+                <p class="text-gray-300 mb-6">Enter your email address to receive a password reset link.</p>
                 <div class="mb-4">
-                    <label for="reset-code-input" class="block mb-2 text-sm font-medium text-gray-300">Verification Code</label>
-                    <input type="text" id="reset-code-input" class="form-input text-center text-xl tracking-widest" maxlength="6" required pattern="\d{6}">
-                </div>
-                <div class="mb-4">
-                    <label for="new-password" class="block mb-2 text-sm font-medium text-gray-300">New Password</label>
-                    <input type="password" id="new-password" class="form-input" required>
-                </div>
-                 <div class="mb-6">
-                    <label for="confirm-new-password" class="block mb-2 text-sm font-medium text-gray-300">Confirm New Password</label>
-                    <input type="password" id="confirm-new-password" class="form-input" required>
+                    <label for="reset-contact" class="block mb-2 text-sm font-medium text-gray-300">Email Address</label>
+                    <input type="email" id="reset-contact" class="form-input" required placeholder="name@example.com">
                 </div>
                 <div class="flex justify-end gap-4">
-                    <button type="button" id="back-to-login-btn" class="bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Back to login">Cancel</button>
-                    <button type="button" id="resend-reset-code-btn" class="bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Resend Code">Resend</button>
-                    <button type="submit" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Change Password">Change Password</button>
+                    <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
+                    <button type="submit" id="send-reset-code-btn" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Send Reset Email">Send Link</button>
                 </div>
             </form>
         </div>

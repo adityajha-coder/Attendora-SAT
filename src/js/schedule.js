@@ -1,5 +1,5 @@
 import { state, saveData, dateIsWithinTerm } from './state.js';
-import { updateAllViews } from './main.js';
+
 import { checkAchievements } from './gamification.js';
 import { showConfirmationModal, showToast, toggleModal } from './ui.js';
 import { minutesToTime, timeToMinutes } from './utils.js';
@@ -184,7 +184,7 @@ export function handleClassFormSubmit(e) {
     state.schedule.sort((a,b) => a.start.localeCompare(b.start)); 
     checkAchievements();
     saveData();
-    updateAllViews();
+    window.dispatchEvent(new CustomEvent('attendora-update-ui'));
     toggleModal(document.getElementById('class-modal'), false); 
 }
 
@@ -199,7 +199,7 @@ export function handleDeleteClass(classId) {
         state.history = state.history.filter(h => h.classId !== classId); 
         showToast(`Class from '${courseName}' deleted.`);
         saveData();
-        updateAllViews();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
     });
 }
 
@@ -272,38 +272,18 @@ export async function handleTimetableScan(event) {
     reader.onload = async (e) => {
         const base64Image = e.target.result;
         try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('/api/scan', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer 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',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    model: 'openai/gpt-4o-mini',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: 'You are a highly accurate data extraction AI. Extract the classes schedule from this timetable image grid. Return ONLY a valid JSON array of objects without any markdown formatting, backticks, or extra text. Use this exact structure for each object: {"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "Room Number"}. Map abbreviations to full day names like "Monday". Convert ALL PM times strictly to 24-hour HH:MM format (e.g., 1:40 is 13:40, 2:30 is 14:30, 4:10 is 16:10). If a class is split into groups (e.g. G1/G2), include the group name in the Class Name or create separate entries if possible. Read the bottom legend to map the full subject name and faculty name if they are abbreviated in the grid. Exclude "LUNCH", "BREAK", "LIB", or empty cells. Read the days on the left and the time periods on the top carefully to align every row and column. Do not skip any valid classes. Return [] if no classes are found.'
-                                },
-                                {
-                                    type: 'image_url',
-                                    image_url: {
-                                        url: base64Image
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                })
+                body: JSON.stringify({ base64Image })
             });
 
             if (!response.ok) {
-                const errorData = await response.text();
-                console.error("OpenRouter API Error:", errorData);
-                throw new Error("API call failed.");
+                const errorData = await response.json();
+                console.error("Backend API Error:", errorData);
+                throw new Error(`Server Error: ${response.status} - ${errorData.error || "Failed to process image."}`);
             }
 
             const data = await response.json();
@@ -334,7 +314,7 @@ export async function handleTimetableScan(event) {
 
         } catch (error) {
             console.error('Error analyzing timetable:', error);
-            showToast("Error connecting to AI service. Please try simulating or check network.", "error");
+            showToast(`${error.message || "Failed to communicate with Server"}`, "error");
             scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
             scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
         }
@@ -435,7 +415,7 @@ export function handleSaveScannedSchedule() {
         state.schedule.sort((a,b) => a.start.localeCompare(b.start)); 
         checkAchievements();
         saveData();
-        updateAllViews();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
         toggleModal(document.getElementById('scan-timetable-modal'), false); 
         showToast(`${newClassesAdded} classes added, replacing your old schedule!`);
     } else if(errorCount === 0) {

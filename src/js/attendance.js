@@ -1,5 +1,5 @@
 import { state, saveData, dateIsWithinTerm } from './state.js';
-import { updateAllViews } from './main.js';
+
 import { checkAchievements } from './gamification.js';
 import { showToast, toggleModal } from './ui.js';
 
@@ -26,7 +26,7 @@ export function handleAttendanceAction(classId, status, historyId = null, reason
     }
     checkAchievements(classInfo?.name);
     saveData();
-    updateAllViews();
+    window.dispatchEvent(new CustomEvent('attendora-update-ui'));
 }
 
 export function openEditAttendanceModal(classId, historyId, courseName) {

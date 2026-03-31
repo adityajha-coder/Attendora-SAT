@@ -1,7 +1,7 @@
 import { state, saveData, dateIsWithinTerm } from './state.js';
 import { calculateOverallAttendance, calculateStreak, calculateAttendanceForCourse, renderReports } from './attendance.js';
 import { showToast, showConfirmationModal, toggleModal } from './ui.js';
-import { updateAllViews } from './main.js';
+
 
 // We get countdownInterval from main.js dynamically or pass it
 let countdownInterval = null;
@@ -234,7 +234,7 @@ export function saveTermDates() {
         state.settings.termEndDate = endDate;
         saveData();
         updateTermDatesUI();
-        updateAllViews();
+        window.dispatchEvent(new CustomEvent("attendora-update-ui"));
         showToast("Term dates saved!");
         toggleModal(document.getElementById('settings-modal'), false); 
     } else {
@@ -268,7 +268,7 @@ export function archiveCurrentTerm() {
             state.settings.termEndDate = new Date(new Date().setMonth(new Date().getMonth() + 4)).toISOString().slice(0, 10);
             saveData();
             updateTermDatesUI();
-            updateAllViews();
+            window.dispatchEvent(new CustomEvent("attendora-update-ui"));
             showToast(`Term '${termName}' archived! Start fresh now.`);
             toggleModal(document.getElementById('settings-modal'), false); 
         }

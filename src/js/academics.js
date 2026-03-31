@@ -1,5 +1,5 @@
 import { state, saveData, dateIsWithinTerm } from './state.js';
-import { updateAllViews } from './main.js';
+
 import { checkAchievements } from './gamification.js';
 import { showConfirmationModal, showToast, toggleModal } from './ui.js';
 import { calculateAttendanceForCourse } from './attendance.js';
@@ -84,7 +84,7 @@ export function handleAssignmentFormSubmit(e) {
         state.assignments.push({ id: `asg-${Date.now()}`, ...assignmentData });
     }
     saveData();
-    updateAllViews();
+    window.dispatchEvent(new CustomEvent('attendora-update-ui'));
     toggleModal(document.getElementById('assignment-modal'), false); 
 }
 
@@ -96,7 +96,7 @@ export function handleDeleteAssignment(assignmentId) {
     showConfirmationModal(title, message, () => {
         state.assignments = state.assignments.filter(a => a.id !== assignmentId);
         saveData();
-        updateAllViews();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
         showToast('Assignment deleted.');
     });
 }

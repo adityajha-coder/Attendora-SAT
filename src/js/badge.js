@@ -1,5 +1,5 @@
 import { state, saveData, dateIsWithinTerm } from './state.js';
-import { updateAllViews } from './main.js';
+
 import { calculateGpa } from './academics.js';
 import { calculateOverallAttendance, calculateStreak, calculateAttendanceForCourse } from './attendance.js';
 import { showToast, toggleModal } from './ui.js';
@@ -82,7 +82,7 @@ export function checkAchievements(courseName = null) {
     attemptUnlock('semesterArchivist', state.archivedTerms.length, (val) => val >= ALL_ACHIEVEMENTS.semesterArchivist.goal);
     if (newAchievement) {
         saveData();
-        updateAllViews();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
     }
 }
 
