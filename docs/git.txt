@@ -1,0 +1,64 @@
+1. git init  //initialie git
+
+2. git add .   //add all files of that folder
+
+3. git add __.file  //add that specific file
+
+4. git commit -m "new commit"  //commit changes
+
+5. git remote add origin <github-repo-url>  //connect that repo
+
+6. git remote -v   //to check that work connect to which folder
+
+7. git branch  //check the current branch
+
+8. git checkout -b main  // will create and switch to new branch main
+
+9. git status  //status of current work of that branch
+
+10. git remote remove origin  //remove the origin of github repo(now that folder isn't connect to any repo)
+
+11. git branch -M main   //Push and set upstream branch.
+
+12. git push -u origin main   //push the code to main
+
+13. git remote add second <second-repo-url>  //connect second repo to that folder
+
+14. git push second main  //push the code into second repo
+
+15  git clone <repo-url>  //clone the repo
+
+16. git log → View commit history.
+
+17. git diff → Show unstaged changes.
+
+18. git diff --staged → Show staged changes.
+
+19. git commit -am "message" → Stage and commit tracked files in one step
+
+20. git merge <branch> → Merge another branch into current one.
+
+21. git branch -d <branch> → Delete a branch.
+
+22. git pull origin main → Fetch and merge changes from remote.
+
+23. git fetch → Download changes without merging.
+
+- git reset <file> → Unstage a file.
+
+- git reset --hard → Reset to last commit (discard changes).
+
+- git checkout -- <file> → Discard changes in a file.
+
+- git revert <commit> → Create a new commit that undoes a previous commit.
+
+- git stash → Temporarily save uncommitted changes.
+
+- git stash pop → Reapply stashed changes.
+
+- git tag <name> → Create a tag (often for releases).
+
+- git rebase <branch> → Reapply commits on top of another branch.
+
+
+
