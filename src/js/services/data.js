@@ -36,7 +36,7 @@ export function exportData() {
 }
 
 export function importData() {
-    const fileInput = document.getElementById('import-file-input');
+    const fileInput = document.getElementById('import-data-input');
     const file = fileInput.files[0];
     if (file) {
         const reader = new FileReader();

@@ -4,6 +4,7 @@ import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
 import { auth, db } from '../core/firebase.js';
+import { forceCloudSave } from '../services/cloud-sync.js';
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
@@ -23,7 +24,7 @@ export const loginUser = async (email, password) => {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         showToast("Logged in successfully!", "success");
-        setTimeout(() => window.location.reload(), 1500);
+        // onAuthStateChanged in main.js handles the rest
         return userCredential.user;
     } catch (error) {
         showToast(error.message, "error");
@@ -76,8 +77,11 @@ export const handleSignup = async (e) => {
         state.userProfile = { name, contact: email, course, year };
         saveData();
         
+        // Push the initial state to cloud
+        await forceCloudSave(state);
+        
         showToast("Account created successfully!", "success");
-        setTimeout(() => window.location.reload(), 1500);
+        // onAuthStateChanged in main.js handles navigation
     } catch (error) {
         showToast(error.message, "error");
     }
@@ -172,5 +176,5 @@ export function renderProfile() {
     document.getElementById('profile-calculated-gpa').textContent = gpa.toFixed(2);
     document.getElementById('profile-attendance-bar').style.width = `${attendancePercentage}%`;
     document.getElementById('profile-achievements-unlocked').textContent = `${unlockedAchievements} / ${totalAchievements}`;
-    document.getElementById('welcome-message').textContent = `Welcome, ${profile.name.split(' ')[0] || contact.split('@')[0]}!`;
+    document.getElementById('welcome-message').textContent = `Welcome, ${(profile.name || '').split(' ')[0] || contact.split('@')[0]}!`;
 }

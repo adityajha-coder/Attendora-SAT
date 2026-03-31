@@ -182,7 +182,9 @@ export function renderGpaCalculator() {
 export function calculateGpa() {
     const totalPoints = state.gpaCourses.reduce((acc, course) => acc + (course.grade * course.credits), 0);
     const totalCredits = state.gpaCourses.reduce((acc, course) => acc + course.credits, 0);
-    const gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
+    let gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
+    // Round to 2 decimal places as requested
+    gpa = Math.round(gpa * 100) / 100;
     return { totalCredits, gpa };
 }
 

@@ -10,10 +10,11 @@ import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } 
 import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
-import { renderThemePicker, toggleModal, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
+import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
 import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth/auth.js';
 import { auth } from './core/firebase.js';
 import { onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
 import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, renderGpaCalculator, handleGpaFormSubmit, handleDeleteGpaCourse, openGpaModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './features/academics.js';
@@ -23,6 +24,7 @@ export const showDashboard = () => {
     document.getElementById('auth-page').classList.add('hidden');
     document.getElementById('landing-page').classList.add('hidden');
     document.getElementById('dashboard-app').classList.remove('hidden');
+    dismissLoader();
     initializeDashboard();
 };
 
@@ -30,7 +32,16 @@ const showLandingPage = () => {
     document.getElementById('dashboard-app').classList.add('hidden');
     document.getElementById('auth-page').classList.add('hidden');
     document.getElementById('landing-page').classList.remove('hidden');
+    dismissLoader();
 };
+
+function dismissLoader() {
+    const loader = document.getElementById('app-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 500);
+    }
+}
 
 const showAuthPage = (showLogin = true) => {
     document.getElementById('dashboard-app').classList.add('hidden');
@@ -38,6 +49,7 @@ const showAuthPage = (showLogin = true) => {
     document.getElementById('auth-page').classList.remove('hidden');
     document.getElementById('login-form').classList.toggle('hidden', !showLogin);
     document.getElementById('signup-form').classList.toggle('hidden', showLogin);
+    dismissLoader();
 };
 
 const initializeAttendora = () => {
@@ -46,8 +58,34 @@ const initializeAttendora = () => {
     loadData();
     setupEventListeners();
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
+            // Show loading indicator while syncing from cloud
+            const syncIndicator = document.getElementById('cloud-sync-indicator');
+            if (syncIndicator) syncIndicator.style.display = 'flex';
+
+            // Load cloud data and merge with local
+            try {
+                const cloudData = await loadFromCloud();
+                if (cloudData) {
+                    const wasMerged = mergeCloudData(state, cloudData);
+                    if (wasMerged) {
+                        // Cloud data was used — save merged result to localStorage
+                        localStorage.setItem('attendoraState', JSON.stringify(state));
+                        applyTheme(state.settings.selectedTheme);
+                        applyLightMode(state.settings.isLightMode);
+                    } else {
+                        // Local data is newer — push to cloud
+                        forceCloudSave(state);
+                    }
+                } else {
+                    // No cloud data exists yet — push local to cloud
+                    forceCloudSave(state);
+                }
+            } catch (err) {
+                console.warn('[CloudSync] Sync on login failed, using local data:', err);
+            }
+
             if (!state.userProfile.contact) {
                 state.userProfile.contact = user.email;
                 state.userProfile.name = state.userProfile.name || user.email.split('@')[0];
