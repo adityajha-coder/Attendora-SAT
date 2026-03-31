@@ -293,14 +293,14 @@ export const modalsHtml = `
                     <div>
                         <label for="gpa-grade" class="block mb-2 text-sm font-medium text-gray-300">Final Grade (Points)</label>
                         <select id="gpa-grade" class="form-input" required aria-label="Final Grade Points">
-                            <option value="10">O (Outstanding) - 10</option>
-                            <option value="9">A+ (Excellent) - 9</option>
-                            <option value="8">A (Very Good) - 8</option>
-                            <option value="7">B+ (Good) - 7</option>
-                            <option value="6">B (Above Average) - 6</option>
-                            <option value="5">C (Average) - 5</option>
-                            <option value="4">P (Pass) - 4</option>
-                            <option value="0">F (Fail) - 0</option>
+                            <option value="10">O (90-100 Marks) - 10</option>
+                            <option value="9">A+ (75-89 Marks) - 9</option>
+                            <option value="8">A (65-74 Marks) - 8</option>
+                            <option value="7">B+ (55-64 Marks) - 7</option>
+                            <option value="6">B (50-54 Marks) - 6</option>
+                            <option value="5">C (45-49 Marks) - 5</option>
+                            <option value="4">P (40-44 Marks) - 4</option>
+                            <option value="0">F (Less than 40) - 0</option>
                         </select>
                     </div>
                 </div>
