@@ -1,7 +1,6 @@
-import { state, saveData, dateIsWithinTerm } from './state.js';
-
+import { state, saveData, dateIsWithinTerm } from '../core/state.js';
 import { checkAchievements } from './gamification.js';
-import { showConfirmationModal, showToast, toggleModal } from './ui.js';
+import { showConfirmationModal, showToast, toggleModal } from '../ui/ui.js';
 import { calculateAttendanceForCourse } from './attendance.js';
 
 export function renderAssignments() {

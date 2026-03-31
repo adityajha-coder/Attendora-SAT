@@ -1,7 +1,6 @@
-import { state, saveData, dateIsWithinTerm } from './state.js';
-
+import { state, saveData, dateIsWithinTerm } from '../core/state.js';
 import { checkAchievements } from './gamification.js';
-import { showToast, toggleModal } from './ui.js';
+import { showToast, toggleModal } from '../ui/ui.js';
 
 let chartInstances = {};
 

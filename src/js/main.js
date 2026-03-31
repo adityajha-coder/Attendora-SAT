@@ -2,19 +2,22 @@ import { authHtml } from './components/auth-html.js';
 import { landingHtml } from './components/landing-html.js';
 import { dashboardHtml } from './components/dashboard-html.js';
 import { modalsHtml } from './components/modals-html.js';
-import { handleNotificationToggle, checkNotificationStatus, requestNotificationPermission, handleSidebarNav, navigateTo, updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, exportHistoryToCSV, exportData, importData, renderOverviewCards, startOnboardingTour } from './app-helpers.js';
-import { debounce } from './utils.js';
-import { state, saveData, loadData, applyTheme, applyLightMode, dateIsWithinTerm } from './state.js';
-import { renderThemePicker, setupDraggableOverviewCards, toggleModal, showToast, showConfirmationModal, filterGrid, filterTable, renderCalendar } from './ui.js';
-import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth.js';
-import { auth } from './firebase.js';
+import { updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, renderOverviewCards } from './services/app-helpers.js';
+import { checkNotificationStatus, handleNotificationToggle } from './ui/notifications.js';
+import { exportHistoryToCSV, exportData, importData } from './services/data.js';
+import { startOnboardingTour } from './ui/tour.js';
+import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
+import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
+import { debounce } from './core/utils.js';
+import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
+import { renderThemePicker, toggleModal, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
+import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth/auth.js';
+import { auth } from './core/firebase.js';
 import { onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule, updateDurationFeedback, handleDurationPreset } from './schedule.js';
-import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, calculateOverallAttendance, calculateStreak, calculateAttendanceForCourse, renderReports, renderCourses } from './attendance.js';
-import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, renderGpaCalculator, handleGpaFormSubmit, handleDeleteGpaCourse, openGpaModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './academics.js';
-import { ALL_ACHIEVEMENTS, checkAchievements, renderAchievements, generateSemesterWrapped, shareSemesterWrapped } from './gamification.js';
-
-let countdownInterval = null;
+import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
+import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
+import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, renderGpaCalculator, handleGpaFormSubmit, handleDeleteGpaCourse, openGpaModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './features/academics.js';
+import { checkAchievements, renderAchievements, generateSemesterWrapped, shareSemesterWrapped } from './features/gamification.js';
 
 export const showDashboard = () => {
     document.getElementById('auth-page').classList.add('hidden');
@@ -43,10 +46,8 @@ const initializeAttendora = () => {
     loadData();
     setupEventListeners();
 
-    // Use Firebase auth state to decide initial view
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // User is signed in — populate profile from Firestore data if needed
             if (!state.userProfile.contact) {
                 state.userProfile.contact = user.email;
                 state.userProfile.name = state.userProfile.name || user.email.split('@')[0];
@@ -90,14 +91,15 @@ export const updateAllViews = () => {
 
     const addAssignmentBtn = document.getElementById('add-assignment-btn');
     const hasCourses = state.schedule.length > 0;
-    addAssignmentBtn.disabled = !hasCourses;
-    addAssignmentBtn.classList.toggle('opacity-50', !hasCourses);
-    addAssignmentBtn.classList.toggle('cursor-not-allowed', !hasCourses);
-    addAssignmentBtn.title = hasCourses ? '' : 'Please add a course first before adding an assignment.';
+    if (addAssignmentBtn) {
+        addAssignmentBtn.disabled = !hasCourses;
+        addAssignmentBtn.classList.toggle('opacity-50', !hasCourses);
+        addAssignmentBtn.classList.toggle('cursor-not-allowed', !hasCourses);
+        addAssignmentBtn.title = hasCourses ? '' : 'Please add a course first before adding an assignment.';
+    }
 };
 
 function setupEventListeners() {
-    // Global Event Listeners to break circular dependencies
     window.addEventListener('attendora-update-ui', () => {
         updateAllViews();
     });
@@ -115,22 +117,14 @@ function setupEventListeners() {
             await loginUser(email, password);
             localStorage.setItem('loggedIn', 'true');
         } catch (err) {
-            // Error toast already shown by loginUser
+            // Error toast in auth.js
         }
     });
 
     document.getElementById('signup-form').addEventListener('submit', handleSignup);
     
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-        sidebar.classList.remove('-translate-x-full');
-        sidebarOverlay.classList.remove('hidden', 'opacity-0');
-    });
-    sidebarOverlay.addEventListener('click', () => {
-        sidebar.classList.add('-translate-x-full');
-        sidebarOverlay.classList.add('hidden', 'opacity-0');
-    });
+    document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
+    document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
 
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('.close-modal-btn')) {
@@ -288,14 +282,9 @@ function setupEventListeners() {
     });
     
     document.getElementById('notification-toggle').addEventListener('change', handleNotificationToggle);
-
     document.getElementById('sidebar-nav').addEventListener('click', handleSidebarNav);
     
-    setupDraggableOverviewCards();
-
-    document.getElementById('logout-btn').addEventListener('click', () => {
-        logoutUser();
-    });
+    document.getElementById('logout-btn').addEventListener('click', logoutUser);
 
     document.getElementById('show-forgot-password').addEventListener('click', (e) => {
         e.preventDefault();
@@ -317,7 +306,6 @@ function setupEventListeners() {
             showToast(error.message, "error");
         }
     });
-    
 }
 
 if ('serviceWorker' in navigator) {

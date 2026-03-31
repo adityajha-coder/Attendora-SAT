@@ -1,9 +1,9 @@
-import { state, saveData } from './state.js';
-import { showToast, toggleModal } from './ui.js';
-import { calculateGpa } from './academics.js';
-import { calculateOverallAttendance } from './attendance.js';
-import { ALL_ACHIEVEMENTS } from './gamification.js';
-import { auth, db } from './firebase.js';
+import { state, saveData } from '../core/state.js';
+import { showToast, toggleModal } from '../ui/ui.js';
+import { calculateGpa } from '../features/academics.js';
+import { calculateOverallAttendance } from '../features/attendance.js';
+import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
+import { auth, db } from '../core/firebase.js';
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 

@@ -1,5 +1,5 @@
-import { state, THEMES, applyTheme, applyLightMode, saveData } from './state.js';
-import { renderReports } from './attendance.js';
+import { state, THEMES, applyTheme, applyLightMode, saveData } from '../core/state.js';
+import { renderReports } from '../features/attendance.js';
 
 export const toggleModal = (modal, show) => {
     if (!modal) return;
