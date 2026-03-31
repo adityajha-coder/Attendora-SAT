@@ -104,11 +104,11 @@ const initializeDashboard = () => {
     autoMarkMissedClasses();
     renderThemePicker();
     checkNotificationStatus();
-    updateTermDatesUI(); 
+    updateTermDatesUI();
     updateAllViews();
-    
+
     if (!state.settings.hasCompletedTour) {
-        setTimeout(startOnboardingTour, 1000); 
+        setTimeout(startOnboardingTour, 1000);
     }
 };
 
@@ -146,7 +146,7 @@ function setupEventListeners() {
     document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(true); });
     document.getElementById('go-to-login-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(true); });
     document.getElementById('go-to-signup-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(false); });
-    
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-contact').value;
@@ -160,7 +160,7 @@ function setupEventListeners() {
     });
 
     document.getElementById('signup-form').addEventListener('submit', handleSignup);
-    
+
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
 
@@ -182,13 +182,13 @@ function setupEventListeners() {
     document.getElementById('add-class-btn').addEventListener('click', () => openClassModal(null, 'Class'));
     document.getElementById('add-assignment-btn').addEventListener('click', () => openAssignmentModal());
     document.getElementById('add-gpa-course-btn').addEventListener('click', () => openGpaModal());
-    
+
     document.getElementById('settings-btn').addEventListener('click', () => {
         updateTermDatesUI();
-        renderArchivedTermsList(); 
+        renderArchivedTermsList();
         toggleModal(document.getElementById('settings-modal'), true);
     });
-    
+
     document.getElementById('edit-profile-btn').addEventListener('click', openEditProfileModal);
 
     document.getElementById('export-csv-btn').addEventListener('click', exportHistoryToCSV);
@@ -197,7 +197,7 @@ function setupEventListeners() {
     document.getElementById('semester-wrapped-btn').addEventListener('click', generateSemesterWrapped);
     document.getElementById('share-wrapped-btn').addEventListener('click', shareSemesterWrapped);
     document.getElementById('start-tour-btn').addEventListener('click', startOnboardingTour);
-    
+
     document.getElementById('save-term-dates-btn').addEventListener('click', saveTermDates);
     document.getElementById('archive-term-btn-danger').addEventListener('click', archiveCurrentTerm);
     document.getElementById('reports-filter').addEventListener('change', renderReports);
@@ -218,11 +218,11 @@ function setupEventListeners() {
         const swatch = e.target.closest('#theme-picker button');
         if (swatch) {
             applyTheme(swatch.dataset.theme);
-            renderThemePicker(); 
+            renderThemePicker();
             saveData();
         }
     });
-    
+
     document.getElementById('theme-toggle').addEventListener('change', (e) => {
         applyLightMode(e.target.checked);
         saveData();
@@ -253,11 +253,11 @@ function setupEventListeners() {
         }
         const editStatusBtn = e.target.closest('#upcoming-classes-list button.edit-status-btn');
         if (editStatusBtn) {
-                const classId = parseFloat(editStatusBtn.dataset.classId);
-                const historyId = parseFloat(editStatusBtn.dataset.historyId);
-                const courseName = editStatusBtn.dataset.courseName;
-                openEditAttendanceModal(classId, historyId, courseName);
-                return;
+            const classId = parseFloat(editStatusBtn.dataset.classId);
+            const historyId = parseFloat(editStatusBtn.dataset.historyId);
+            const courseName = editStatusBtn.dataset.courseName;
+            openEditAttendanceModal(classId, historyId, courseName);
+            return;
         }
 
         const editAssignmentBtn = e.target.closest('.edit-assignment-btn');
@@ -270,7 +270,7 @@ function setupEventListeners() {
             handleDeleteAssignment(deleteAssignmentBtn.dataset.assignmentId);
             return;
         }
-        
+
         const editGpaBtn = e.target.closest('.edit-gpa-btn');
         if (editGpaBtn) {
             openGpaModal(editGpaBtn.dataset.gpaId);
@@ -296,7 +296,7 @@ function setupEventListeners() {
             const reason = document.getElementById('absent-reason').value;
             const reasonToPass = (newStatus === 'Absent' || newStatus === 'Cancelled') ? reason : '';
             handleAttendanceAction(state.editingAttendance.classId, newStatus, state.editingAttendance.historyId, reasonToPass);
-            toggleModal(document.getElementById('edit-attendance-modal'), false); 
+            toggleModal(document.getElementById('edit-attendance-modal'), false);
         }
     });
 
@@ -318,10 +318,10 @@ function setupEventListeners() {
         renderCalendar();
         saveData();
     });
-    
+
     document.getElementById('notification-toggle').addEventListener('change', handleNotificationToggle);
     document.getElementById('sidebar-nav').addEventListener('click', handleSidebarNav);
-    
+
     document.getElementById('logout-btn').addEventListener('click', logoutUser);
 
     document.getElementById('show-forgot-password').addEventListener('click', (e) => {
@@ -348,8 +348,8 @@ function setupEventListeners() {
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then((registration) => {
-        registration.update().catch(() => {});
-    }).catch(() => {});
+        registration.update().catch(() => { });
+    }).catch(() => { });
 }
 
 if (document.readyState === 'loading') {

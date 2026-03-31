@@ -5,17 +5,17 @@ import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
 import { auth, db } from '../core/firebase.js';
 import { forceCloudSave } from '../services/cloud-sync.js';
-import { 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut, 
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
     onAuthStateChanged,
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { 
-    doc, 
-    setDoc, 
-    getDoc 
+import {
+    doc,
+    setDoc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 export let forgotPasswordContact = null;
@@ -27,7 +27,15 @@ export const loginUser = async (email, password) => {
         // onAuthStateChanged in main.js handles the rest
         return userCredential.user;
     } catch (error) {
-        showToast(error.message, "error");
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+            showToast("Account not found or invalid password! Please 'Sign Up' first if you don't have an account.", "error");
+            // Auto switch to signup pane
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.remove('hidden');
+            document.getElementById('signup-contact').value = email; // prefill email
+        } else {
+            showToast(error.message, "error");
+        }
         throw error;
     }
 };
@@ -76,10 +84,10 @@ export const handleSignup = async (e) => {
 
         state.userProfile = { name, contact: email, course, year };
         saveData();
-        
+
         // Push the initial state to cloud
         await forceCloudSave(state);
-        
+
         showToast("Account created successfully!", "success");
         // onAuthStateChanged in main.js handles navigation
     } catch (error) {
@@ -130,15 +138,15 @@ export function openEditProfileModal() {
         document.querySelector('#signup-form h2').textContent = 'Create Account';
         document.querySelector('#signup-form p').textContent = 'Start your journey with Attendora.';
         signupButton.textContent = 'Sign Up';
-        document.getElementById('signup-form').onsubmit = handleSignup; 
+        document.getElementById('signup-form').onsubmit = handleSignup;
         passwordInput.setAttribute('required', '');
         confirmPasswordInput.setAttribute('required', '');
         document.querySelector('#signup-form .mb-4:has(#signup-password)').classList.remove('hidden');
         document.querySelector('#signup-form .mb-6:has(#signup-password-confirm)').classList.remove('hidden');
-        
+
         // Use custom event or global to trigger UI update instead of direct main.js import
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-        
+
         showToast("Profile details updated!", "success");
     };
 }
@@ -164,8 +172,8 @@ export function renderProfile() {
     const totalAchievements = Object.keys(ALL_ACHIEVEMENTS).length;
 
     document.getElementById('profile-name-display').textContent = profile.name || (contact.split('@')[0]);
-    document.getElementById('profile-email').textContent = contact; 
-    document.getElementById('profile-mobile').textContent = contact; 
+    document.getElementById('profile-email').textContent = contact;
+    document.getElementById('profile-mobile').textContent = contact;
     document.getElementById('profile-img').src = `https://placehold.co/128x128/${getComputedStyle(document.documentElement).getPropertyValue('--primary-color-start').substring(1)}/FFFFFF?text=${firstLetter}`;
     document.getElementById('profile-status-tier').textContent = `Attendance Tier: ${statusTier}`;
     document.getElementById('profile-status-tier').className = `text-sm px-3 py-1 mt-1 rounded-full font-semibold ${statusClass}`;
