@@ -1,5 +1,5 @@
-import { state, saveData, dateIsWithinTerm } from './state.js';
-import { showToast, toggleModal } from './ui.js';
+import { state, saveData, dateIsWithinTerm } from '../core/state.js';
+import { showToast, toggleModal } from '../ui/ui.js';
 import { calculateOverallAttendance, calculateAttendanceForCourse } from './attendance.js';
 
 // Local copy to avoid circular dependency with academics.js

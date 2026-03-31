@@ -1,47 +1,74 @@
-Attendora
+# Attendora 🚀
+**Smart Attendance & Academic Management System**
 
-Attendora is a minimalist, professional web application for students to track class attendance, assignments, and GPA while earning achievement badges for consistent use. It is implemented as modular ES modules in a single-page application and includes Progressive Web App (PWA) support for offline caching and installability.
+Attendora is a professional, high-performance web application designed for students to track attendance, calculate GPA, manage assignments, and visualize academic trends—all in one place.
 
-Status
-- Under development — features and UI are actively being refined.
+![Attendora Banner](https://api.placeholder.com/1200/400?text=Attendora+-+Your+Academic+Co-pilot)
 
-Overview
-- Manage a personal class schedule and mark daily attendance.
-- Track attendance history per class and compute course-level percentages and streaks.
-- Calculate GPA from logged courses and credits.
-- Track assignments (quizzes, exams, projects) and upcoming deadlines.
-- Earn achievements as you use the app and generate a semester summary ("Semester Wrapped").
-- Basic offline capability via a service worker and `manifest.json` for PWA installability.
+## ✨ Key Features
 
-Core features (detailed)
-- Schedule management: add, edit, and remove class entries with metadata (name, day/time, credits).
-- Attendance marking: mark Present/Absent/Cancelled, view and export history (CSV supported).
-- Course analytics: per-course attendance percentage, longest streak, and recovery detection for courses that improve over time.
-- GPA calculator: record courses with credits and grades to compute a running GPA.
-- Assignments: add assignments linked to courses, view upcoming assignments, and mark them complete.
-- Gamification: predefined achievement set (`ALL_ACHIEVEMENTS`) that tracks progress and unlocks badges shown on the dashboard.
-- Semester summary: auto-generated summary showing best/worst courses, streaks, achievements unlocked, and GPA for the term.
+- **🤖 AI Timetable Scanner**: Upload a photo of your timetable and let AI automatically build your schedule. (Powered by OpenRouter).
+- **📈 Global Attendance Engine**: Real-time tracking of classes with status labels (Present, Absent, Cancelled).
+- **💎 GPA Calculator**: Track individual course grades and credits to see your current and projected GPA.
+- **📝 Assignment Tracker**: Dedicated space for quizzes, exams, and projects with deadlines.
+- **📊 Interactive Analytics**: View your attendance trends via modern Chart.js visualizations.
+- **🔥 Gamification System**: Earn 20+ unique badges and streaks for consistency.
+- **🌓 Adaptive Theme**: High-contrast dark mode and premium glassmorphism design with customizable accent themes.
+- **💾 Data Portability**: Full support for CSV exports and JSON backups for your data safety.
+- **📱 PWA Support**: Fully installable on mobile and desktop with offline caching via Service Workers.
 
-Architecture & important files
-- `index.html` — app shell and module bootstrap (loads `src/js/main.js` as an ES module).
-- `src/js/` — application modules:
-	- `main.js` — entry point and view orchestration
-	- `state.js` — central state management and persistence helpers
-	- `ui.js` — DOM rendering utilities, modals, and toasts
-	- `attendance.js` — attendance marking, charts, and reports
-	- `academics.js` — GPA and assignment logic
-	- `gamification.js` — achievements and semester summary generation
-	- `utils.js` — shared helper functions
-- `src/style/style.css` — main stylesheet
-- `sw.js` — service worker responsible for caching key assets
-- `manifest.json` — PWA manifest metadata and icons
+## 🏗️ Project Architecture
 
-Data & persistence
-- App data is persisted locally using `localStorage` (no backend required for the offline-first experience).
-- Export/import utilities allow backing up and restoring application state.
+Attendora uses a **Modular Component-Based Architecture** (ESM) to ensure high maintainability and developer efficiency.
 
-Development notes
-- The codebase uses vanilla ES modules; serve `index.html` from a static server during development to avoid module loading issues due to direct file access.
-- Check the browser DevTools Console and Network tab for errors related to module imports or missing assets.
+### Directory Structure
+- `src/js/core/`: State management, Firebase initialization, and core utilities.
+- `src/js/features/`: Domain logic for Attendance, Schedule, Academics, and AI Scanner.
+- `src/js/ui/`: UI Rendering engine, sidebar navigation, and interactive tours.
+- `src/js/services/`: Data syncing, backup services, and lifecycle helpers.
+- `api/`: Serverless Functions (Vercel) for secure API communication and environment variable bridging.
 
-------------- Under Development---------------------
+### Secure Bridge Pattern
+Attendora implements a **Serverless Bridge Pattern**. Sensitive API keys (Firebase, OpenRouter) are kept on the backend. The frontend fetches configuration securely via the `/api/config` gateway, ensuring zero leaked keys in your public repository.
+
+## 🛠️ Technology Stack
+
+- **Frontend**: Vanilla JS (ES6 Modules), HTML5, Custom CSS3 (Glassmorphism).
+- **Backend**: Firebase JS SDK v12 (Firestore, Auth, Analytics).
+- **AI**: OpenRouter API for intelligent timetable parsing.
+- **Visualization**: Chart.js.
+- **Onboarding**: Intro.js.
+- **Deployment**: Vercel Serverless Architecture.
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (Latest LTS).
+- Vercel CLI (`npm install -g vercel`).
+- A Firebase Project and OpenRouter API key.
+
+### Local Development
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/Attendora-SAT.git
+   cd Attendora-SAT
+   ```
+2. **Setup environment variables**:
+   Create a `.env` file in the root:
+   ```env
+   # Firebase Config (Get from Firebase Console)
+   FIREBASE_API_KEY="..."
+   OPENROUTER_API_KEY="..."
+   # ... [See .env.example for full list]
+   ```
+3. **Run the developer server**:
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:3000` to view the app.
+
+## 📄 License
+Distributed under the ISC License.
+
+---
+Built with ❤️ for students by [Attendora Team]

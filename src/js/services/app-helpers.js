@@ -1,81 +1,11 @@
-import { state, saveData, dateIsWithinTerm } from './state.js';
-import { calculateOverallAttendance, calculateStreak, calculateAttendanceForCourse, renderReports } from './attendance.js';
-import { showToast, showConfirmationModal, toggleModal } from './ui.js';
-
+import { state, saveData, dateIsWithinTerm } from '../core/state.js';
+import { calculateOverallAttendance, calculateStreak, renderReports } from '../features/attendance.js';
+import { toggleModal, showToast, showConfirmationModal } from '../ui/ui.js';
 
 // We get countdownInterval from main.js dynamically or pass it
 let countdownInterval = null;
 export function getCountdownInterval() { return countdownInterval; }
 export function updateInterval(v) { countdownInterval = v; }
-
-export function handleNotificationToggle(e) {
-    const isEnabled = e.target.checked;
-    state.settings.notifications = isEnabled;
-    if (isEnabled) {
-        requestNotificationPermission();
-    }
-    saveData();
-}
-
-export const checkNotificationStatus = () => {
-    const toggle = document.getElementById('notification-toggle');
-    const statusText = document.getElementById('notification-status-text');
-    if (!("Notification" in window)) {
-        toggle.disabled = true;
-        statusText.textContent = "Notifications are not supported by your browser.";
-        return;
-    }
-    toggle.checked = state.settings.notifications && Notification.permission === 'granted';
-    if (Notification.permission === "granted") {
-        statusText.textContent = "Reminders are enabled.";
-    } else if (Notification.permission === "denied") {
-        statusText.textContent = "Reminders are blocked in your browser settings.";
-        toggle.disabled = true;
-    } else {
-            statusText.textContent = "Allow notifications to get class reminders.";
-    }
-};
-
-export const requestNotificationPermission = async () => {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-        showToast("Notifications enabled!");
-        state.settings.notifications = true;
-    } else {
-        showToast("Notifications were not enabled.", "error");
-        state.settings.notifications = false;
-    }
-    saveData();
-    checkNotificationStatus();
-};
-
-export function handleSidebarNav(e) {
-    e.preventDefault();
-    const link = e.target.closest('a.sidebar-link');
-    if (!link) return;
-    navigateTo(link.getAttribute('href').substring(1));
-    if (window.innerWidth < 768) {
-        document.getElementById('sidebar').classList.add('-translate-x-full');
-        document.getElementById('sidebar-overlay').classList.add('hidden', 'opacity-0');
-    }
-}
-
-export function navigateTo(viewId) {
-        document.querySelectorAll('#sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const link = document.querySelector(`#sidebar-nav a[href="#${viewId}"]`);
-    if(link) link.classList.add('active');
-    const targetId = viewId + '-view';
-    document.querySelectorAll('.dashboard-view').forEach(view => {
-        const wasActive = view.classList.contains('active');
-        const isActive = view.id === targetId;
-        view.classList.toggle('active', isActive);
-        if (isActive && !wasActive && (targetId === 'reports-view' || targetId === 'overview-view')) {
-                setTimeout(() => {
-                renderReports();
-                }, 50); 
-        }
-    });
-}
 
 export function updateOverviewStats() {
     const { percentage: overallPercentage } = calculateOverallAttendance();
@@ -98,56 +28,53 @@ export function updateOverviewStats() {
 export function updateGoalOrientedCard() {
     const card = document.getElementById('goal-oriented-card');
     const text = document.getElementById('goal-text');
-    const uniqueCourses = [...new Set(state.schedule.map(item => item.name))];
-    let shouldShowCard = false;
-    for (const courseName of uniqueCourses) {
-        const stats = calculateAttendanceForCourse(courseName);
-        const goal = 75; 
-        if (stats.total > 0 && stats.percentage < goal) {
-            const needed = Math.ceil(( (goal/100) * stats.absent - (1 - (goal/100)) * stats.present) / (1 - (goal/100)) );
-            if(needed > 0) {
-                text.textContent = `You need to attend the next ${needed} classes of ${courseName} to reach ${goal}% attendance.`;
-                text.style.color = state.settings.isLightMode ? '#ca8a04' : '#facc15'; 
-                shouldShowCard = true;
-                break;
-            }
-        }
+    if (!state.settings.targetAttendance) {
+        card.classList.add('hidden');
+        return;
     }
-    card.classList.toggle('hidden', !shouldShowCard);
+    card.classList.remove('hidden');
+    const { percentage } = calculateOverallAttendance();
+    const target = state.settings.targetAttendance;
+    if (percentage >= target) {
+        text.textContent = `Goal Met! (${percentage}%) Keep it up! ✨`;
+        card.style.borderColor = 'var(--accent-color)';
+    } else {
+        const gap = target - percentage;
+        text.textContent = `You are ${gap.toFixed(1)}% away from your ${target}% target. Stay focused! 🚀`;
+        card.style.borderColor = percentage < 75 ? 'rgb(248 113 113)' : 'rgb(250 204 21)';
+    }
 }
 
 export function updateNextClassCountdown() {
-    if (countdownInterval) clearInterval(countdownInterval);
     const countdownEl = document.getElementById('overview-countdown');
     const countdownNameEl = document.getElementById('overview-countdown-classname');
+    if (!countdownEl) return;
+    if (countdownInterval) clearInterval(countdownInterval);
     const now = new Date();
-    const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    let nextClass = null;
-    for (let i = 0; i < 7; i++) {
-        const checkDate = new Date(now);
-        checkDate.setDate(now.getDate() + i);
-        const dayName = dayMap[checkDate.getDay()];
-        const dateStr = checkDate.toISOString().slice(0, 10);
-        if (!dateIsWithinTerm(dateStr)) continue;
-        const classesOnDay = state.schedule
-            .filter(c => c.day === dayName)
-            .sort((a, b) => a.start.localeCompare(b.start));
-        for (const c of classesOnDay) {
-            const [hours, minutes] = c.start.split(':');
-            const classTime = new Date(checkDate);
-            classTime.setHours(hours, minutes, 0, 0);
-            if (classTime > now) {
-                nextClass = { ...c, time: classTime, dayOffset: i };
-                break;
-            }
+    const today = now.toLocaleString('en-US', { weekday: 'long' });
+    const timeToDate = (time, offsetDays = 0) => {
+        const [h, m] = time.split(':').map(Number);
+        const d = new Date();
+        d.setDate(d.getDate() + offsetDays);
+        d.setHours(h, m, 0, 0);
+        return d;
+    };
+    const upcoming = state.schedule.map(c => {
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const targetDayIndex = daysOfWeek.indexOf(c.day);
+        const currentDayIndex = now.getDay();
+        let dayOffset = (targetDayIndex - currentDayIndex + 7) % 7;
+        const classTime = timeToDate(c.start, dayOffset);
+        if (dayOffset === 0 && classTime < now) {
+            dayOffset = 7;
+            classTime.setDate(classTime.getDate() + 7);
         }
-        if (nextClass) break;
-    }
+        return { name: c.name, time: classTime, dayOffset, day: c.day };
+    }).sort((a, b) => a.time - b.time);
+    const nextClass = upcoming[0];
     if (!nextClass) {
-        countdownEl.textContent = 'No upcoming classes';
-        if (!dateIsWithinTerm(now.toISOString().slice(0, 10))) {
-            countdownNameEl.textContent = `Term ended ${new Date(state.settings.termEndDate + 'T00:00:00').toLocaleDateString()}`;
-        } else {
+        countdownEl.textContent = 'No classes';
+        if (countdownNameEl) {
                 countdownNameEl.textContent = state.schedule.length > 0 ? 'Wait for the next day' : 'Add classes to schedule.';
         }
         return;
@@ -275,60 +202,6 @@ export function archiveCurrentTerm() {
     );
 }
 
-export function exportHistoryToCSV() {
-    let csvContent = "data:text/csv;charset=utf-8,Date,Course,Status,Reason,Note\n";
-    state.history.forEach(h => {
-        const course = state.schedule.find(c => c.id === h.classId);
-        if (course) {
-            const row = [h.date, course.name, h.status, h.reason || '', `"${h.note || ''}"`].join(",");
-            csvContent += row + "\r\n";
-        }
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "attendora_history.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast("History exported!");
-}
-
-export function exportData() {
-    const dataStr = JSON.stringify(state, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const link = document.createElement("a");
-    link.setAttribute("href", dataUri);
-    link.setAttribute("download", "attendora_backup.json");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast("Data backup exported!");
-}
-
-export function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const importedState = JSON.parse(e.target.result);
-            if (importedState.schedule && importedState.history) {
-                Object.assign(state, importedState);
-                saveData();
-                showToast("Data imported successfully! Reloading...");
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                showToast("Invalid data file.", "error");
-            }
-        } catch (error) {
-                showToast("Error reading the file. Make sure it's a valid JSON backup.", "error");
-                console.error("Import error:", error);
-        }
-    };
-    reader.readAsText(file);
-}
-
 export function renderOverviewCards() {
     const grid = document.getElementById('overview-grid');
     grid.innerHTML = ''; 
@@ -349,72 +222,3 @@ export function renderOverviewCards() {
         }
     });
 }
-
-export function startOnboardingTour() {
-    const isLightMode = state.settings.isLightMode;
-    const tourHighlightColor = isLightMode ? 'var(--primary-color-start)' : '#FACC15'; 
-    const intro = introJs();
-    intro.setOptions({
-        steps: [
-            {
-                element: document.querySelector('#sidebar'),
-                intro: "Welcome to Attendora! This is your navigation sidebar. Let's take a quick look around.",
-                position: 'right'
-            },
-            {
-                element: document.querySelector('a[href="#schedule"]'),
-                intro: "To begin tracking, navigate to 'My Schedule' to input your classes.",
-                position: 'right'
-            },
-            {
-                element: document.querySelector('#add-class-btn'),
-                intro: "Use this button to manually add classes or view the timetable scanner tool.",
-                position: 'left'
-            },
-            {
-                element: document.querySelector('#todays-schedule-card'),
-                intro: "Your daily schedule appears here. Quickly mark or edit your attendance status and reason.",
-                position: 'top'
-            },
-            {
-                    element: document.querySelector('a[href="#achievements"]'),
-                intro: "Check the Achievements view to see fun goals and track your progress toward them!",
-                    position: 'right'
-            },
-                {
-                    element: document.querySelector('a[href="#reports"]'),
-                intro: "The Reports section shows attendance trends, allowing you to filter by week, month, or term.",
-                    position: 'right'
-            },
-            {
-                element: document.querySelector('a[href="#gpa"]'),
-                intro: "Use the GPA Calculator to manage your course grades and estimated progress.",
-                position: 'right'
-            },
-            {
-                element: document.querySelector('a[href="#profile"]'),
-                intro: "Your Profile contains all personal and institutional data.",
-                position: 'right'
-            },
-            {
-                    element: document.querySelector('#settings-btn'),
-                intro: "Finally, customize your entire app experience here: themes, term dates, data export, and more.",
-                    position: 'top'
-            }
-        ],
-        showProgress: true,
-        showBullets: false,
-        buttonClass: `bg-[${tourHighlightColor}] text-white px-4 py-2 rounded-lg font-bold`,
-        tooltipClass: isLightMode ? 'introjs-light-mode' : 'introjs-dark-mode', 
-    });
-    intro.oncomplete(() => {
-        state.settings.hasCompletedTour = true;
-        saveData();
-    });
-    intro.onexit(() => {
-        state.settings.hasCompletedTour = true;
-        saveData();
-    });
-    intro.start();
-}
-
