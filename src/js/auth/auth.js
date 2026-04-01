@@ -10,7 +10,8 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import {
     doc,
@@ -23,6 +24,15 @@ export let forgotPasswordContact = null;
 export const loginUser = async (email, password) => {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+        // Enforce OTP/Email Verification ONLY for new accounts (created after April 1, 2026)
+        const creationTime = new Date(userCredential.user.metadata.creationTime);
+        const enforcementDate = new Date("2026-04-01T00:00:00Z");
+        if (creationTime > enforcementDate && !userCredential.user.emailVerified) {
+             await signOut(auth);
+             throw new Error("Please verify your email address. We sent a verification link to your email.");
+        }
+
         showToast("Logged in successfully!", "success");
         // onAuthStateChanged in main.js handles the rest
         return userCredential.user;
@@ -44,6 +54,7 @@ export const logoutUser = async () => {
     try {
         await signOut(auth);
         localStorage.removeItem('loggedIn');
+        localStorage.removeItem('attendoraState'); // Clear local data to prevent leak
         window.location.reload();
     } catch (error) {
         showToast("Error logging out: " + error.message, "error");
@@ -82,14 +93,21 @@ export const handleSignup = async (e) => {
             createdAt: new Date().toISOString()
         });
 
-        state.userProfile = { name, contact: email, course, year };
-        saveData();
+        // Send email verification (OTP) for new accounts
+        await sendEmailVerification(user);
+        
+        // Sign out immediately so they must verify
+        await signOut(auth);
+        
+        // Clear local storage to prevent merging the "other account" data into the new account
+        localStorage.removeItem('attendoraState');
+        localStorage.removeItem('loggedIn');
 
-        // Push the initial state to cloud
-        await forceCloudSave(state);
-
-        showToast("Account created successfully!", "success");
-        // onAuthStateChanged in main.js handles navigation
+        showToast("Account created! Please check your email inbox to verify before logging in.", "success");
+        
+        // Switch to login UI
+        document.getElementById('signup-form').classList.add('hidden');
+        document.getElementById('login-form').classList.remove('hidden');
     } catch (error) {
         showToast(error.message, "error");
     }

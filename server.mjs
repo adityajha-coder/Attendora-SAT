@@ -140,18 +140,20 @@ const server = http.createServer(async (req, res) => {
 
 
 
-const startServer = () => {
-    server.listen(PORT, () => {
-        console.log(`Server running with API Backend on http://localhost:${PORT}`);
-    }).on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-            console.log(`Port ${PORT} is in use, trying port ${PORT + 1}...`);
-            PORT++;
-            startServer();
-        } else {
-            console.error(err);
-        }
+function startServer(port) {
+    server.listen(port, () => {
+        console.log(`Server running with API Backend on http://localhost:${port}`);
     });
-};
+}
 
-startServer();
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.log(`Port ${PORT} is in use, trying next port...`);
+        PORT++;
+        startServer(PORT);
+    } else {
+        console.error("Server initialization error:", err);
+    }
+});
+
+startServer(PORT);

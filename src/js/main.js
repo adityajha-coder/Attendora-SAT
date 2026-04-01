@@ -60,6 +60,16 @@ const initializeAttendora = () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
+            // Check if account is newly created and requires verification check before entering dashboard
+            const creationTime = new Date(user.metadata.creationTime);
+            const enforcementDate = new Date("2026-04-01T00:00:00Z");
+            
+            if (creationTime > enforcementDate && !user.emailVerified) {
+                // If they somehow got stuck logged in without being verified, forcefully log them out
+                auth.signOut();
+                return;
+            }
+
             // Show loading indicator while syncing from cloud
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
