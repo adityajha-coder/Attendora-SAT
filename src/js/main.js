@@ -159,7 +159,7 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById('signup-form').addEventListener('submit', handleSignup);
+    document.getElementById('signup-form').onsubmit = handleSignup;
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);

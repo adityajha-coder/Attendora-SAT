@@ -256,7 +256,12 @@ export const dashboardHtml = `
                                     <div class="profile-stat-card">
                                         <p class="text-sm text-gray-400">Overall Attendance</p>
                                         <p id="profile-overall-attendance" class="text-2xl font-bold text-green-400 mt-1">-%</p>
-                                        <div class="w-full bg-gray-700/30 rounded-full h-2 mt-2">
+                                        <div class="flex justify-between items-center mt-2 text-xs text-gray-400">
+                                            <span>Classes: <span id="profile-total-classes" class="font-bold text-white">0</span></span>
+                                            <span class="text-green-400">P: <span id="profile-total-present" class="font-bold">0</span></span>
+                                            <span class="text-red-400">A: <span id="profile-total-absent" class="font-bold">0</span></span>
+                                        </div>
+                                        <div class="w-full bg-gray-700/30 rounded-full h-2 mt-3">
                                             <div id="profile-attendance-bar" class="h-2 rounded-full" style="width: 0%; background-color: var(--primary-color-start);"></div>
                                         </div>
                                     </div>

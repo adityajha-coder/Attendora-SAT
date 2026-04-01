@@ -210,6 +210,15 @@ export function renderProfile() {
     document.getElementById('profile-year').textContent = profile.year || 'Not set';
     document.getElementById('profile-course').textContent = profile.course || 'Not set';
     document.getElementById('profile-overall-attendance').textContent = `${attendancePercentage}%`;
+    
+    // Fill in detailed attendance numbers
+    const totalClassesEl = document.getElementById('profile-total-classes');
+    if (totalClassesEl) totalClassesEl.textContent = totalAttendanceStats.total;
+    const presentEl = document.getElementById('profile-total-present');
+    if (presentEl) presentEl.textContent = totalAttendanceStats.present;
+    const absentEl = document.getElementById('profile-total-absent');
+    if (absentEl) absentEl.textContent = totalAttendanceStats.absent;
+
     document.getElementById('profile-calculated-gpa').textContent = gpa.toFixed(2);
     document.getElementById('profile-attendance-bar').style.width = `${attendancePercentage}%`;
     document.getElementById('profile-achievements-unlocked').textContent = `${unlockedAchievements} / ${totalAchievements}`;
