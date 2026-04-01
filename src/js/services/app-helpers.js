@@ -8,7 +8,7 @@ export function getCountdownInterval() { return countdownInterval; }
 export function updateInterval(v) { countdownInterval = v; }
 
 export function updateOverviewStats() {
-    const { percentage: overallPercentage } = calculateOverallAttendance();
+    const { percentage: overallPercentage, present, absent, total } = calculateOverallAttendance();
     const uniqueCourses = [...new Set(state.schedule.map(item => item.name))];
     let longestStreak = 0;
     if (uniqueCourses.length > 0) {
@@ -21,7 +21,14 @@ export function updateOverviewStats() {
     const attendanceEl = document.getElementById('overview-attendance');
     attendanceEl.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
     attendanceEl.classList.add(percentageColorClass);
-    document.getElementById('overview-courses').textContent = uniqueCourses.length;
+    
+    const totalClassesEl = document.getElementById('overview-total-classes');
+    if(totalClassesEl) totalClassesEl.textContent = total;
+    const presentClassesEl = document.getElementById('overview-present-classes');
+    if(presentClassesEl) presentClassesEl.textContent = present;
+    const absentClassesEl = document.getElementById('overview-absent-classes');
+    if(absentClassesEl) absentClassesEl.textContent = absent;
+    
     document.getElementById('overview-streaks').textContent = `${longestStreak} 🔥`;
 }
 
@@ -207,16 +214,29 @@ export function renderOverviewCards() {
     grid.innerHTML = ''; 
     const cardHTML = {
         'overview-card-attendance': `<div id="overview-card-attendance" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-blue-900/40 to-blue-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">ATTENDANCE RATIO</h3><p id="overview-attendance" class="text-4xl font-bold text-green-400 mt-1 pointer-events-none">-%</p></div>`,
-        'overview-card-courses': `<div id="overview-card-courses" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-purple-900/40 to-purple-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">ACTIVE COURSES</h3><p id="overview-courses" class="text-4xl font-bold mt-1 pointer-events-none">0</p></div>`,
+        'overview-card-classes': `<div id="overview-card-classes" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-purple-900/40 to-purple-800/40" draggable="true">
+            <h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">TOTAL CLASSES</h3>
+            <p id="overview-total-classes" class="text-4xl font-bold mt-1 pointer-events-none mb-1 text-white">0</p>
+            <div class="flex gap-4 text-sm font-semibold pointer-events-none">
+                <span class="text-green-400">P: <span id="overview-present-classes">0</span></span>
+                <span class="text-red-400">A: <span id="overview-absent-classes">0</span></span>
+            </div>
+        </div>`,
         'overview-card-streaks': `<div id="overview-card-streaks" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-orange-900/40 to-orange-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">LONGEST STREAK</h3><p id="overview-streaks" class="text-4xl font-bold text-orange-400 mt-1 pointer-events-none">0 🔥</p></div>`,
         'overview-card-countdown': `<div id="overview-card-countdown" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-indigo-900/40 to-indigo-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">NEXT CLASS IN</h3><p id="overview-countdown" class="text-2xl font-bold text-cyan-400 mt-1 pointer-events-none">No upcoming classes</p><p id="overview-countdown-classname" class="text-xs pointer-events-none" style="color: var(--text-secondary);"></p></div>`
     };
-    const requiredOrder = ['overview-card-attendance', 'overview-card-courses', 'overview-card-streaks', 'overview-card-countdown'];
-    state.settings.dashboardOrder = state.settings.dashboardOrder.filter(id => requiredOrder.includes(id));
-    if (state.settings.dashboardOrder.length !== requiredOrder.length) {
-        state.settings.dashboardOrder = requiredOrder;
+    const requiredOrder = ['overview-card-attendance', 'overview-card-classes', 'overview-card-streaks', 'overview-card-countdown'];
+    
+    let dashboardOrder = state.settings.dashboardOrder || [];
+    const indexOfCourses = dashboardOrder.indexOf('overview-card-courses');
+    if (indexOfCourses !== -1) dashboardOrder[indexOfCourses] = 'overview-card-classes';
+    
+    dashboardOrder = dashboardOrder.filter(id => requiredOrder.includes(id));
+    if (dashboardOrder.length !== requiredOrder.length) {
+        dashboardOrder = requiredOrder;
     }
-    state.settings.dashboardOrder.forEach(cardId => {
+    state.settings.dashboardOrder = dashboardOrder;
+    dashboardOrder.forEach(cardId => {
         if(cardHTML[cardId]) {
             grid.innerHTML += cardHTML[cardId];
         }

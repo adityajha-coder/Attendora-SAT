@@ -10,7 +10,8 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import {
     doc,
@@ -23,16 +24,21 @@ export let forgotPasswordContact = null;
 export const loginUser = async (email, password) => {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+        // Enforce OTP/Email Verification ONLY for new accounts (created after April 1, 2026)
+        const creationTime = new Date(userCredential.user.metadata.creationTime);
+        const enforcementDate = new Date("2026-04-01T00:00:00Z");
+        if (creationTime > enforcementDate && !userCredential.user.emailVerified) {
+             await signOut(auth);
+             throw new Error("Please verify your email address. We sent a verification link to your email.");
+        }
+
         showToast("Logged in successfully!", "success");
         // onAuthStateChanged in main.js handles the rest
         return userCredential.user;
     } catch (error) {
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
             showToast("Account not found or invalid password! Please 'Sign Up' first if you don't have an account.", "error");
-            // Auto switch to signup pane
-            document.getElementById('login-form').classList.add('hidden');
-            document.getElementById('signup-form').classList.remove('hidden');
-            document.getElementById('signup-contact').value = email; // prefill email
         } else {
             showToast(error.message, "error");
         }
@@ -44,6 +50,7 @@ export const logoutUser = async () => {
     try {
         await signOut(auth);
         localStorage.removeItem('loggedIn');
+        localStorage.removeItem('attendoraState'); // Clear local data to prevent leak
         window.location.reload();
     } catch (error) {
         showToast("Error logging out: " + error.message, "error");
@@ -52,6 +59,14 @@ export const logoutUser = async () => {
 
 export const handleSignup = async (e) => {
     e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.innerText : 'Sign Up';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-contact').value;
     const password = document.getElementById('signup-password').value;
@@ -61,11 +76,13 @@ export const handleSignup = async (e) => {
 
     if (password !== confirmPassword) {
         showToast("Passwords do not match.", "error");
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = originalText; }
         return;
     }
 
     if (!email.includes('@')) {
         showToast("Please use a valid email address for Firebase Auth.", "error");
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = originalText; }
         return;
     }
 
@@ -82,16 +99,28 @@ export const handleSignup = async (e) => {
             createdAt: new Date().toISOString()
         });
 
-        state.userProfile = { name, contact: email, course, year };
-        saveData();
+        // Send email verification (OTP) for new accounts
+        await sendEmailVerification(user);
+        
+        // Sign out immediately so they must verify
+        await signOut(auth);
+        
+        // Clear local storage to prevent merging the "other account" data into the new account
+        localStorage.removeItem('attendoraState');
+        localStorage.removeItem('loggedIn');
 
-        // Push the initial state to cloud
-        await forceCloudSave(state);
-
-        showToast("Account created successfully!", "success");
-        // onAuthStateChanged in main.js handles navigation
+        showToast("Please verify email for registration", "success");
+        
+        // Switch to login UI
+        document.getElementById('signup-form').classList.add('hidden');
+        document.getElementById('login-form').classList.remove('hidden');
     } catch (error) {
         showToast(error.message, "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
+        }
     }
 };
 
@@ -210,6 +239,15 @@ export function renderProfile() {
     document.getElementById('profile-year').textContent = profile.year || 'Not set';
     document.getElementById('profile-course').textContent = profile.course || 'Not set';
     document.getElementById('profile-overall-attendance').textContent = `${attendancePercentage}%`;
+    
+    // Fill in detailed attendance numbers
+    const totalClassesEl = document.getElementById('profile-total-classes');
+    if (totalClassesEl) totalClassesEl.textContent = totalAttendanceStats.total;
+    const presentEl = document.getElementById('profile-total-present');
+    if (presentEl) presentEl.textContent = totalAttendanceStats.present;
+    const absentEl = document.getElementById('profile-total-absent');
+    if (absentEl) absentEl.textContent = totalAttendanceStats.absent;
+
     document.getElementById('profile-calculated-gpa').textContent = gpa.toFixed(2);
     document.getElementById('profile-attendance-bar').style.width = `${attendancePercentage}%`;
     document.getElementById('profile-achievements-unlocked').textContent = `${unlockedAchievements} / ${totalAchievements}`;

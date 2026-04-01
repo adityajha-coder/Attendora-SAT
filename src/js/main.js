@@ -60,6 +60,16 @@ const initializeAttendora = () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
+            // Check if account is newly created and requires verification check before entering dashboard
+            const creationTime = new Date(user.metadata.creationTime);
+            const enforcementDate = new Date("2026-04-01T00:00:00Z");
+            
+            if (creationTime > enforcementDate && !user.emailVerified) {
+                // If they somehow got stuck logged in without being verified, forcefully log them out
+                auth.signOut();
+                return;
+            }
+
             // Show loading indicator while syncing from cloud
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
@@ -95,7 +105,12 @@ const initializeAttendora = () => {
             showDashboard();
         } else {
             localStorage.removeItem('loggedIn');
-            showLandingPage();
+            // If the user is actively looking at the auth page (like during signup), don't abruptly hide it
+            if (document.getElementById('auth-page').classList.contains('hidden')) {
+                showLandingPage();
+            } else {
+                dismissLoader();
+            }
         }
     });
 };
@@ -159,7 +174,7 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById('signup-form').addEventListener('submit', handleSignup);
+    document.getElementById('signup-form').onsubmit = handleSignup;
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
