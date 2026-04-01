@@ -105,7 +105,12 @@ const initializeAttendora = () => {
             showDashboard();
         } else {
             localStorage.removeItem('loggedIn');
-            showLandingPage();
+            // If the user is actively looking at the auth page (like during signup), don't abruptly hide it
+            if (document.getElementById('auth-page').classList.contains('hidden')) {
+                showLandingPage();
+            } else {
+                dismissLoader();
+            }
         }
     });
 };

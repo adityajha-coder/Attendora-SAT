@@ -45,11 +45,10 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 const modelsToTry = [
-                    'llama-3.2-90b-vision-preview',
-                    'llama-3.2-11b-vision-preview',
-                    'llama-3.2-11b-vision-instruct',
-                    'llama3-vision-preview'
+                    'llama-3.2-90b-vision-instruct',
+                    'llama-3.2-11b-vision-instruct'
                 ];
+                console.log("Testing new stable models:", modelsToTry);
 
                 let apiResponse = null;
                 let lastError = '';

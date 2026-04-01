@@ -39,10 +39,6 @@ export const loginUser = async (email, password) => {
     } catch (error) {
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
             showToast("Account not found or invalid password! Please 'Sign Up' first if you don't have an account.", "error");
-            // Auto switch to signup pane
-            document.getElementById('login-form').classList.add('hidden');
-            document.getElementById('signup-form').classList.remove('hidden');
-            document.getElementById('signup-contact').value = email; // prefill email
         } else {
             showToast(error.message, "error");
         }
@@ -63,6 +59,14 @@ export const logoutUser = async () => {
 
 export const handleSignup = async (e) => {
     e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.innerText : 'Sign Up';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-contact').value;
     const password = document.getElementById('signup-password').value;
@@ -72,11 +76,13 @@ export const handleSignup = async (e) => {
 
     if (password !== confirmPassword) {
         showToast("Passwords do not match.", "error");
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = originalText; }
         return;
     }
 
     if (!email.includes('@')) {
         showToast("Please use a valid email address for Firebase Auth.", "error");
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = originalText; }
         return;
     }
 
@@ -103,13 +109,18 @@ export const handleSignup = async (e) => {
         localStorage.removeItem('attendoraState');
         localStorage.removeItem('loggedIn');
 
-        showToast("Account created! Please check your email inbox to verify before logging in.", "success");
+        showToast("Please verify email for registration", "success");
         
         // Switch to login UI
         document.getElementById('signup-form').classList.add('hidden');
         document.getElementById('login-form').classList.remove('hidden');
     } catch (error) {
         showToast(error.message, "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
+        }
     }
 };
 
