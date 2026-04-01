@@ -21,56 +21,89 @@ export async function handleTimetableScan(event) {
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-        const base64Image = e.target.result;
-        try {
-            const response = await fetch('/api/scan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    base64Image: base64Image
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.text();
-                console.error("OpenRouter API Error:", errorData);
-                throw new Error(`OpenRouter Error: ${response.status} - failed to process image.`);
-            }
-
-            const data = await response.json();
-            const aiResponseText = data.choices[0].message.content.trim();
+        const img = new Image();
+        img.onload = async () => {
+            // Downscale image to max 1024px width to prevent API 400 errors for too large payloads
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1024;
             
-            let scannedData = [];
+            if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Compress heavily to ensure Groq accepts it
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+
             try {
-                // Strip possible markdown wrapping
-                const cleanedText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-                scannedData = JSON.parse(cleanedText);
-            } catch (parseError) {
-                console.error("Failed to parse AI response: ", aiResponseText);
-                showToast("Failed to parse timetable data from AI.", "error");
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        base64Image: base64Image
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    let parsedError = errorData;
+                    try {
+                        const jsonError = JSON.parse(errorData);
+                        if (jsonError.error) parsedError = jsonError.error;
+                    } catch (err) {}
+                    
+                    console.error("Backend API Error:", errorData);
+                    throw new Error(parsedError);
+                }
+
+                const data = await response.json();
+                const aiResponseText = data.choices[0].message.content.trim();
+                
+                let scannedData = [];
+                try {
+                    // Strip possible markdown wrapping
+                    const cleanedText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    scannedData = JSON.parse(cleanedText);
+                } catch (parseError) {
+                    console.error("Failed to parse AI response: ", aiResponseText);
+                    showToast("Failed to parse timetable data from AI.", "error");
+                    scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+                    scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+                    return;
+                }
+
+                if (!Array.isArray(scannedData) || scannedData.length === 0) {
+                    showToast("No classes detected from the image.", "warning");
+                    scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+                    scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+                    return;
+                }
+
+                showToast("Timetable analyzed successfully!", "success");
+                renderCorrectionView(scannedData);
+
+            } catch (error) {
+                console.error('Error analyzing timetable:', error);
+                showToast(`${error.message || "Failed to communicate with Server"}`, "error");
                 scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
                 scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
-                return;
             }
-
-            if (!Array.isArray(scannedData) || scannedData.length === 0) {
-                 showToast("No classes detected from the image.", "warning");
-                 scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
-                 scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
-                 return;
-            }
-
-            showToast("Timetable analyzed successfully!", "success");
-            renderCorrectionView(scannedData);
-
-        } catch (error) {
-            console.error('Error analyzing timetable:', error);
-            showToast(`${error.message || "Failed to communicate with Server"}`, "error");
-            scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
-            scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
-        }
+        };
+        img.onerror = () => {
+             showToast("Error processing the image file.", "error");
+             scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+             scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+        };
+        img.src = e.target.result;
     };
     reader.onerror = () => {
         showToast("Error reading the image file.", "error");
@@ -123,7 +156,7 @@ export function handleSaveScannedSchedule() {
     const rows = tbody.querySelectorAll('tr');
     let newClassesAdded = 0;
     let errorCount = 0;
-    const newSchedule = []; 
+    const newSchedule = [];
     const validDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     rows.forEach(row => {
         const nameInput = row.querySelector('input[data-field="name"]');
@@ -140,17 +173,17 @@ export function handleSaveScannedSchedule() {
         const room = roomInput ? roomInput.value.trim() : '';
         if (name && day && start && end) {
             if (!validDays.some(d => d.toLowerCase() === day.toLowerCase()) || end <= start) {
-                    errorCount++;
-                    return; 
+                errorCount++;
+                return;
             }
-                const classData = { 
-                id: Date.now() + Math.random(), 
-                name: name, 
+            const classData = {
+                id: Date.now() + Math.random(),
+                name: name,
                 instructor: instructor,
                 room: room,
-                day: day.charAt(0).toUpperCase() + day.slice(1).toLowerCase(), 
-                type: name.toLowerCase().includes('lab') ? 'Lab' : 'Class', 
-                start: start, 
+                day: day.charAt(0).toUpperCase() + day.slice(1).toLowerCase(),
+                type: name.toLowerCase().includes('lab') ? 'Lab' : 'Class',
+                start: start,
                 end: end,
             };
             newSchedule.push(classData);
@@ -158,20 +191,20 @@ export function handleSaveScannedSchedule() {
         }
     });
     if (errorCount > 0) {
-            showToast(`${errorCount} entries were skipped due to invalid data.`, "warning");
+        showToast(`${errorCount} entries were skipped due to invalid data.`, "warning");
     }
     if (newClassesAdded > 0) {
         state.schedule = newSchedule;
-        state.history = []; 
+        state.history = [];
         state.assignments = [];
-        state.gpaCourses = []; 
-        state.schedule.sort((a,b) => a.start.localeCompare(b.start)); 
+        state.gpaCourses = [];
+        state.schedule.sort((a, b) => a.start.localeCompare(b.start));
         checkAchievements();
         saveData();
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-        toggleModal(document.getElementById('scan-timetable-modal'), false); 
+        toggleModal(document.getElementById('scan-timetable-modal'), false);
         showToast(`${newClassesAdded} classes added, replacing your old schedule!`);
-    } else if(errorCount === 0) {
+    } else if (errorCount === 0) {
         showToast("No valid classes were found to save.", "error");
     }
 }
