@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Attendora - Smart attendance tracking with predictive insights, goal tracking, GPA calculator, and gamified achievements for students.">
     <title>Attendora - Smart Attendance Tracker</title>
     <link rel="shortcut icon" href="assets/images/android.png" type="image/x-icon">
     <link rel="manifest" href="manifest.json">
@@ -23,6 +24,28 @@
 </head>
 <body class="relative">
     <canvas id="shooting-stars-canvas"></canvas>
+    
+    <!-- Loading Splash Screen -->
+    <div id="app-loader" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000010;gap:24px;transition:opacity 0.5s ease;">
+        <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="loaderGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+            <circle cx="12" cy="12" r="10" stroke="url(#loaderGrad)" stroke-width="2"/>
+            <path d="M8 12L11 15L16 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span style="font-family:'Righteous',cursive;font-size:2rem;letter-spacing:2px;color:#fff;text-shadow:0 0 8px rgba(191,219,254,0.5);">ATTENDORA</span>
+        <div style="width:200px;height:3px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+            <div style="width:40%;height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:4px;animation:loaderBar 1.5s ease-in-out infinite;"></div>
+        </div>
+        <p style="color:#94a3b8;font-size:0.875rem;">Loading your dashboard...</p>
+    </div>
+    <style>
+        @keyframes loaderBar {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(150%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+    
     <div id="app"></div>
 
 

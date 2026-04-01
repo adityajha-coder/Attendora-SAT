@@ -1,4 +1,5 @@
 import { initVisuals } from './utils.js';
+import { schedulCloudSync } from '../services/cloud-sync.js';
 
 export const THEMES = {
     'default': { name: 'Default', start: '#3b82f6', end: '#8b5cf6' },
@@ -47,6 +48,8 @@ export const visuals = initVisuals();
 
 export const saveData = () => {
     localStorage.setItem('attendoraState', JSON.stringify(state));
+    // Also schedule a debounced cloud sync
+    schedulCloudSync(state);
 };
 
 export const loadData = () => {

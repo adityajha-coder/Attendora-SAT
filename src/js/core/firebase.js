@@ -1,8 +1,7 @@
 /* 
-   SECURE FIREBASE INITIALIZER
-   Uses Top-Level Await to bridge the configuration from the backend 
-   via the serverless bridge in api/config.js. 
-   This keeps your keys 100% out of your public GitHub code!
+   FIREBASE INITIALIZER
+   Tries the secure API bridge first (for Vercel production).
+   Falls back to the local config file (for local development).
 */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -10,13 +9,33 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// Step 1: Securely fetch from the Bridge (localhost during dev, Vercel during prod)
-const response = await fetch('/api/config');
-const firebaseConfig = await response.json();
+let firebaseConfig;
 
-// Step 2: Initialize with the bridge config
+try {
+    // Try the secure API bridge first (works on Vercel)
+    const response = await fetch('/api/config');
+    if (!response.ok) throw new Error('API bridge unavailable');
+    firebaseConfig = await response.json();
+    
+    // Verify the config has required fields
+    if (!firebaseConfig.apiKey) throw new Error('Invalid config from API');
+} catch (e) {
+    // Fall back to local config file (works with any local server)
+    console.info('[Firebase] API bridge unavailable, using local config.');
+    const { firebaseConfig: localConfig } = await import('./firebase-config.js');
+    firebaseConfig = localConfig;
+}
+
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+let analytics = null;
+try {
+    analytics = getAnalytics(app);
+} catch (e) {
+    // Analytics may fail on localhost
+    console.info('[Firebase] Analytics not available in this environment.');
+}
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
