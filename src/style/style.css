@@ -22,12 +22,19 @@
     --input-background: #f8fafc; 
     --danger-color: #ef4444;
 }
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--background-color);
     color: var(--text-primary);
     overflow-x: hidden;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1.5;
 }
 .font-brand {
     font-family: 'Righteous', cursive;
@@ -47,17 +54,18 @@ body {
 }
 .card {
     background: var(--card-background);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
-    border-radius: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
 .card:not(.no-hover):hover {
-    transform: translateY(-5px);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1), 0 0 15px color-mix(in srgb, var(--primary-color-start) 30%, transparent);
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--primary-color-start) 20%, transparent);
 }
 .btn-primary {
     background: linear-gradient(90deg, var(--primary-color-start), var(--primary-color-end));
@@ -107,11 +115,12 @@ body {
 }
 
 .modal-overlay { 
-    transition: opacity 0.3s ease; 
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
     align-items: center; 
+    backdrop-filter: blur(8px);
 }
 .modal-content { 
-    transition: transform 0.3s ease; 
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     max-height: 85vh;
     overflow-y: auto;
 }
