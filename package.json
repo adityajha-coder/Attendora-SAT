@@ -4,8 +4,8 @@
   "description": "Smart Attendance Tracker",
   "main": "index.html",
   "scripts": {
-    "dev": "npx serve .",
-    "start": "npx serve ."
+    "dev": "node --env-file=.env server.mjs",
+    "start": "node --env-file=.env server.mjs"
   },
   "devDependencies": {
     "vercel": "^39.0.0"
@@ -16,5 +16,9 @@
     "dashboard"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
 }

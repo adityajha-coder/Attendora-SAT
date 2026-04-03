@@ -21,75 +21,89 @@ export async function handleTimetableScan(event) {
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-        const base64Image = e.target.result;
-        try {
-            const OPENROUTER_KEY = "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";
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${OPENROUTER_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'openai/gpt-4o-mini',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: 'You are a highly accurate data extraction AI. Extract the classes schedule from this timetable image grid. There is a vertical column spanning all days that says "LUNCH". You MUST extract all classes that occur to the left AND to the right of the LUNCH column. CRITICAL RULE: Map the abbreviated subjects to their full faculty/instructor names and full subject names using the legend at the bottom of the image. For example, if the grid says "CM", look up "CM" in the legend to find "Computational Methods (CM)" and the corresponding instructor name. If a class is split into groups (e.g. G1/G2), extract them separately with the group name in parenthesis. Return ONLY a valid JSON array of objects without any markdown formatting, backticks, or extra text. Use this exact structure: {"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "Room Number"}. Map abbreviations to full day names. Convert ALL PM times strictly to 24-hour HH:MM format (e.g., 1:40 is 13:40, 2:30 is 14:30). If a class spans multiple periods, adjust the start and end time accordingly. Exclude "LUNCH", "BREAK", "LIB", "PDP", or empty cells. Do not skip any valid classes. Return [] if no classes are found.'
-                                },
-                                {
-                                    type: 'image_url',
-                                    image_url: {
-                                        url: base64Image
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.text();
-                console.error("OpenRouter API Error:", errorData);
-                throw new Error(`OpenRouter Error: ${response.status} - failed to process image.`);
-            }
-
-            const data = await response.json();
-            const aiResponseText = data.choices[0].message.content.trim();
+        const img = new Image();
+        img.onload = async () => {
+            // Downscale image to max 1024px width to prevent API 400 errors for too large payloads
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1024;
             
-            let scannedData = [];
+            if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Compress heavily to ensure Groq accepts it
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+
             try {
-                // Strip possible markdown wrapping
-                const cleanedText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-                scannedData = JSON.parse(cleanedText);
-            } catch (parseError) {
-                console.error("Failed to parse AI response: ", aiResponseText);
-                showToast("Failed to parse timetable data from AI.", "error");
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        base64Image: base64Image
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    let parsedError = errorData;
+                    try {
+                        const jsonError = JSON.parse(errorData);
+                        if (jsonError.error) parsedError = jsonError.error;
+                    } catch (err) {}
+                    
+                    console.error("Backend API Error:", errorData);
+                    throw new Error(parsedError);
+                }
+
+                const data = await response.json();
+                const aiResponseText = data.choices[0].message.content.trim();
+                
+                let scannedData = [];
+                try {
+                    // Strip possible markdown wrapping
+                    const cleanedText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    scannedData = JSON.parse(cleanedText);
+                } catch (parseError) {
+                    console.error("Failed to parse AI response: ", aiResponseText);
+                    showToast("Failed to parse timetable data from AI.", "error");
+                    scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+                    scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+                    return;
+                }
+
+                if (!Array.isArray(scannedData) || scannedData.length === 0) {
+                    showToast("No classes detected from the image.", "warning");
+                    scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+                    scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+                    return;
+                }
+
+                showToast("Timetable analyzed successfully!", "success");
+                renderCorrectionView(scannedData);
+
+            } catch (error) {
+                console.error('Error analyzing timetable:', error);
+                showToast(`${error.message || "Failed to communicate with Server"}`, "error");
                 scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
                 scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
-                return;
             }
-
-            if (!Array.isArray(scannedData) || scannedData.length === 0) {
-                 showToast("No classes detected from the image.", "warning");
-                 scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
-                 scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
-                 return;
-            }
-
-            showToast("Timetable analyzed successfully!", "success");
-            renderCorrectionView(scannedData);
-
-        } catch (error) {
-            console.error('Error analyzing timetable:', error);
-            showToast(`${error.message || "Failed to communicate with Server"}`, "error");
-            scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
-            scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
-        }
+        };
+        img.onerror = () => {
+             showToast("Error processing the image file.", "error");
+             scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
+             scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
+        };
+        img.src = e.target.result;
     };
     reader.onerror = () => {
         showToast("Error reading the image file.", "error");
@@ -142,7 +156,7 @@ export function handleSaveScannedSchedule() {
     const rows = tbody.querySelectorAll('tr');
     let newClassesAdded = 0;
     let errorCount = 0;
-    const newSchedule = []; 
+    const newSchedule = [];
     const validDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     rows.forEach(row => {
         const nameInput = row.querySelector('input[data-field="name"]');
@@ -159,17 +173,17 @@ export function handleSaveScannedSchedule() {
         const room = roomInput ? roomInput.value.trim() : '';
         if (name && day && start && end) {
             if (!validDays.some(d => d.toLowerCase() === day.toLowerCase()) || end <= start) {
-                    errorCount++;
-                    return; 
+                errorCount++;
+                return;
             }
-                const classData = { 
-                id: Date.now() + Math.random(), 
-                name: name, 
+            const classData = {
+                id: Date.now() + Math.random(),
+                name: name,
                 instructor: instructor,
                 room: room,
-                day: day.charAt(0).toUpperCase() + day.slice(1).toLowerCase(), 
-                type: name.toLowerCase().includes('lab') ? 'Lab' : 'Class', 
-                start: start, 
+                day: day.charAt(0).toUpperCase() + day.slice(1).toLowerCase(),
+                type: name.toLowerCase().includes('lab') ? 'Lab' : 'Class',
+                start: start,
                 end: end,
             };
             newSchedule.push(classData);
@@ -177,20 +191,20 @@ export function handleSaveScannedSchedule() {
         }
     });
     if (errorCount > 0) {
-            showToast(`${errorCount} entries were skipped due to invalid data.`, "warning");
+        showToast(`${errorCount} entries were skipped due to invalid data.`, "warning");
     }
     if (newClassesAdded > 0) {
         state.schedule = newSchedule;
-        state.history = []; 
+        state.history = [];
         state.assignments = [];
-        state.gpaCourses = []; 
-        state.schedule.sort((a,b) => a.start.localeCompare(b.start)); 
+        state.gpaCourses = [];
+        state.schedule.sort((a, b) => a.start.localeCompare(b.start));
         checkAchievements();
         saveData();
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-        toggleModal(document.getElementById('scan-timetable-modal'), false); 
+        toggleModal(document.getElementById('scan-timetable-modal'), false);
         showToast(`${newClassesAdded} classes added, replacing your old schedule!`);
-    } else if(errorCount === 0) {
+    } else if (errorCount === 0) {
         showToast("No valid classes were found to save.", "error");
     }
 }

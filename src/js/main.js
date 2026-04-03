@@ -5,13 +5,12 @@ import { modalsHtml } from './components/modals-html.js';
 import { updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, renderOverviewCards } from './services/app-helpers.js';
 import { checkNotificationStatus, handleNotificationToggle } from './ui/notifications.js';
 import { exportHistoryToCSV, exportData, importData } from './services/data.js';
-import { startOnboardingTour } from './ui/tour.js';
 import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
 import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth/auth.js';
+import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
 import { auth } from './core/firebase.js';
 import { onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
@@ -60,6 +59,7 @@ const initializeAttendora = () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
+
             // Show loading indicator while syncing from cloud
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
@@ -95,7 +95,12 @@ const initializeAttendora = () => {
             showDashboard();
         } else {
             localStorage.removeItem('loggedIn');
-            showLandingPage();
+            // If the user is actively looking at the auth page (like during signup), don't abruptly hide it
+            if (document.getElementById('auth-page').classList.contains('hidden')) {
+                showLandingPage();
+            } else {
+                dismissLoader();
+            }
         }
     });
 };
@@ -107,9 +112,6 @@ const initializeDashboard = () => {
     updateTermDatesUI();
     updateAllViews();
 
-    if (!state.settings.hasCompletedTour) {
-        setTimeout(startOnboardingTour, 1000);
-    }
 };
 
 export const updateAllViews = () => {
@@ -159,7 +161,10 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById('signup-form').addEventListener('submit', handleSignup);
+    document.getElementById('signup-form').onsubmit = handleSignup;
+
+    document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
+    document.getElementById('google-signup-btn').addEventListener('click', signInWithGoogle);
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
@@ -196,7 +201,6 @@ function setupEventListeners() {
     document.getElementById('import-data-input').addEventListener('change', importData);
     document.getElementById('semester-wrapped-btn').addEventListener('click', generateSemesterWrapped);
     document.getElementById('share-wrapped-btn').addEventListener('click', shareSemesterWrapped);
-    document.getElementById('start-tour-btn').addEventListener('click', startOnboardingTour);
 
     document.getElementById('save-term-dates-btn').addEventListener('click', saveTermDates);
     document.getElementById('archive-term-btn-danger').addEventListener('click', archiveCurrentTerm);
