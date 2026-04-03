@@ -4,34 +4,65 @@ import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
 import { auth, db, googleProvider } from '../core/firebase.js';
-import { signOut, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { signOut, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+// ── Detect Mobile ───────────────────────────
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (window.innerWidth <= 768);
+}
+
+// ── Handle Redirect Result (for mobile sign-in) ──
+async function handleRedirectResult() {
+    try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+            await setupNewUser(result.user);
+            showToast("Signed in with Google!", "success");
+        }
+    } catch (error) {
+        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+            console.error("Redirect sign-in error:", error);
+            showToast("Sign-in failed: " + error.message, "error");
+        }
+    }
+}
+
+// Process redirect result on page load
+handleRedirectResult();
+
+// ── Setup New User in Firestore ─────────────
+async function setupNewUser(user) {
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+            name: user.displayName || '',
+            email: user.email,
+            course: '',
+            year: '',
+            createdAt: new Date().toISOString()
+        });
+    }
+    state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
+    state.userProfile.contact = user.email;
+    saveData();
+}
 
 // ── Google Sign-In ──────────────────────────
 export const signInWithGoogle = async () => {
     try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-
-        // First-time user → create Firestore profile
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-                name: user.displayName || '',
-                email: user.email,
-                course: '',
-                year: '',
-                createdAt: new Date().toISOString()
-            });
+        if (isMobileDevice()) {
+            // Mobile: use redirect (popups are blocked on most mobile browsers)
+            await signInWithRedirect(auth, googleProvider);
+            // Page will redirect, so no code runs after this
+        } else {
+            // Desktop: use popup
+            const result = await signInWithPopup(auth, googleProvider);
+            await setupNewUser(result.user);
+            showToast("Signed in with Google!", "success");
         }
-
-        // Populate local state
-        state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
-        state.userProfile.contact = user.email;
-        saveData();
-
-        showToast("Signed in with Google!", "success");
     } catch (error) {
         if (error.code === 'auth/popup-closed-by-user') {
             showToast("Sign-in cancelled.", "warning");
