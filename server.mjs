@@ -45,6 +45,7 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 const modelsToTry = [
+                    'openai/gpt-4o-mini',
                     'meta-llama/llama-3.2-90b-vision-instruct',
                     'meta-llama/llama-3.2-11b-vision-instruct',
                     'google/gemini-flash-1.5'
