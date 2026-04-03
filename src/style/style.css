@@ -4,23 +4,23 @@
     --background-color: #000010;
     --text-primary: #e2e8f0; 
     --text-secondary: #94a3b8;
-    --card-background: rgba(12, 16, 43, 0.5);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --sidebar-background: rgba(0, 0, 0, 0.3);
-    --input-background: rgba(255, 255, 255, 0.1);
-    --danger-color: #ef4444;
+    --card-background: rgba(15, 20, 55, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --sidebar-background: rgba(5, 7, 20, 0.4);
+    --input-background: rgba(255, 255, 255, 0.05);
+    --danger-color: #ff5f5f;
 }
 .light-mode {
-    --primary-color-start: #4f6fe0; 
-    --primary-color-end: #7c5cbf; 
-    --background-color: #f0eeeb; 
-    --text-primary: #2d3039;   
-    --text-secondary: #6b7085; 
-    --card-background: #f7f5f2;
-    --card-border: rgba(0, 0, 0, 0.07);
-    --sidebar-background: #f3f1ee; 
-    --input-background: #eceae7; 
-    --danger-color: #d64545;
+    --primary-color-start: #4866d9; 
+    --primary-color-end: #7555b8; 
+    --background-color: #f6f5f2; 
+    --text-primary: #1e293b;   
+    --text-secondary: #64748b; 
+    --card-background: #ffffff;
+    --card-border: rgba(0, 0, 0, 0.05);
+    --sidebar-background: #f1f5f9; 
+    --input-background: #f8fafc; 
+    --danger-color: #ef4444;
 }
 body {
     font-family: 'Montserrat', sans-serif;
@@ -47,13 +47,17 @@ body {
 }
 .card {
     background: var(--card-background);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--card-border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card:not(.no-hover):hover {
-    transform: translateY(-8px);
-    box-shadow: 0 0 25px color-mix(in srgb, var(--primary-color-start) 50%, var(--primary-color-end) 50%, transparent 50%);
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1), 0 0 15px color-mix(in srgb, var(--primary-color-start) 30%, transparent);
 }
 .btn-primary {
     background: linear-gradient(90deg, var(--primary-color-start), var(--primary-color-end));

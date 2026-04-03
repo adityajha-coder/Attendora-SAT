@@ -1,20 +1,30 @@
 const CACHE_NAME = 'attendora-v2';
 const urlsToCache = [
-  '',
+  '/',
   'index.html',
+  'manifest.json',
   'src/style/style.css',
   'src/js/main.js',
-  'src/js/utils.js',
-  'src/js/state.js',
-  'src/js/ui.js',
-  'src/js/auth.js',
-  'src/js/schedule.js',
-  'src/js/attendance.js',
-  'src/js/academics.js',
-  'src/js/gamification.js',
-  'src/js/badge.js',
-  'assets/images/android.png',
-  'manifest.json'
+  'src/js/core/state.js',
+  'src/js/core/utils.js',
+  'src/js/core/firebase.js',
+  'src/js/core/firebase-config.js',
+  'src/js/ui/ui.js',
+  'src/js/ui/sidebar.js',
+  'src/js/ui/notifications.js',
+  'src/js/auth/auth.js',
+  'src/js/features/schedule.js',
+  'src/js/features/attendance.js',
+  'src/js/features/academics.js',
+  'src/js/features/gamification.js',
+  'src/js/features/scanner.js',
+  'src/js/services/cloud-sync.js',
+  'src/js/services/data.js',
+  'src/js/components/auth-html.js',
+  'src/js/components/dashboard-html.js',
+  'src/js/components/modals-html.js',
+  'src/js/components/landing-html.js',
+  'assets/images/android.png'
 ];
 
 const toScopedUrl = (path) => new URL(path, self.registration.scope).toString();
