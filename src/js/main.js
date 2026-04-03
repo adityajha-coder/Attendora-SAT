@@ -51,14 +51,16 @@ const showAuthPage = () => {
     dismissLoader();
 };
 
-const initializeAttendora = () => {
+const initializeAttendora = async () => {
     document.getElementById('app').innerHTML = authHtml + landingHtml + dashboardHtml + modalsHtml;
 
     loadData();
     setupEventListeners();
 
-    // Process mobile Google redirect result (must run after DOM is ready)
-    handleRedirectResult();
+    // MUST await redirect result before checking auth state.
+    // Without this, onAuthStateChanged fires with null (user not yet resolved)
+    // and the app incorrectly shows the landing page.
+    await handleRedirectResult();
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
