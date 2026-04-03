@@ -13,41 +13,40 @@ function isMobileDevice() {
         || (window.innerWidth <= 768);
 }
 
-// ── Handle Redirect Result (for mobile sign-in) ──
-async function handleRedirectResult() {
+// ── Handle Redirect Result (called from main.js after DOM is ready) ──
+export async function handleRedirectResult() {
     try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
             await setupNewUser(result.user);
-            showToast("Signed in with Google!", "success");
+            // onAuthStateChanged in main.js will handle showing the dashboard
         }
     } catch (error) {
-        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-            console.error("Redirect sign-in error:", error);
-            showToast("Sign-in failed: " + error.message, "error");
-        }
+        console.error("Redirect sign-in error:", error);
+        // Don't block the app — onAuthStateChanged will still fire if user is logged in
     }
 }
 
-// Process redirect result on page load
-handleRedirectResult();
-
 // ── Setup New User in Firestore ─────────────
 async function setupNewUser(user) {
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-    if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-            name: user.displayName || '',
-            email: user.email,
-            course: '',
-            year: '',
-            createdAt: new Date().toISOString()
-        });
+    try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                name: user.displayName || '',
+                email: user.email,
+                course: '',
+                year: '',
+                createdAt: new Date().toISOString()
+            });
+        }
+        state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
+        state.userProfile.contact = user.email;
+        saveData();
+    } catch (err) {
+        console.warn('[Auth] setupNewUser failed:', err);
     }
-    state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
-    state.userProfile.contact = user.email;
-    saveData();
 }
 
 // ── Google Sign-In ──────────────────────────
@@ -56,7 +55,7 @@ export const signInWithGoogle = async () => {
         if (isMobileDevice()) {
             // Mobile: use redirect (popups are blocked on most mobile browsers)
             await signInWithRedirect(auth, googleProvider);
-            // Page will redirect, so no code runs after this
+            // Page will redirect away, no code runs after this
         } else {
             // Desktop: use popup
             const result = await signInWithPopup(auth, googleProvider);
