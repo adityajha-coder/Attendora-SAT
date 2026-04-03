@@ -24,6 +24,28 @@ export function setupAuthListener() {
         });
 }
 
+// ── Setup New User ──────────────────────────
+async function setupNewUser(user) {
+    try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                name: user.displayName || '',
+                email: user.email,
+                course: '',
+                year: '',
+                createdAt: new Date().toISOString()
+            });
+        }
+        state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
+        state.userProfile.contact = user.email;
+        saveData();
+    } catch (err) {
+        console.warn('[Auth] setupNewUser failed:', err);
+    }
+}
+
 // ── Google Sign-In ──────────────────────────
 export const signInWithGoogle = () => {
     // 1. ABSOLUTELY NO ASYNC/AWAIT ALLOWED BEFORE POPUP.
