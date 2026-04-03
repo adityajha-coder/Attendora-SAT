@@ -10,7 +10,7 @@ import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle, handleRedirectResult } from './auth/auth.js';
+import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
 import { auth } from './core/firebase.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
@@ -51,16 +51,11 @@ const showAuthPage = () => {
     dismissLoader();
 };
 
-const initializeAttendora = async () => {
+const initializeAttendora = () => {
     document.getElementById('app').innerHTML = authHtml + landingHtml + dashboardHtml + modalsHtml;
 
     loadData();
     setupEventListeners();
-
-    // MUST await redirect result before checking auth state.
-    // Without this, onAuthStateChanged fires with null (user not yet resolved)
-    // and the app incorrectly shows the landing page.
-    await handleRedirectResult();
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {

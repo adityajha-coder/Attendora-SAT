@@ -42,32 +42,23 @@ async function setupNewUser(user) {
     }
 }
 
-// ── Google Sign-In (popup-first, redirect-fallback) ──
-export const signInWithGoogle = async () => {
-    try {
-        // Always try popup first — works on most mobile browsers
-        // when triggered by a direct user click
-        const result = await signInWithPopup(auth, googleProvider);
-        await setupNewUser(result.user);
-        showToast("Signed in with Google!", "success");
-    } catch (error) {
-        if (error.code === 'auth/popup-blocked' ||
-            error.code === 'auth/operation-not-supported-in-this-environment' ||
-            error.code === 'auth/internal-error') {
-            // Popup was blocked → fall back to redirect
-            console.log('[Auth] Popup blocked, falling back to redirect');
-            try {
-                await signInWithRedirect(auth, googleProvider);
-            } catch (redirectError) {
-                showToast("Sign-in failed. Please try again.", "error");
+// ── Google Sign-In (Popup only - synchronously triggered to prevent mobile blocking) ──
+export const signInWithGoogle = () => {
+    // Note: Do NOT make this outer function async. 
+    // Calling signInWithPopup synchronously within the click handler prevents Safari/iOS from blocking it.
+    signInWithPopup(auth, googleProvider)
+        .then(async (result) => {
+            await setupNewUser(result.user);
+            showToast("Signed in with Google!", "success");
+        })
+        .catch((error) => {
+            if (error.code === 'auth/popup-closed-by-user') {
+                showToast("Sign-in cancelled.", "warning");
+            } else if (error.code !== 'auth/cancelled-popup-request') {
+                console.error('[Auth] Sign-in error:', error.code, error.message);
+                showToast("Sign-in failed: " + error.message, "error");
             }
-        } else if (error.code === 'auth/popup-closed-by-user') {
-            showToast("Sign-in cancelled.", "warning");
-        } else if (error.code !== 'auth/cancelled-popup-request') {
-            console.error('[Auth] Sign-in error:', error.code, error.message);
-            showToast("Sign-in failed: " + error.message, "error");
-        }
-    }
+        });
 };
 
 // ── Logout ──────────────────────────────────
