@@ -47,6 +47,8 @@ async function setupNewUser(user) {
 }
 
 // ── Google Sign-In ──────────────────────────
+import { showDashboard } from '../main.js';
+
 export const signInWithGoogle = () => {
     // 1. ABSOLUTELY NO ASYNC/AWAIT ALLOWED BEFORE POPUP.
     // Ensure the popup happens synchronously to prevent strict browser blocks.
@@ -71,15 +73,17 @@ export const signInWithGoogle = () => {
             btn.innerHTML = originalText;
             btn.disabled = false;
             
-            // Decisively force reload to transition UI seamlessly into Dashboard
-            // and eliminate any onAuthStateChanged caching race-conditions.
-            window.location.reload();
+            // Seamlessly transition the UI to the dashboard instead of reloading.
+            // Reloading was actively aborting Firebase's auth token save on mobile!
+            showDashboard();
         })
         .catch((error) => {
             if (error.code === 'auth/popup-closed-by-user') {
                 showToast("Sign-in cancelled.", "warning");
             } else if (error.code === 'auth/popup-blocked') {
-                showToast("Popups are blocked! Please allow popups or use native Chrome.", "error");
+                showToast("Popups blocked. Using secure redirect fallback...", "info");
+                signInWithRedirect(auth, googleProvider);
+                return;
             } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
                 showToast("Environment must use HTTPS. Please test via Vercel.", "error");
             } else if (error.code !== 'auth/cancelled-popup-request') {

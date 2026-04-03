@@ -1,4 +1,4 @@
-export default function handler(request, response) {
+module.exports = function handler(request, response) {
     // Only return the PUBLIC Firebase configuration
     // This serverless function reads from your secure Vercel environment variables
     const config = {
@@ -18,4 +18,4 @@ export default function handler(request, response) {
     }
 
     return response.status(200).json(config);
-}
+};
