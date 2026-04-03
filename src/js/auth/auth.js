@@ -7,23 +7,16 @@ import { auth, db, googleProvider } from '../core/firebase.js';
 import { signOut, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// ── Detect Mobile ───────────────────────────
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-        || (window.innerWidth <= 768);
-}
-
-// ── Handle Redirect Result (called from main.js after DOM is ready) ──
+// ── Handle Redirect Result (fallback for blocked popups) ──
 export async function handleRedirectResult() {
     try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
+            console.log('[Auth] Redirect sign-in successful');
             await setupNewUser(result.user);
-            // onAuthStateChanged in main.js will handle showing the dashboard
         }
     } catch (error) {
-        console.error("Redirect sign-in error:", error);
-        // Don't block the app — onAuthStateChanged will still fire if user is logged in
+        console.warn('[Auth] Redirect result error:', error.code, error.message);
     }
 }
 
@@ -49,23 +42,29 @@ async function setupNewUser(user) {
     }
 }
 
-// ── Google Sign-In ──────────────────────────
+// ── Google Sign-In (popup-first, redirect-fallback) ──
 export const signInWithGoogle = async () => {
     try {
-        if (isMobileDevice()) {
-            // Mobile: use redirect (popups are blocked on most mobile browsers)
-            await signInWithRedirect(auth, googleProvider);
-            // Page will redirect away, no code runs after this
-        } else {
-            // Desktop: use popup
-            const result = await signInWithPopup(auth, googleProvider);
-            await setupNewUser(result.user);
-            showToast("Signed in with Google!", "success");
-        }
+        // Always try popup first — works on most mobile browsers
+        // when triggered by a direct user click
+        const result = await signInWithPopup(auth, googleProvider);
+        await setupNewUser(result.user);
+        showToast("Signed in with Google!", "success");
     } catch (error) {
-        if (error.code === 'auth/popup-closed-by-user') {
+        if (error.code === 'auth/popup-blocked' ||
+            error.code === 'auth/operation-not-supported-in-this-environment' ||
+            error.code === 'auth/internal-error') {
+            // Popup was blocked → fall back to redirect
+            console.log('[Auth] Popup blocked, falling back to redirect');
+            try {
+                await signInWithRedirect(auth, googleProvider);
+            } catch (redirectError) {
+                showToast("Sign-in failed. Please try again.", "error");
+            }
+        } else if (error.code === 'auth/popup-closed-by-user') {
             showToast("Sign-in cancelled.", "warning");
         } else if (error.code !== 'auth/cancelled-popup-request') {
+            console.error('[Auth] Sign-in error:', error.code, error.message);
             showToast("Sign-in failed: " + error.message, "error");
         }
     }
