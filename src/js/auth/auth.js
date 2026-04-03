@@ -7,58 +7,68 @@ import { auth, db, googleProvider } from '../core/firebase.js';
 import { signOut, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// ── Handle Redirect Result (fallback for blocked popups) ──
-export async function handleRedirectResult() {
-    try {
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-            console.log('[Auth] Redirect sign-in successful');
-            await setupNewUser(result.user);
-        }
-    } catch (error) {
-        console.warn('[Auth] Redirect result error:', error.code, error.message);
-    }
-}
-
-// ── Setup New User in Firestore ─────────────
-async function setupNewUser(user) {
-    try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-                name: user.displayName || '',
-                email: user.email,
-                course: '',
-                year: '',
-                createdAt: new Date().toISOString()
-            });
-        }
-        state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
-        state.userProfile.contact = user.email;
-        saveData();
-    } catch (err) {
-        console.warn('[Auth] setupNewUser failed:', err);
-    }
-}
-
-// ── Google Sign-In (Popup only - synchronously triggered to prevent mobile blocking) ──
-export const signInWithGoogle = () => {
-    // Note: Do NOT make this outer function async. 
-    // Calling signInWithPopup synchronously within the click handler prevents Safari/iOS from blocking it.
-    signInWithPopup(auth, googleProvider)
+// ── Listen for Redirects (Non-blocking) ──
+// Call this on app load so Firebase processes returning users from mobile redirect
+export function setupAuthListener() {
+    getRedirectResult(auth)
         .then(async (result) => {
-            await setupNewUser(result.user);
-            showToast("Signed in with Google!", "success");
+            if (result && result.user) {
+                console.log('[Auth] Redirect sign-in success!');
+                await setupNewUser(result.user);
+                showToast("Signed in successfully!", "success");
+            }
         })
         .catch((error) => {
-            if (error.code === 'auth/popup-closed-by-user') {
-                showToast("Sign-in cancelled.", "warning");
-            } else if (error.code !== 'auth/cancelled-popup-request') {
-                console.error('[Auth] Sign-in error:', error.code, error.message);
-                showToast("Sign-in failed: " + error.message, "error");
-            }
+            console.warn('[Auth] Redirect sign-in error:', error);
+            // Don't show toast on load unless necessary, just log it.
         });
+}
+
+// ── Google Sign-In ──────────────────────────
+export const signInWithGoogle = () => {
+    const btn = document.getElementById('google-signin-btn');
+    const originalText = btn.innerHTML;
+    
+    // 1. Show immediate visual feedback
+    btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
+    btn.disabled = true;
+
+    // 2. Detect Mobile Environment
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                    || window.innerWidth <= 768 
+                    || window.matchMedia('(display-mode: standalone)').matches 
+                    || window.navigator.standalone;
+
+    // 3. Execute Auth Strategy
+    if (isMobile) {
+        // MOBILE / PWA: MUST use redirect. Popups are incredibly unreliable here.
+        signInWithRedirect(auth, googleProvider).catch((error) => {
+            console.error('[Auth] Redirect trigger error:', error);
+            showToast("Failed to initiate sign-in. Please try again.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+        // Note: Page will navigate away. Code stops here on success.
+    } else {
+        // DESKTOP: Use synchronous popup
+        signInWithPopup(auth, googleProvider)
+            .then(async (result) => {
+                await setupNewUser(result.user);
+                showToast("Signed in with Google!", "success");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            })
+            .catch((error) => {
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showToast("Sign-in cancelled.", "warning");
+                } else if (error.code !== 'auth/cancelled-popup-request') {
+                    console.error('[Auth] Sign-in error:', error);
+                    showToast("Sign-in failed: " + error.message, "error");
+                }
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+    }
 };
 
 // ── Logout ──────────────────────────────────
