@@ -354,4 +354,18 @@ export const modalsHtml = `
             </div>
         </div>
     </div>
+    <div id="calendar-day-details-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
+            <div class="flex justify-between items-start mb-4">
+                <h2 id="calendar-day-title" class="text-2xl font-bold text-white">Attendance Detail</h2>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl" aria-label="Close modal">&times;</button>
+            </div>
+            <div id="calendar-day-log" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                <!-- Log entries will be injected here -->
+            </div>
+            <div class="flex justify-end mt-6">
+                 <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Close">Close</button>
+            </div>
+        </div>
+    </div>
 `;
