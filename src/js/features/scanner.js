@@ -72,6 +72,12 @@ export async function handleTimetableScan(event) {
                 try {
                     // Strips potential introductory text/markdown and handles edge cases
                     let jsonStr = aiResponseText;
+                    
+                    // Remove markdown code blocks if present
+                    if (jsonStr.includes('```')) {
+                        jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '');
+                    }
+                    
                     if (jsonStr.includes('[')) {
                         jsonStr = jsonStr.substring(jsonStr.indexOf('['), jsonStr.lastIndexOf(']') + 1);
                     }

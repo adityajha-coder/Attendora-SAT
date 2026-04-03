@@ -3,7 +3,7 @@ export const dashboardHtml = `
         <div class="relative min-h-screen md:flex">
             <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden"></div>
             
-            <aside id="sidebar" class="w-64 flex-shrink-0 bg-black/40 backdrop-blur-xl border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 transform -translate-x-full transition-all duration-300 ease-in-out">
+            <aside id="sidebar" class="w-64 flex-shrink-0 sidebar-theme border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 transform -translate-x-full transition-all duration-300 ease-in-out">
                 <div class="h-20 flex items-center justify-between border-b border-white/5 px-6">
                      <a href="#" class="flex items-center gap-3">
                         <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -16,7 +16,7 @@ export const dashboardHtml = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <nav id="sidebar-nav" class="flex-1 px-4 py-6 space-y-2">
+                <nav id="sidebar-nav" class="px-4 pt-6 pb-2 space-y-2">
                     <a href="#overview" class="sidebar-link active flex items-center gap-3 px-4 py-3" aria-label="Overview"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg><span>Overview</span></a>
                     <a href="#schedule" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Schedule"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>My Schedule</span></a>
                     <a href="#courses" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Courses"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg><span>My Courses</span></a>
@@ -27,10 +27,19 @@ export const dashboardHtml = `
                     <a href="#gpa" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="GPA Calculator"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h3m-3-10l-1.5-1.5a1.5 1.5 0 00-2.12 0L9 7m0 10l-1.5 1.5a1.5 1.5 0 01-2.12 0L4 17m11-6l1.5 1.5a1.5 1.5 0 010 2.12L15 17m-6 0h2m5-11l-2.09-2.09a1.5 1.5 0 00-2.12 0L9 7m-5 5h2m2 0h2" /></svg><span>GPA Calculator</span></a>
                     <a href="#profile" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Profile"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span>My Profile</span></a>
                 </nav>
-                <div class="px-4 py-6 border-t border-white/10 mt-auto">
-                    <a id="report-bug-btn" href="https://mail.google.com/mail/?view=cm&to=attendora.help@gmail.com&su=Bug%20Report%20-%20Attendora&body=Please%20describe%20the%20bug%20you%20encountered%3A%0A%0ASteps%20to%20reproduce%3A%0A1.%20%0A2.%20%0A3.%20%0A%0AExpected%20behavior%3A%0A%0AActual%20behavior%3A%0A" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-3 py-3 rounded-lg transition-colors mb-2 sidebar-link text-white hover:text-white no-underline" aria-label="Report a Bug"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.75-2.96l-6.93-12a2 2 0 00-3.5 0l-6.93 12A2 2 0 005.07 19z" /></svg><span>Report Bug</span></a>
-                    <button id="settings-btn" class="w-full flex items-center justify-center gap-3 py-3 rounded-lg transition-colors mb-2 sidebar-link" aria-label="Open Settings"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>Settings</button>
-                    <button id="logout-btn" class="w-full flex items-center justify-center gap-3 py-3 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-lg transition-colors" aria-label="Logout"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>Logout</button>
+                <div class="px-4 py-4 border-t border-white/10 space-y-1">
+                    <a id="report-bug-btn" href="https://mail.google.com/mail/?view=cm&to=attendora.help@gmail.com&su=Bug%20Report%20-%20Attendora&body=Please%20describe%20the%20bug%20you%20encountered%3A%0A%0ASteps%20to%20reproduce%3A%0A1.%20%0A2.%20%0A3.%20%0A%0AExpected%20behavior%3A%0A%0AActual%20behavior%3A%0A" target="_blank" rel="noopener noreferrer" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors sidebar-link text-white no-underline" aria-label="Report a Bug">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.75-2.96l-6.93-12a2 2 0 00-3.5 0l-6.93 12A2 2 0 005.07 19z" /></svg>
+                        <span>Report Bug</span>
+                    </a>
+                    <button id="settings-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors sidebar-link text-white text-left" aria-label="Open Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <span>Settings</span>
+                    </button>
+                    <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-red-400 hover:bg-red-500/20 hover:text-red-300 text-left" aria-label="Logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        <span>Logout</span>
+                    </button>
                 </div>
             </aside>
 
@@ -44,20 +53,21 @@ export const dashboardHtml = `
                 </div>
                 
                 <div id="overview-view" class="dashboard-view active">
-                    <div class="flex flex-col items-center text-center mb-10 pt-4">
+                    <div class="relative flex flex-col items-center text-center mb-10 pt-4 px-4 overflow-visible">
+                        <!-- Minimalist Streak Indicator -->
+                        <div id="top-streak-indicator" class="absolute top-0 right-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/[0.03] border border-white/5 text-white font-bold text-xs shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95 translate-y-[-12px]">
+                            <span id="top-streak-count" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
+                            <span class="text-sm filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                        </div>
+
                         <div class="mb-6 relative">
                              <h1 id="welcome-message" class="text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-2xl">Welcome!</h1>
                              <div class="h-1.5 w-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mt-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
                         </div>
                         <p class="text-gray-400 text-lg max-w-md leading-relaxed mb-6">Here's your smart summary for today.</p>
-                        
-                        <div id="top-streak-indicator" class="inline-flex items-center gap-3 px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-lg shadow-xl backdrop-blur-md transition-transform hover:scale-105 active:scale-95">
-                            <span id="top-streak-count" class="text-2xl text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
-                            <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]">🔥</span>
-                        </div>
                     </div>
 
-                    <div id="goal-oriented-card" class="card p-6 rounded-xl mb-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 hidden no-hover">
+                    <div id="goal-oriented-card" class="card p-6 rounded-xl mb-6 hidden no-hover">
                         <h3 class="text-xl font-bold text-white mb-2">Smart Goal</h3>
                         <p id="goal-text" class="text-cyan-300 text-base"></p>
                     </div>

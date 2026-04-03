@@ -4,8 +4,8 @@
     --background-color: #000010;
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
-    --card-background: rgba(15, 20, 55, 0.7);
-    --card-border: rgba(255, 255, 255, 0.08);
+    --card-background: rgba(0, 0, 0, 0.3);
+    --card-border: rgba(255, 255, 255, 0.05);
     --sidebar-background: rgba(5, 7, 20, 0.4);
     --input-background: rgba(255, 255, 255, 0.05);
     --danger-color: #ff5f5f;
@@ -114,6 +114,13 @@ body {
     color: var(--text-primary);
     font-weight: 600;
     border-right: 3px solid var(--primary-color-start);
+}
+
+.sidebar-theme {
+    background-color: var(--sidebar-background);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
 .dashboard-view {
@@ -349,14 +356,15 @@ select option {
     color: var(--text-secondary) !important;
 }
 
-.light-mode .bg-black\/30 {
+.light-mode .sidebar-theme {
     background-color: var(--sidebar-background);
-    border-color: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.06) !important;
 }
 
+.light-mode .border-white\/5,
 .light-mode .border-white\/10,
 .light-mode .border-white\/20 {
-    border-color: var(--card-border);
+    border-color: var(--card-border) !important;
 }
 
 .light-mode .bg-white\/5 {

@@ -4,8 +4,8 @@
   "description": "Smart Attendance Tracker",
   "main": "index.html",
   "scripts": {
-    "dev": "node --env-file=.env server.mjs",
-    "start": "node --env-file=.env server.mjs"
+    "dev": "node --env-file=server/.env server/server.mjs",
+    "start": "node --env-file=server/.env server/server.mjs"
   },
   "devDependencies": {
     "vercel": "^39.0.0"
