@@ -29,6 +29,13 @@ export const signInWithGoogle = () => {
     const btn = document.getElementById('google-signin-btn');
     const originalText = btn.innerHTML;
     
+    // Explicit warning for local network testing (192.168.x.x) on mobile
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        showToast("Local IP testing blocks Firebase Auth. Please use localhost, ngrok, or deploy to Vercel.", "error");
+        console.warn("[Auth] Firebase Auth requires HTTPS or exact 'localhost'. Testing via mobile over local IP will drop auth state.");
+        return;
+    }
+
     // 1. Show immediate visual feedback
     btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
     btn.disabled = true;
@@ -44,10 +51,13 @@ export const signInWithGoogle = () => {
         .catch((error) => {
             if (error.code === 'auth/popup-closed-by-user') {
                 showToast("Sign-in cancelled.", "warning");
+            } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
+               showToast("Browser blocked secure login. Must use HTTPS/Vercel on mobile.", "error");
             } else if (error.code !== 'auth/cancelled-popup-request') {
                 console.error('[Auth] Sign-in error:', error);
+                
                 // Last ditch fallback if popup is violently blocked by browser policies
-                if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
+                if (error.code === 'auth/popup-blocked') {
                     showToast("Redirecting to login...", "warning");
                     signInWithRedirect(auth, googleProvider);
                     return;
