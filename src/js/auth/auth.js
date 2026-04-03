@@ -33,42 +33,30 @@ export const signInWithGoogle = () => {
     btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
     btn.disabled = true;
 
-    // 2. Detect Mobile Environment
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-                    || window.innerWidth <= 768 
-                    || window.matchMedia('(display-mode: standalone)').matches 
-                    || window.navigator.standalone;
-
-    // 3. Execute Auth Strategy
-    if (isMobile) {
-        // MOBILE / PWA: MUST use redirect. Popups are incredibly unreliable here.
-        signInWithRedirect(auth, googleProvider).catch((error) => {
-            console.error('[Auth] Redirect trigger error:', error);
-            showToast("Failed to initiate sign-in. Please try again.", "error");
+    // 2. Execute Auth Strategy (Popup ONLY - universally supported when called synchronously)
+    signInWithPopup(auth, googleProvider)
+        .then(async (result) => {
+            await setupNewUser(result.user);
+            showToast("Signed in with Google!", "success");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        })
+        .catch((error) => {
+            if (error.code === 'auth/popup-closed-by-user') {
+                showToast("Sign-in cancelled.", "warning");
+            } else if (error.code !== 'auth/cancelled-popup-request') {
+                console.error('[Auth] Sign-in error:', error);
+                // Last ditch fallback if popup is violently blocked by browser policies
+                if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
+                    showToast("Redirecting to login...", "warning");
+                    signInWithRedirect(auth, googleProvider);
+                    return;
+                }
+                showToast("Sign-in failed. Please try again.", "error");
+            }
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
-        // Note: Page will navigate away. Code stops here on success.
-    } else {
-        // DESKTOP: Use synchronous popup
-        signInWithPopup(auth, googleProvider)
-            .then(async (result) => {
-                await setupNewUser(result.user);
-                showToast("Signed in with Google!", "success");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            })
-            .catch((error) => {
-                if (error.code === 'auth/popup-closed-by-user') {
-                    showToast("Sign-in cancelled.", "warning");
-                } else if (error.code !== 'auth/cancelled-popup-request') {
-                    console.error('[Auth] Sign-in error:', error);
-                    showToast("Sign-in failed: " + error.message, "error");
-                }
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-    }
 };
 
 // ── Logout ──────────────────────────────────
