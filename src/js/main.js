@@ -10,9 +10,10 @@ import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle, setupAuthListener } from './auth/auth.js';
-import { auth } from './core/firebase.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
+import { auth, db } from './core/firebase.js';
+import { onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
@@ -51,14 +52,44 @@ const showAuthPage = () => {
     dismissLoader();
 };
 
-const initializeAttendora = () => {
+// Ensure new users from redirect have Firestore profiles created
+async function setupNewUserFromRedirect(user) {
+    try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                name: user.displayName || '',
+                email: user.email,
+                course: '',
+                year: '',
+                createdAt: new Date().toISOString()
+            });
+        }
+    } catch (e) {
+        console.warn('[Setup] Failed to register new user docs:', e);
+    }
+}
+
+const initializeAttendora = async () => {
     document.getElementById('app').innerHTML = authHtml + landingHtml + dashboardHtml + modalsHtml;
 
     loadData();
     setupEventListeners();
 
-    // Trigger non-blocking check for returning redirect users (Mobile)
-    setupAuthListener();
+    // EXTREMELY CRITICAL FOR MOBILE: 
+    // Wait for any pending Google Redirects to evaluate *before* checking local auth state.
+    // If we don't await this, Firebase will initially assume logged out, 
+    // flash the login screen, and break the user experience.
+    try {
+        const redirectResult = await getRedirectResult(auth);
+        if (redirectResult && redirectResult.user) {
+            console.log('[Auth] Detected returning mobile user');
+            await setupNewUserFromRedirect(redirectResult.user);
+        }
+    } catch (error) {
+        console.warn('[Auth] Redirect processing failed:', error);
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
