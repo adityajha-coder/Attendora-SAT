@@ -32,16 +32,40 @@ export const signInWithGoogle = () => {
     // Explicit warning for local network testing (192.168.x.x) on mobile
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         showToast("Local IP testing blocks Firebase Auth. Please use localhost, ngrok, or deploy to Vercel.", "error");
-        console.warn("[Auth] Firebase Auth requires HTTPS or exact 'localhost'. Testing via mobile over local IP will drop auth state.");
         return;
     }
 
-    // 1. Show immediate visual feedback
+    // Detect Mobile Environment
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                    || window.innerWidth <= 768 
+                    || window.matchMedia('(display-mode: standalone)').matches 
+                    || window.navigator.standalone;
+
+    // 1. MOBILE/PWA MUST BE REDIRECT! 
+    // Android kills background browser tabs to save memory when the Google sign-in custom tab opens.
+    // If we use Popup, the app restarts and loses the login context.
+    if (isMobile) {
+        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
+        btn.disabled = true;
+        
+        signInWithRedirect(auth, googleProvider).catch(error => {
+            console.error('[Auth] Redirect error:', error);
+            showToast("Failed to initiate sign in.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+        return;
+    }
+
+    // 2. DESKTOP Uses Popup
+    // Start popup IMMEDIATELY to prevent Safari blocking
+    const authPromise = signInWithPopup(auth, googleProvider);
+
     btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
     btn.disabled = true;
 
-    // 2. Execute Auth Strategy (Popup ONLY - universally supported when called synchronously)
-    signInWithPopup(auth, googleProvider)
+    // Handle the result
+    authPromise
         .then(async (result) => {
             await setupNewUser(result.user);
             showToast("Signed in with Google!", "success");
@@ -51,17 +75,8 @@ export const signInWithGoogle = () => {
         .catch((error) => {
             if (error.code === 'auth/popup-closed-by-user') {
                 showToast("Sign-in cancelled.", "warning");
-            } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
-               showToast("Browser blocked secure login. Must use HTTPS/Vercel on mobile.", "error");
             } else if (error.code !== 'auth/cancelled-popup-request') {
                 console.error('[Auth] Sign-in error:', error);
-                
-                // Last ditch fallback if popup is violently blocked by browser policies
-                if (error.code === 'auth/popup-blocked') {
-                    showToast("Redirecting to login...", "warning");
-                    signInWithRedirect(auth, googleProvider);
-                    return;
-                }
                 showToast("Sign-in failed. Please try again.", "error");
             }
             btn.innerHTML = originalText;
