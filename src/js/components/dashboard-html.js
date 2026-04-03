@@ -46,11 +46,11 @@ export const dashboardHtml = `
                             <h1 id="welcome-message" class="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome!</h1>
                             <p class="text-gray-400">Here's your smart summary for today. Drag cards to rearrange.</p>
                         </div>
-                        <div id="cloud-sync-indicator" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 transition-all duration-300">
-                            <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M1 12.5A4.5 4.5 0 005.5 17H15a4 4 0 001.866-7.539 3.504 3.504 0 00-4.504-4.272A4.5 4.5 0 004.06 8.235 4.502 4.502 0 001 12.5z" />
-                            </svg>
-                            <span class="text-xs text-gray-500">Cloud saved</span>
+                        <div class="flex items-center gap-4">
+                            <div id="top-streak-indicator" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-bold text-sm">
+                                <span id="top-streak-count">0</span>
+                                <span class="text-base">🔥</span>
+                            </div>
                         </div>
                     </div>
 

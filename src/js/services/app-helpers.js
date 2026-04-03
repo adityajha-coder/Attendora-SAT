@@ -44,7 +44,13 @@ export function updateOverviewStats() {
         absentBar.style.width = `${(absent / totalTracked) * 100}%`;
     }
 
-    document.getElementById('overview-streaks').textContent = longestStreak;
+    // Top Bar Streak logic
+    const topStreakCount = document.getElementById('top-streak-count');
+    const topStreakIndicator = document.getElementById('top-streak-indicator');
+    if (topStreakCount) topStreakCount.textContent = longestStreak;
+    if (topStreakIndicator) {
+        topStreakIndicator.classList.toggle('hidden', longestStreak === 0);
+    }
 }
 
 export function updateGoalOrientedCard() {
@@ -260,15 +266,6 @@ export function renderOverviewCards() {
                     </div>
                 </div>
             </div>`,
-        'overview-card-streaks': `
-            <div id="overview-card-streaks" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
-                <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Current Momentum</h3>
-                <div class="flex items-center gap-3">
-                    <p id="overview-streaks" class="text-5xl font-black text-orange-400">0</p>
-                    <span class="text-3xl">🔥</span>
-                </div>
-                <p class="text-[10px] mt-6 text-gray-500 font-bold uppercase tracking-tight italic">Unbroken session streak</p>
-            </div>`,
         'overview-card-countdown': `
             <div id="overview-card-countdown" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
                 <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Upcoming</h3>
@@ -279,12 +276,9 @@ export function renderOverviewCards() {
                 </div>
             </div>`
     };
-    const requiredOrder = ['overview-card-attendance', 'overview-card-classes', 'overview-card-streaks', 'overview-card-countdown'];
+    const requiredOrder = ['overview-card-attendance', 'overview-card-classes', 'overview-card-countdown'];
 
     let dashboardOrder = state.settings.dashboardOrder || [];
-    const indexOfCourses = dashboardOrder.indexOf('overview-card-courses');
-    if (indexOfCourses !== -1) dashboardOrder[indexOfCourses] = 'overview-card-classes';
-
     dashboardOrder = dashboardOrder.filter(id => requiredOrder.includes(id));
     if (dashboardOrder.length !== requiredOrder.length) {
         dashboardOrder = requiredOrder;
