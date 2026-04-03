@@ -12,7 +12,7 @@ export function updateOverviewStats() {
     const uniqueCourses = [...new Set(state.schedule.map(item => item.name))];
     let longestStreak = 0;
     if (uniqueCourses.length > 0) {
-            longestStreak = Math.max(0, ...uniqueCourses.map(calculateStreak));
+        longestStreak = Math.max(0, ...uniqueCourses.map(calculateStreak));
     }
     let percentageColorClass = 'text-red-400';
     if (overallPercentage >= 90) percentageColorClass = 'text-green-400';
@@ -21,15 +21,36 @@ export function updateOverviewStats() {
     const attendanceEl = document.getElementById('overview-attendance');
     attendanceEl.classList.remove('text-red-400', 'text-yellow-400', 'text-green-400');
     attendanceEl.classList.add(percentageColorClass);
+
+    const attendanceBar = document.getElementById('overview-attendance-bar');
+    if (attendanceBar) {
+        attendanceBar.style.width = `${overallPercentage}%`;
+        attendanceBar.className = `h-1.5 rounded-full transition-all duration-1000 ${percentageColorClass.replace('text-', 'bg-')}`;
+    }
     
     const totalClassesEl = document.getElementById('overview-total-classes');
-    if(totalClassesEl) totalClassesEl.textContent = total;
+    if (totalClassesEl) totalClassesEl.textContent = total;
     const presentClassesEl = document.getElementById('overview-present-classes');
-    if(presentClassesEl) presentClassesEl.textContent = present;
+    if (presentClassesEl) presentClassesEl.textContent = present;
     const absentClassesEl = document.getElementById('overview-absent-classes');
-    if(absentClassesEl) absentClassesEl.textContent = absent;
-    
-    document.getElementById('overview-streaks').textContent = `${longestStreak} 🔥`;
+    if (absentClassesEl) absentClassesEl.textContent = absent;
+
+    // Redesigned: Professional Segmented Progress Bar logic
+    const totalTracked = present + absent;
+    const presentBar = document.getElementById('overview-present-bar');
+    const absentBar = document.getElementById('overview-absent-bar');
+    if (presentBar && absentBar && totalTracked > 0) {
+        presentBar.style.width = `${(present / totalTracked) * 100}%`;
+        absentBar.style.width = `${(absent / totalTracked) * 100}%`;
+    }
+
+    // Top Bar Streak logic
+    const topStreakCount = document.getElementById('top-streak-count');
+    const topStreakIndicator = document.getElementById('top-streak-indicator');
+    if (topStreakCount) topStreakCount.textContent = longestStreak;
+    if (topStreakIndicator) {
+        topStreakIndicator.classList.toggle('hidden', longestStreak === 0);
+    }
 }
 
 export function updateGoalOrientedCard() {
@@ -82,7 +103,7 @@ export function updateNextClassCountdown() {
     if (!nextClass) {
         countdownEl.textContent = 'No classes';
         if (countdownNameEl) {
-                countdownNameEl.textContent = state.schedule.length > 0 ? 'Wait for the next day' : 'Add classes to schedule.';
+            countdownNameEl.textContent = state.schedule.length > 0 ? 'Wait for the next day' : 'Add classes to schedule.';
         }
         return;
     }
@@ -133,14 +154,14 @@ export function renderArchivedTermsList() {
 }
 
 export function toggleArchivedTermsList() {
-        const listContainer = document.getElementById('archived-terms-list');
-        listContainer.classList.toggle('hidden');
-        const button = document.getElementById('view-archived-terms-btn');
-        if (!listContainer.classList.contains('hidden')) {
-            button.innerHTML = `Hide Archived Terms (<span id="archived-count">${state.archivedTerms.length}</span>)`;
-        } else {
-            button.innerHTML = `View Archived Terms (<span id="archived-count">${state.archivedTerms.length}</span>)`;
-        }
+    const listContainer = document.getElementById('archived-terms-list');
+    listContainer.classList.toggle('hidden');
+    const button = document.getElementById('view-archived-terms-btn');
+    if (!listContainer.classList.contains('hidden')) {
+        button.innerHTML = `Hide Archived Terms (<span id="archived-count">${state.archivedTerms.length}</span>)`;
+    } else {
+        button.innerHTML = `View Archived Terms (<span id="archived-count">${state.archivedTerms.length}</span>)`;
+    }
 }
 
 export function updateTermDatesUI() {
@@ -153,7 +174,7 @@ export function updateTermDatesUI() {
         dateText = `${new Date(termStart + 'T00:00:00').toLocaleDateString()} - ${new Date(termEnd + 'T00:00:00').toLocaleDateString()}`;
     }
     document.getElementById('current-term-dates').textContent = dateText;
-    renderArchivedTermsList(); 
+    renderArchivedTermsList();
 }
 
 export function saveTermDates() {
@@ -170,7 +191,7 @@ export function saveTermDates() {
         updateTermDatesUI();
         window.dispatchEvent(new CustomEvent("attendora-update-ui"));
         showToast("Term dates saved!");
-        toggleModal(document.getElementById('settings-modal'), false); 
+        toggleModal(document.getElementById('settings-modal'), false);
     } else {
         showToast("Please select both start and end dates.", "error");
     }
@@ -197,47 +218,74 @@ export function archiveCurrentTerm() {
             state.history = [];
             state.assignments = [];
             state.gpaCourses = [];
-            state.achievements = {}; 
+            state.achievements = {};
             state.settings.termStartDate = new Date().toISOString().slice(0, 10);
             state.settings.termEndDate = new Date(new Date().setMonth(new Date().getMonth() + 4)).toISOString().slice(0, 10);
             saveData();
             updateTermDatesUI();
             window.dispatchEvent(new CustomEvent("attendora-update-ui"));
             showToast(`Term '${termName}' archived! Start fresh now.`);
-            toggleModal(document.getElementById('settings-modal'), false); 
+            toggleModal(document.getElementById('settings-modal'), false);
         }
     );
 }
 
 export function renderOverviewCards() {
     const grid = document.getElementById('overview-grid');
-    grid.innerHTML = ''; 
+    grid.innerHTML = '';
     const cardHTML = {
-        'overview-card-attendance': `<div id="overview-card-attendance" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-blue-900/40 to-blue-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">ATTENDANCE RATIO</h3><p id="overview-attendance" class="text-4xl font-bold text-green-400 mt-1 pointer-events-none">-%</p></div>`,
-        'overview-card-classes': `<div id="overview-card-classes" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-purple-900/40 to-purple-800/40" draggable="true">
-            <h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">TOTAL CLASSES</h3>
-            <p id="overview-total-classes" class="text-4xl font-bold mt-1 pointer-events-none mb-1 text-white">0</p>
-            <div class="flex gap-4 text-sm font-semibold pointer-events-none">
-                <span class="text-green-400">P: <span id="overview-present-classes">0</span></span>
-                <span class="text-red-400">A: <span id="overview-absent-classes">0</span></span>
-            </div>
-        </div>`,
-        'overview-card-streaks': `<div id="overview-card-streaks" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-orange-900/40 to-orange-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">LONGEST STREAK</h3><p id="overview-streaks" class="text-4xl font-bold text-orange-400 mt-1 pointer-events-none">0 🔥</p></div>`,
-        'overview-card-countdown': `<div id="overview-card-countdown" class="card p-6 rounded-xl overview-card bg-gradient-to-r from-indigo-900/40 to-indigo-800/40" draggable="true"><h3 class="text-sm font-semibold pointer-events-none" style="color: var(--text-secondary);">NEXT CLASS IN</h3><p id="overview-countdown" class="text-2xl font-bold text-cyan-400 mt-1 pointer-events-none">No upcoming classes</p><p id="overview-countdown-classname" class="text-xs pointer-events-none" style="color: var(--text-secondary);"></p></div>`
+        'overview-card-attendance': `
+            <div id="overview-card-attendance" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
+                <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Attendance Score</h3>
+                <div class="flex items-baseline gap-2">
+                    <p id="overview-attendance" class="text-5xl font-black text-green-400">-%</p>
+                    <span class="text-xs text-gray-500 font-bold uppercase">overall</span>
+                </div>
+                <div class="mt-6 w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                    <div id="overview-attendance-bar" class="bg-green-400 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>`,
+        'overview-card-classes': `
+            <div id="overview-card-classes" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
+                <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Academic Load</h3>
+                <div class="flex items-baseline gap-2">
+                    <p id="overview-total-classes" class="text-5xl font-black text-white">0</p>
+                    <span class="text-xs text-gray-500 font-bold uppercase">Lectures</span>
+                </div>
+                <!-- Segmented Progress Bar -->
+                <div class="mt-4 w-full h-1.5 flex rounded-full overflow-hidden bg-white/5">
+                    <div id="overview-present-bar" class="h-full bg-green-500 transition-all duration-1000" style="width: 0%"></div>
+                    <div id="overview-absent-bar" class="h-full bg-red-500 transition-all duration-1000" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between mt-3 text-[10px] font-black uppercase tracking-widest">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-green-500">Attended: <span id="overview-present-classes" class="text-white ml-0.5">0</span></span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-red-500">Skipped: <span id="overview-absent-classes" class="text-white ml-0.5">0</span></span>
+                    </div>
+                </div>
+            </div>`,
+        'overview-card-countdown': `
+            <div id="overview-card-countdown" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
+                <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Upcoming</h3>
+                <p id="overview-countdown" class="text-4xl font-black text-cyan-400 truncate tracking-tighter">Preparing...</p>
+                <div class="flex items-center gap-2 mt-6">
+                    <div class="h-2 w-2 rounded-full bg-cyan-500"></div>
+                    <p id="overview-countdown-classname" class="text-[11px] font-black uppercase truncate" style="color: var(--text-secondary);"></p>
+                </div>
+            </div>`
     };
-    const requiredOrder = ['overview-card-attendance', 'overview-card-classes', 'overview-card-streaks', 'overview-card-countdown'];
-    
+    const requiredOrder = ['overview-card-attendance', 'overview-card-classes', 'overview-card-countdown'];
+
     let dashboardOrder = state.settings.dashboardOrder || [];
-    const indexOfCourses = dashboardOrder.indexOf('overview-card-courses');
-    if (indexOfCourses !== -1) dashboardOrder[indexOfCourses] = 'overview-card-classes';
-    
     dashboardOrder = dashboardOrder.filter(id => requiredOrder.includes(id));
     if (dashboardOrder.length !== requiredOrder.length) {
         dashboardOrder = requiredOrder;
     }
     state.settings.dashboardOrder = dashboardOrder;
     dashboardOrder.forEach(cardId => {
-        if(cardHTML[cardId]) {
+        if (cardHTML[cardId]) {
             grid.innerHTML += cardHTML[cardId];
         }
     });

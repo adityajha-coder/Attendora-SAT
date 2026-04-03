@@ -1,21 +1,4 @@
 export const modalsHtml = `
-    <div id="forgot-password-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
-        <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
-            <h2 class="text-2xl font-bold text-white mb-4">Forgot Password</h2>
-            <form id="forgot-password-form">
-                <p class="text-gray-300 mb-6">Enter your email address to receive a password reset link.</p>
-                <div class="mb-4">
-                    <label for="reset-contact" class="block mb-2 text-sm font-medium text-gray-300">Email Address</label>
-                    <input type="email" id="reset-contact" class="form-input" required placeholder="name@example.com">
-                </div>
-                <div class="flex justify-end gap-4">
-                    <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
-                    <button type="submit" id="send-reset-code-btn" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Send Reset Email">Send Link</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <div id="confirmation-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
         <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
             <h2 id="confirmation-title" class="text-2xl font-bold text-white mb-4">Are you sure?</h2>
@@ -368,6 +351,20 @@ export const modalsHtml = `
                     <button type="button" id="scan-cancel-btn-2" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
                     <button type="button" id="save-scanned-schedule-btn" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Save scanned schedule">Save Schedule</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div id="calendar-day-details-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
+            <div class="flex justify-between items-start mb-4">
+                <h2 id="calendar-day-title" class="text-2xl font-bold text-white">Attendance Detail</h2>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl" aria-label="Close modal">&times;</button>
+            </div>
+            <div id="calendar-day-log" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                <!-- Log entries will be injected here -->
+            </div>
+            <div class="flex justify-end mt-6">
+                 <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Close">Close</button>
             </div>
         </div>
     </div>

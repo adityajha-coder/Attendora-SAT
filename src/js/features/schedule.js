@@ -11,6 +11,25 @@ export function renderSchedule() {
     if (state.schedule.length === 0) {
         scheduleContainer.classList.add('hidden');
         scheduleEmptyPrompt.classList.remove('hidden');
+        scheduleEmptyPrompt.innerHTML = `
+            <div class="py-20 px-6 text-center">
+                <div class="mb-6 inline-flex p-5 rounded-full bg-cyan-500/10">
+                    <svg class="h-12 w-12 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2.25 2.25 0 002.25-2.25V7a2.25 2.25 0 00-2.25-2.25H5A2.25 2.25 0 002.75 7v11.75A2.25 2.25 0 005 21z" />
+                    </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-white mb-2">Build your Weekly Schedule</h3>
+                <p class="text-gray-400 mb-8 max-w-md mx-auto">Upload a photo of your timetable or add your classes manually to start tracking.</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button id="scan-timetable-prompt-btn" class="btn-primary text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform hover:scale-105">
+                        Scan Timetable (AI)
+                    </button>
+                    <button id="add-class-prompt-btn" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-white">
+                        Add Manually
+                    </button>
+                </div>
+            </div>
+        `;
         return;
     } else {
         scheduleContainer.classList.remove('hidden');

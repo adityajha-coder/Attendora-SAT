@@ -70,12 +70,27 @@ export async function handleTimetableScan(event) {
                 
                 let scannedData = [];
                 try {
-                    // Strip possible markdown wrapping
-                    const cleanedText = aiResponseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    scannedData = JSON.parse(cleanedText);
+                    // Strips potential introductory text/markdown and handles edge cases
+                    let jsonStr = aiResponseText;
+                    
+                    // Remove markdown code blocks if present
+                    if (jsonStr.includes('```')) {
+                        jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '');
+                    }
+                    
+                    if (jsonStr.includes('[')) {
+                        jsonStr = jsonStr.substring(jsonStr.indexOf('['), jsonStr.lastIndexOf(']') + 1);
+                    }
+                    
+                    // Handle models that might use single quotes instead of doubles
+                    if (!jsonStr.includes('"') && jsonStr.includes("'")) {
+                        jsonStr = jsonStr.replace(/'/g, '"');
+                    }
+                    
+                    scannedData = JSON.parse(jsonStr);
                 } catch (parseError) {
                     console.error("Failed to parse AI response: ", aiResponseText);
-                    showToast("Failed to parse timetable data from AI.", "error");
+                    showToast("AI returned invalid format. Please try again or use a clearer photo.", "error");
                     scanTimetableModal.querySelector('#scan-upload-view').classList.remove('hidden');
                     scanTimetableModal.querySelector('#scan-processing-view').classList.add('hidden');
                     return;

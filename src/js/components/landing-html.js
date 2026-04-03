@@ -21,7 +21,7 @@ export const landingHtml = `
                 <div class="container mx-auto px-6 z-10">
                     <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 hero-glow leading-tight font-brand">Smart Attendance Tracking</h1>
                     <p class="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-8">Stay on top of your classes with predictive insights, goal tracking, and motivational achievements.</p>
-                    <button id="go-to-signup-btn" class="btn-primary text-white font-bold py-4 px-10 rounded-full text-lg">Get Started for Free</button>
+                    <button id="go-to-login-landing-btn" class="btn-primary text-white font-bold py-4 px-10 rounded-full text-lg">Sign In to Get Started</button>
                 </div>
                 <div class="absolute bottom-[-150px] md:bottom-[-250px] right-[-150px] md:right-[-250px] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-gradient-to-tl from-blue-500/20 to-purple-600/20 rounded-full blur-3xl opacity-60"></div>
                 <div class="absolute top-[-100px] left-[-150px] w-[300px] h-[300px] bg-gradient-to-br from-indigo-500/20 to-sky-500/20 rounded-full blur-3xl opacity-50"></div>

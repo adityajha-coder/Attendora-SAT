@@ -1,255 +1,135 @@
 import { state, saveData } from '../core/state.js';
-import { showToast, toggleModal } from '../ui/ui.js';
+import { showToast } from '../ui/ui.js';
 import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
-import { auth, db } from '../core/firebase.js';
-import { forceCloudSave } from '../services/cloud-sync.js';
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    sendPasswordResetEmail,
-    sendEmailVerification
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import {
-    doc,
-    setDoc,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { auth, db, googleProvider } from '../core/firebase.js';
+import { signOut, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-export let forgotPasswordContact = null;
-
-export const loginUser = async (email, password) => {
+// ── Google Sign-In ──────────────────────────
+export const signInWithGoogle = async () => {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
 
-        // Enforce OTP/Email Verification ONLY for new accounts (created after April 1, 2026)
-        const creationTime = new Date(userCredential.user.metadata.creationTime);
-        const enforcementDate = new Date("2026-04-01T00:00:00Z");
-        if (creationTime > enforcementDate && !userCredential.user.emailVerified) {
-             await signOut(auth);
-             throw new Error("Please verify your email address. We sent a verification link to your email.");
+        // First-time user → create Firestore profile
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                name: user.displayName || '',
+                email: user.email,
+                course: '',
+                year: '',
+                createdAt: new Date().toISOString()
+            });
         }
 
-        showToast("Logged in successfully!", "success");
-        // onAuthStateChanged in main.js handles the rest
-        return userCredential.user;
+        // Populate local state
+        state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
+        state.userProfile.contact = user.email;
+        saveData();
+
+        showToast("Signed in with Google!", "success");
     } catch (error) {
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-            showToast("Account not found or invalid password! Please 'Sign Up' first if you don't have an account.", "error");
-        } else {
-            showToast(error.message, "error");
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast("Sign-in cancelled.", "warning");
+        } else if (error.code !== 'auth/cancelled-popup-request') {
+            showToast("Sign-in failed: " + error.message, "error");
         }
-        throw error;
     }
 };
 
+// ── Logout ──────────────────────────────────
 export const logoutUser = async () => {
     try {
         await signOut(auth);
         localStorage.removeItem('loggedIn');
-        localStorage.removeItem('attendoraState'); // Clear local data to prevent leak
+        localStorage.removeItem('attendoraState');
         window.location.reload();
     } catch (error) {
         showToast("Error logging out: " + error.message, "error");
     }
 };
 
-export const handleSignup = async (e) => {
-    e.preventDefault();
-    
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn ? submitBtn.innerText : 'Sign Up';
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    }
-
-    const name = document.getElementById('signup-name').value;
-    const email = document.getElementById('signup-contact').value;
-    const password = document.getElementById('signup-password').value;
-    const confirmPassword = document.getElementById('signup-password-confirm').value;
-    const course = document.getElementById('signup-course').value;
-    const year = document.getElementById('signup-year').value;
-
-    if (password !== confirmPassword) {
-        showToast("Passwords do not match.", "error");
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = originalText; }
-        return;
-    }
-
-    if (!email.includes('@')) {
-        showToast("Please use a valid email address for Firebase Auth.", "error");
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = originalText; }
-        return;
-    }
-
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Save additional user info to Firestore
-        await setDoc(doc(db, "users", user.uid), {
-            name,
-            email,
-            course,
-            year,
-            createdAt: new Date().toISOString()
-        });
-
-        // Send email verification (OTP) for new accounts
-        await sendEmailVerification(user);
-        
-        // Sign out immediately so they must verify
-        await signOut(auth);
-        
-        // Clear local storage to prevent merging the "other account" data into the new account
-        localStorage.removeItem('attendoraState');
-        localStorage.removeItem('loggedIn');
-
-        showToast("Please verify email for registration", "success");
-        
-        // Switch to login UI
-        document.getElementById('signup-form').classList.add('hidden');
-        document.getElementById('login-form').classList.remove('hidden');
-    } catch (error) {
-        showToast(error.message, "error");
-    } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerText = originalText;
-        }
-    }
-};
-
+// ── Edit Profile Modal ──────────────────────
 export function openEditProfileModal() {
+    if (!auth.currentUser) return showToast("You must be signed in.", "error");
+
     document.getElementById('auth-page').classList.remove('hidden');
     document.getElementById('dashboard-app').classList.add('hidden');
-    document.getElementById('signup-form').classList.remove('hidden');
     document.getElementById('login-form').classList.add('hidden');
-    document.getElementById('signup-name').value = state.userProfile.name || '';
-    document.getElementById('signup-contact').value = state.userProfile.contact || '';
-    document.getElementById('signup-course').value = state.userProfile.course || '';
-    document.getElementById('signup-year').value = state.userProfile.year || '';
-    const passwordInput = document.getElementById('signup-password');
-    const confirmPasswordInput = document.getElementById('signup-password-confirm');
-    passwordInput.value = '';
-    confirmPasswordInput.value = '';
-    passwordInput.removeAttribute('required');
-    confirmPasswordInput.removeAttribute('required');
-    document.querySelector('#signup-form .mb-4:has(#signup-password)').classList.add('hidden');
-    document.querySelector('#signup-form .mb-6:has(#signup-password-confirm)').classList.add('hidden');
-    document.querySelector('#signup-form h2').textContent = 'Update Profile Details';
-    document.querySelector('#signup-form p').textContent = 'Modify your personal and institutional information.';
-    document.getElementById('show-login').parentElement.classList.add('hidden');
-    const signupButton = document.querySelector('#signup-form button[type="submit"]');
-    signupButton.textContent = 'Save Changes';
+    document.getElementById('edit-profile-form').classList.remove('hidden');
 
-    // Add Cancel button logic for a better user experience
-    let cancelBtn = document.getElementById('cancel-edit-profile-btn');
-    if (!cancelBtn) {
-        cancelBtn = document.createElement('button');
-        cancelBtn.id = 'cancel-edit-profile-btn';
-        cancelBtn.type = 'button';
-        cancelBtn.className = 'w-full bg-white/10 text-white font-bold py-3 px-6 rounded-lg mt-4 border border-white/20 hover:bg-white/20 transition-colors';
-        cancelBtn.textContent = 'Cancel Edit';
-        signupButton.parentNode.insertBefore(cancelBtn, signupButton.nextSibling);
-    }
-    cancelBtn.classList.remove('hidden');
+    // Populate fields
+    document.getElementById('edit-name').value = state.userProfile.name || '';
+    document.getElementById('edit-course').value = state.userProfile.course || '';
+    document.getElementById('edit-year').value = state.userProfile.year || '';
 
-    const finishEdit = () => {
-        document.getElementById('show-login').parentElement.classList.remove('hidden');
-        document.querySelector('#signup-form h2').textContent = 'Create Account';
-        document.querySelector('#signup-form p').textContent = 'Start your journey with Attendora.';
-        signupButton.textContent = 'Sign Up';
-        document.getElementById('signup-form').onsubmit = handleSignup;
-        passwordInput.setAttribute('required', '');
-        confirmPasswordInput.setAttribute('required', '');
-        document.querySelector('#signup-form .mb-4:has(#signup-password)').classList.remove('hidden');
-        document.querySelector('#signup-form .mb-6:has(#signup-password-confirm)').classList.remove('hidden');
-        if (cancelBtn) cancelBtn.classList.add('hidden');
-
-        // Restore dashboard view!
-        document.getElementById('auth-page').classList.add('hidden');
-        document.getElementById('dashboard-app').classList.remove('hidden');
-    };
-
-    cancelBtn.onclick = () => {
-        finishEdit();
-        // Since we didn't save, we should re-render UI to restore any temporary visual changes if there are any
-        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-    };
-
-    document.getElementById('signup-form').onsubmit = (e) => {
+    // Save handler
+    document.getElementById('edit-profile-form').onsubmit = (e) => {
         e.preventDefault();
-        const contact = document.getElementById('signup-contact').value;
-        const name = document.getElementById('signup-name').value;
-        if (!contact) {
-            showToast("Please provide your Email address.", "error");
-            return;
-        }
-        if (!name) {
-            showToast("Please provide your Full Name.", "error");
-            return;
-        }
+        const name = document.getElementById('edit-name').value.trim();
+        if (!name) return showToast("Name cannot be empty.", "error");
+
         state.userProfile.name = name;
-        state.userProfile.contact = contact;
-        state.userProfile.course = document.getElementById('signup-course').value;
-        state.userProfile.year = document.getElementById('signup-year').value;
+        state.userProfile.course = document.getElementById('edit-course').value.trim();
+        state.userProfile.year = document.getElementById('edit-year').value.trim();
         saveData();
-        
-        finishEdit();
 
-        // Use custom event or global to trigger UI update instead of direct main.js import
+        closeEditProfile();
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
+        showToast("Profile updated!", "success");
+    };
 
-        showToast("Profile details updated!", "success");
+    // Cancel handler
+    document.getElementById('cancel-edit-profile-btn').onclick = () => {
+        closeEditProfile();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
     };
 }
 
+function closeEditProfile() {
+    document.getElementById('edit-profile-form').classList.add('hidden');
+    document.getElementById('auth-page').classList.add('hidden');
+    document.getElementById('dashboard-app').classList.remove('hidden');
+}
+
+// ── Render Profile View ─────────────────────
 export function renderProfile() {
     const profile = state.userProfile || {};
     const contact = profile.contact || 'user@example.com';
     const firstLetter = (profile.name || contact).charAt(0).toUpperCase() || 'A';
     const { totalCredits, gpa } = calculateGpa();
-    const totalAttendanceStats = calculateOverallAttendance();
-    const attendancePercentage = totalAttendanceStats.percentage;
-    let statusTier = 'Low Performer';
-    let statusClass = 'bg-red-500/20 text-red-400';
-    if (attendancePercentage >= 90) {
-        statusTier = 'High Performer';
-        statusClass = 'bg-green-500/20 text-green-400';
-    } else if (attendancePercentage >= 75) {
-        statusTier = 'On Track';
-        statusClass = 'bg-yellow-500/20 text-yellow-400';
-    }
+    const stats = calculateOverallAttendance();
+    const pct = stats.percentage;
 
-    const unlockedAchievements = Object.values(ALL_ACHIEVEMENTS).filter(a => state.achievements[a.id]?.unlocked).length;
-    const totalAchievements = Object.keys(ALL_ACHIEVEMENTS).length;
+    let tier = 'Low Performer', cls = 'bg-red-500/20 text-red-400';
+    if (pct >= 90) { tier = 'High Performer'; cls = 'bg-green-500/20 text-green-400'; }
+    else if (pct >= 75) { tier = 'On Track'; cls = 'bg-yellow-500/20 text-yellow-400'; }
 
-    document.getElementById('profile-name-display').textContent = profile.name || (contact.split('@')[0]);
+    const unlocked = Object.values(ALL_ACHIEVEMENTS).filter(a => state.achievements[a.id]?.unlocked).length;
+    const total = Object.keys(ALL_ACHIEVEMENTS).length;
+
+    document.getElementById('profile-name-display').textContent = profile.name || contact.split('@')[0];
     document.getElementById('profile-email').textContent = contact;
     document.getElementById('profile-mobile').textContent = contact;
     document.getElementById('profile-img').src = `https://placehold.co/128x128/${getComputedStyle(document.documentElement).getPropertyValue('--primary-color-start').substring(1)}/FFFFFF?text=${firstLetter}`;
-    document.getElementById('profile-status-tier').textContent = `Attendance Tier: ${statusTier}`;
-    document.getElementById('profile-status-tier').className = `text-sm px-3 py-1 mt-1 rounded-full font-semibold ${statusClass}`;
+    document.getElementById('profile-status-tier').textContent = `Attendance Tier: ${tier}`;
+    document.getElementById('profile-status-tier').className = `text-sm px-3 py-1 mt-1 rounded-full font-semibold ${cls}`;
     document.getElementById('profile-total-credits').textContent = totalCredits;
     document.getElementById('profile-year').textContent = profile.year || 'Not set';
     document.getElementById('profile-course').textContent = profile.course || 'Not set';
-    document.getElementById('profile-overall-attendance').textContent = `${attendancePercentage}%`;
-    
-    // Fill in detailed attendance numbers
-    const totalClassesEl = document.getElementById('profile-total-classes');
-    if (totalClassesEl) totalClassesEl.textContent = totalAttendanceStats.total;
-    const presentEl = document.getElementById('profile-total-present');
-    if (presentEl) presentEl.textContent = totalAttendanceStats.present;
-    const absentEl = document.getElementById('profile-total-absent');
-    if (absentEl) absentEl.textContent = totalAttendanceStats.absent;
+    document.getElementById('profile-overall-attendance').textContent = `${pct}%`;
+
+    const el = (id) => document.getElementById(id);
+    if (el('profile-total-classes')) el('profile-total-classes').textContent = stats.total;
+    if (el('profile-total-present')) el('profile-total-present').textContent = stats.present;
+    if (el('profile-total-absent')) el('profile-total-absent').textContent = stats.absent;
 
     document.getElementById('profile-calculated-gpa').textContent = gpa.toFixed(2);
-    document.getElementById('profile-attendance-bar').style.width = `${attendancePercentage}%`;
-    document.getElementById('profile-achievements-unlocked').textContent = `${unlockedAchievements} / ${totalAchievements}`;
+    document.getElementById('profile-attendance-bar').style.width = `${pct}%`;
+    document.getElementById('profile-achievements-unlocked').textContent = `${unlocked} / ${total}`;
     document.getElementById('welcome-message').textContent = `Welcome, ${(profile.name || '').split(' ')[0] || contact.split('@')[0]}!`;
 }

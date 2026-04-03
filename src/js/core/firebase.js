@@ -6,22 +6,27 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 let firebaseConfig;
 
 try {
     // Try the secure API bridge first (works on Vercel)
-    const response = await fetch('/api/config');
-    if (!response.ok) throw new Error('API bridge unavailable');
-    firebaseConfig = await response.json();
-    
-    // Verify the config has required fields
-    if (!firebaseConfig.apiKey) throw new Error('Invalid config from API');
+    // Only attempt bridge if not on localhost
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+            firebaseConfig = await response.json();
+            if (!firebaseConfig.apiKey) throw new Error('Invalid config');
+        } else {
+            throw new Error('API bridge unavailable');
+        }
+    } else {
+        throw new Error('Localhost environment');
+    }
 } catch (e) {
     // Fall back to local config file (works with any local server)
-    console.info('[Firebase] API bridge unavailable, using local config.');
     const { firebaseConfig: localConfig } = await import('./firebase-config.js');
     firebaseConfig = localConfig;
 }
@@ -38,5 +43,6 @@ try {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
 
-export { app, analytics, auth, db };
+export { app, analytics, auth, db, googleProvider };

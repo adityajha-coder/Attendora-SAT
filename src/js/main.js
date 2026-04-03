@@ -5,15 +5,14 @@ import { modalsHtml } from './components/modals-html.js';
 import { updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, renderOverviewCards } from './services/app-helpers.js';
 import { checkNotificationStatus, handleNotificationToggle } from './ui/notifications.js';
 import { exportHistoryToCSV, exportData, importData } from './services/data.js';
-import { startOnboardingTour } from './ui/tour.js';
 import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
 import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth/auth.js';
+import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
 import { auth } from './core/firebase.js';
-import { onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
@@ -43,12 +42,12 @@ function dismissLoader() {
     }
 }
 
-const showAuthPage = (showLogin = true) => {
+const showAuthPage = () => {
     document.getElementById('dashboard-app').classList.add('hidden');
     document.getElementById('landing-page').classList.add('hidden');
     document.getElementById('auth-page').classList.remove('hidden');
-    document.getElementById('login-form').classList.toggle('hidden', !showLogin);
-    document.getElementById('signup-form').classList.toggle('hidden', showLogin);
+    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('edit-profile-form').classList.add('hidden');
     dismissLoader();
 };
 
@@ -60,16 +59,6 @@ const initializeAttendora = () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Check if account is newly created and requires verification check before entering dashboard
-            const creationTime = new Date(user.metadata.creationTime);
-            const enforcementDate = new Date("2026-04-01T00:00:00Z");
-            
-            if (creationTime > enforcementDate && !user.emailVerified) {
-                // If they somehow got stuck logged in without being verified, forcefully log them out
-                auth.signOut();
-                return;
-            }
-
             // Show loading indicator while syncing from cloud
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
@@ -80,32 +69,32 @@ const initializeAttendora = () => {
                 if (cloudData) {
                     const wasMerged = mergeCloudData(state, cloudData);
                     if (wasMerged) {
-                        // Cloud data was used — save merged result to localStorage
                         localStorage.setItem('attendoraState', JSON.stringify(state));
                         applyTheme(state.settings.selectedTheme);
                         applyLightMode(state.settings.isLightMode);
                     } else {
-                        // Local data is newer — push to cloud
                         forceCloudSave(state);
                     }
                 } else {
-                    // No cloud data exists yet — push local to cloud
                     forceCloudSave(state);
                 }
             } catch (err) {
                 console.warn('[CloudSync] Sync on login failed, using local data:', err);
             }
 
+            // Ensure profile has user's info (handles first-time Google sign-in)
             if (!state.userProfile.contact) {
                 state.userProfile.contact = user.email;
-                state.userProfile.name = state.userProfile.name || user.email.split('@')[0];
-                saveData();
             }
+            if (!state.userProfile.name) {
+                state.userProfile.name = user.displayName || user.email.split('@')[0];
+            }
+            saveData();
+
             localStorage.setItem('loggedIn', 'true');
             showDashboard();
         } else {
             localStorage.removeItem('loggedIn');
-            // If the user is actively looking at the auth page (like during signup), don't abruptly hide it
             if (document.getElementById('auth-page').classList.contains('hidden')) {
                 showLandingPage();
             } else {
@@ -122,9 +111,6 @@ const initializeDashboard = () => {
     updateTermDatesUI();
     updateAllViews();
 
-    if (!state.settings.hasCompletedTour) {
-        setTimeout(startOnboardingTour, 1000);
-    }
 };
 
 export const updateAllViews = () => {
@@ -157,26 +143,12 @@ function setupEventListeners() {
         updateAllViews();
     });
 
-    document.getElementById('show-signup').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(false); });
-    document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(true); });
-    document.getElementById('go-to-login-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(true); });
-    document.getElementById('go-to-signup-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(false); });
-
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-contact').value;
-        const password = document.getElementById('login-password').value;
-        try {
-            await loginUser(email, password);
-            localStorage.setItem('loggedIn', 'true');
-        } catch (err) {
-            // Error toast in auth.js
-        }
-    });
-
-    document.getElementById('signup-form').onsubmit = handleSignup;
+    document.getElementById('go-to-login-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(); });
+    document.getElementById('go-to-login-landing-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(); });
+    document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
+    document.getElementById('close-sidebar-btn').addEventListener('click', closeMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
 
     document.body.addEventListener('click', (e) => {
@@ -211,7 +183,6 @@ function setupEventListeners() {
     document.getElementById('import-data-input').addEventListener('change', importData);
     document.getElementById('semester-wrapped-btn').addEventListener('click', generateSemesterWrapped);
     document.getElementById('share-wrapped-btn').addEventListener('click', shareSemesterWrapped);
-    document.getElementById('start-tour-btn').addEventListener('click', startOnboardingTour);
 
     document.getElementById('save-term-dates-btn').addEventListener('click', saveTermDates);
     document.getElementById('archive-term-btn-danger').addEventListener('click', archiveCurrentTerm);
@@ -339,30 +310,11 @@ function setupEventListeners() {
 
     document.getElementById('logout-btn').addEventListener('click', logoutUser);
 
-    document.getElementById('show-forgot-password').addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleModal(document.getElementById('forgot-password-modal'), true);
-    });
 
-    document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('reset-contact').value;
-        if (!email || !email.includes('@')) {
-            showToast("Please enter a valid email address.", "error");
-            return;
-        }
-        try {
-            await sendPasswordResetEmail(auth, email);
-            showToast(`Password reset email sent to ${email}. Check your inbox.`, 'success');
-            toggleModal(document.getElementById('forgot-password-modal'), false);
-        } catch (error) {
-            showToast(error.message, "error");
-        }
-    });
 }
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then((registration) => {
+    navigator.serviceWorker.register('pwa/sw.js').then((registration) => {
         registration.update().catch(() => { });
     }).catch(() => { });
 }

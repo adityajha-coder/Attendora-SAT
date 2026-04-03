@@ -14,7 +14,7 @@ export function handleSidebarNav(e) {
 export function navigateTo(viewId) {
     document.querySelectorAll('#sidebar-nav a').forEach(a => a.classList.remove('active'));
     const link = document.querySelector(`#sidebar-nav a[href="#${viewId}"]`);
-    if(link) link.classList.add('active');
+    if (link) link.classList.add('active');
     const targetId = viewId + '-view';
     document.querySelectorAll('.dashboard-view').forEach(view => {
         const wasActive = view.classList.contains('active');
@@ -23,7 +23,7 @@ export function navigateTo(viewId) {
         if (isActive && !wasActive && (targetId === 'reports-view' || targetId === 'overview-view')) {
             setTimeout(() => {
                 renderReports();
-            }, 50); 
+            }, 50);
         }
     });
 }
@@ -32,10 +32,12 @@ export function toggleMobileSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
     const isHidden = sidebar.classList.contains('-translate-x-full');
-    
+
     if (isHidden) {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden', 'opacity-0');
+        // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
     } else {
         closeMobileSidebar();
     }
@@ -44,4 +46,6 @@ export function toggleMobileSidebar() {
 export function closeMobileSidebar() {
     document.getElementById('sidebar').classList.add('-translate-x-full');
     document.getElementById('sidebar-overlay').classList.add('hidden', 'opacity-0');
+    // Restore background scrolling
+    document.body.style.overflow = '';
 }

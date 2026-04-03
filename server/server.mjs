@@ -2,9 +2,13 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 let PORT = process.env.PORT || 3000;
 
@@ -45,6 +49,7 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 const modelsToTry = [
+                    'openai/gpt-4o-mini',
                     'meta-llama/llama-3.2-90b-vision-instruct',
                     'meta-llama/llama-3.2-11b-vision-instruct',
                     'google/gemini-flash-1.5'
@@ -130,7 +135,7 @@ const server = http.createServer(async (req, res) => {
 
     const extname = String(path.extname(filePath)).toLowerCase();
     const contentType = MIME_TYPES[extname] || 'application/octet-stream';
-    const absolutePath = path.join(__dirname, filePath);
+    const absolutePath = path.join(__dirname, '..', filePath);
 
     fs.readFile(absolutePath, (error, content) => {
         if (error) {
