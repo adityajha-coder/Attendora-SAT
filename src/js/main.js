@@ -10,7 +10,7 @@ import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal } from './auth/auth.js';
+import { loginUser, logoutUser, handleSignup, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
 import { auth } from './core/firebase.js';
 import { onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
@@ -59,15 +59,6 @@ const initializeAttendora = () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Check if account is newly created and requires verification check before entering dashboard
-            const creationTime = new Date(user.metadata.creationTime);
-            const enforcementDate = new Date("2026-04-01T00:00:00Z");
-            
-            if (creationTime > enforcementDate && !user.emailVerified) {
-                // If they somehow got stuck logged in without being verified, forcefully log them out
-                auth.signOut();
-                return;
-            }
 
             // Show loading indicator while syncing from cloud
             const syncIndicator = document.getElementById('cloud-sync-indicator');
@@ -171,6 +162,9 @@ function setupEventListeners() {
     });
 
     document.getElementById('signup-form').onsubmit = handleSignup;
+
+    document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
+    document.getElementById('google-signup-btn').addEventListener('click', signInWithGoogle);
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
