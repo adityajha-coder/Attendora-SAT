@@ -5,7 +5,6 @@ import { modalsHtml } from './components/modals-html.js';
 import { updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, renderOverviewCards } from './services/app-helpers.js';
 import { checkNotificationStatus, handleNotificationToggle } from './ui/notifications.js';
 import { exportHistoryToCSV, exportData, importData } from './services/data.js';
-import { startOnboardingTour } from './ui/tour.js';
 import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
 import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
@@ -122,9 +121,6 @@ const initializeDashboard = () => {
     updateTermDatesUI();
     updateAllViews();
 
-    if (!state.settings.hasCompletedTour) {
-        setTimeout(startOnboardingTour, 1000);
-    }
 };
 
 export const updateAllViews = () => {
@@ -211,7 +207,6 @@ function setupEventListeners() {
     document.getElementById('import-data-input').addEventListener('change', importData);
     document.getElementById('semester-wrapped-btn').addEventListener('click', generateSemesterWrapped);
     document.getElementById('share-wrapped-btn').addEventListener('click', shareSemesterWrapped);
-    document.getElementById('start-tour-btn').addEventListener('click', startOnboardingTour);
 
     document.getElementById('save-term-dates-btn').addEventListener('click', saveTermDates);
     document.getElementById('archive-term-btn-danger').addEventListener('click', archiveCurrentTerm);
