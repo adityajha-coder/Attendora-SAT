@@ -148,6 +148,7 @@ function setupEventListeners() {
     document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
+    document.getElementById('close-sidebar-btn').addEventListener('click', closeMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
 
     document.body.addEventListener('click', (e) => {
@@ -313,7 +314,7 @@ function setupEventListeners() {
 }
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then((registration) => {
+    navigator.serviceWorker.register('pwa/sw.js').then((registration) => {
         registration.update().catch(() => { });
     }).catch(() => { });
 }

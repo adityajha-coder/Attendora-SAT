@@ -3,8 +3,8 @@ export const dashboardHtml = `
         <div class="relative min-h-screen md:flex">
             <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden"></div>
             
-            <aside id="sidebar" class="w-64 flex-shrink-0 bg-black/30 backdrop-blur-md border-r border-white/10 flex-col fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 transform -translate-x-full transition-transform duration-300 ease-in-out">
-                <div class="h-20 flex items-center justify-center border-b border-white/10 px-4" data-intro="Welcome to Attendora! This is your sidebar for navigating through all the features." data-step="1">
+            <aside id="sidebar" class="w-64 flex-shrink-0 bg-black/40 backdrop-blur-xl border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 transform -translate-x-full transition-all duration-300 ease-in-out">
+                <div class="h-20 flex items-center justify-between border-b border-white/5 px-6">
                      <a href="#" class="flex items-center gap-3">
                         <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                            <defs><linearGradient id="logoGradientSidebar" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--primary-color-start)"/><stop offset="100%" stop-color="var(--primary-color-end)"/></linearGradient></defs>
@@ -12,6 +12,9 @@ export const dashboardHtml = `
                         </svg>
                         <span class="text-2xl font-bold text-white hero-glow font-brand">ATTENDORA</span>
                     </a>
+                    <button id="close-sidebar-btn" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors text-white" aria-label="Close sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
                 <nav id="sidebar-nav" class="flex-1 px-4 py-6 space-y-2">
                     <a href="#overview" class="sidebar-link active flex items-center gap-3 px-4 py-3" aria-label="Overview"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg><span>Overview</span></a>
@@ -32,25 +35,25 @@ export const dashboardHtml = `
             </aside>
 
             <main class="flex-1 p-6 sm:p-10 overflow-y-auto">
-                <div class="md:hidden flex justify-between items-center mb-6">
-                    <button id="mobile-menu-btn" class="p-2" aria-label="Open menu">
+                <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-6 py-4 bg-[#000010]/80 backdrop-blur-lg border-b border-white/5 mb-6">
+                    <button id="mobile-menu-btn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white active:scale-95 transition-all shadow-lg" aria-label="Open menu">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
                     </button>
                     <span class="text-xl font-bold hero-glow font-brand text-white">ATTENDORA</span>
-                    <div class="w-8"></div>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">A</div>
                 </div>
                 
                 <div id="overview-view" class="dashboard-view active">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
-                        <div>
-                            <h1 id="welcome-message" class="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome!</h1>
-                            <p class="text-gray-400">Here's your smart summary for today. Drag cards to rearrange.</p>
+                    <div class="flex flex-col items-center text-center mb-10 pt-4">
+                        <div class="mb-6 relative">
+                             <h1 id="welcome-message" class="text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-2xl">Welcome!</h1>
+                             <div class="h-1.5 w-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mt-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <div id="top-streak-indicator" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-bold text-sm">
-                                <span id="top-streak-count">0</span>
-                                <span class="text-base">🔥</span>
-                            </div>
+                        <p class="text-gray-400 text-lg max-w-md leading-relaxed mb-6">Here's your smart summary for today.</p>
+                        
+                        <div id="top-streak-indicator" class="inline-flex items-center gap-3 px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-lg shadow-xl backdrop-blur-md transition-transform hover:scale-105 active:scale-95">
+                            <span id="top-streak-count" class="text-2xl text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
+                            <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]">🔥</span>
                         </div>
                     </div>
 

@@ -23,20 +23,94 @@ export function initVisuals() {
     const canvas = document.getElementById('shooting-stars-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    
+    // Performance: Detect mobile to reduce load
+    const isMobile = window.innerWidth < 768;
+    const starCount = isMobile ? 40 : 100;
+    const shootingStarChance = isMobile ? 0.005 : 0.02;
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     let stars = [], shootingStars = [];
     
-    function initStars() { stars = []; for (let i = 0; i < 100; i++) stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, alpha: Math.random(), dAlpha: 0.01 + Math.random() * 0.01 }); }
-    function drawStars() { stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`; ctx.fill(); s.alpha += s.dAlpha; if (s.alpha > 1 || s.alpha < 0) s.dAlpha *= -1; }); }
-    function createShootingStar() { if (Math.random() < 0.02) { shootingStars.push({ x: Math.random() * canvas.width, y: Math.random() > 0.5 ? 0 : Math.random() * canvas.height, len: Math.random() * 80 + 10, speed: Math.random() * 10 + 5, size: Math.random() * 1 + 0.5, angle: Math.PI / 4 + (Math.random() * Math.PI / 4) }); } }
-    function drawShootingStars() { shootingStars.forEach((s, i) => { ctx.beginPath(); const grad = ctx.createLinearGradient(s.x, s.y, s.x - s.len * Math.cos(s.angle), s.y - s.len * Math.sin(s.angle)); grad.addColorStop(0, `rgba(255, 255, 255, ${s.size / 2})`); grad.addColorStop(1, 'rgba(255, 255, 255, 0)'); ctx.strokeStyle = grad; ctx.lineWidth = s.size; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.len * Math.cos(s.angle), s.y - s.len * Math.sin(s.angle)); ctx.stroke(); s.x += s.speed * Math.cos(s.angle); s.y += s.speed * Math.sin(s.angle); if (s.x > canvas.width + s.len || s.y > canvas.height + s.len) shootingStars.splice(i, 1); }); }
+    function initStars() { 
+        stars = []; 
+        for (let i = 0; i < starCount; i++) {
+            stars.push({ 
+                x: Math.random() * canvas.width, 
+                y: Math.random() * canvas.height, 
+                radius: Math.random() * 1.2, 
+                alpha: Math.random(), 
+                dAlpha: 0.005 + Math.random() * 0.01 
+            });
+        } 
+    }
+    
+    function drawStars() { 
+        stars.forEach(s => { 
+            ctx.beginPath(); 
+            ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2); 
+            ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`; 
+            ctx.fill(); 
+            s.alpha += s.dAlpha; 
+            if (s.alpha > 1 || s.alpha < 0) s.dAlpha *= -1; 
+        }); 
+    }
+    
+    function createShootingStar() { 
+        if (Math.random() < shootingStarChance) { 
+            shootingStars.push({ 
+                x: Math.random() * canvas.width, 
+                y: Math.random() > 0.5 ? 0 : Math.random() * canvas.height, 
+                len: Math.random() * 60 + 10, 
+                speed: Math.random() * 8 + 4, 
+                size: Math.random() * 1 + 0.5, 
+                angle: Math.PI / 4 + (Math.random() * Math.PI / 4) 
+            }); 
+        } 
+    }
+
+    function drawShootingStars() { 
+        shootingStars.forEach((s, i) => { 
+            ctx.beginPath(); 
+            const grad = ctx.createLinearGradient(s.x, s.y, s.x - s.len * Math.cos(s.angle), s.y - s.len * Math.sin(s.angle)); 
+            grad.addColorStop(0, `rgba(255, 255, 255, ${s.size / 2})`); 
+            grad.addColorStop(1, 'rgba(255, 255, 255, 0)'); 
+            ctx.strokeStyle = grad; 
+            ctx.lineWidth = s.size; 
+            ctx.moveTo(s.x, s.y); 
+            ctx.lineTo(s.x - s.len * Math.cos(s.angle), s.y - s.len * Math.sin(s.angle)); 
+            ctx.stroke(); 
+            s.x += s.speed * Math.cos(s.angle); 
+            s.y += s.speed * Math.sin(s.angle); 
+            if (s.x > canvas.width + s.len || s.y > canvas.height + s.len) shootingStars.splice(i, 1); 
+        }); 
+    }
     
     let animationFrameId;
-    function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawStars(); createShootingStar(); drawShootingStars(); animationFrameId = requestAnimationFrame(animate); }
+    let lastTime = 0;
+    const fpsLimit = isMobile ? 30 : 60; // Throttle mobile to save CPU
+
+    function animate(time) { 
+        if (time - lastTime < 1000 / fpsLimit) {
+            animationFrameId = requestAnimationFrame(animate);
+            return;
+        }
+        lastTime = time;
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        drawStars(); 
+        createShootingStar(); 
+        drawShootingStars(); 
+        animationFrameId = requestAnimationFrame(animate); 
+    }
+    
     function stopAnimate() { cancelAnimationFrame(animationFrameId); }
     
-    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initStars(); });
+    window.addEventListener('resize', () => { 
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight; 
+        initStars(); 
+    });
     
     return { initStars, animate, stopAnimate };
 }

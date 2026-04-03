@@ -60,39 +60,6 @@ export const renderThemePicker = () => {
     });
 };
 
-export function setupDraggableOverviewCards() {
-    const grid = document.getElementById('overview-grid');
-    let draggedItem = null;
-    grid.addEventListener('dragstart', (e) => {
-        if (e.target.classList.contains('overview-card')) {
-            draggedItem = e.target;
-            setTimeout(() => e.target.classList.add('dragging'), 0);
-        }
-    });
-    grid.addEventListener('dragend', (e) => {
-        if (draggedItem) {
-            setTimeout(() => {
-                draggedItem.classList.remove('dragging');
-                draggedItem = null;
-                const newOrder = [...grid.querySelectorAll('.overview-card')].map(card => card.id);
-                state.settings.dashboardOrder = newOrder;
-                saveData();
-            }, 0);
-        }
-    });
-    grid.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(grid, e.clientY);
-        if (draggedItem) {
-            if (afterElement == null) {
-                grid.appendChild(draggedItem);
-            } else {
-                grid.insertBefore(draggedItem, afterElement);
-            }
-        }
-    });
-}
-
 function getDragAfterElement(container, y) {
     const draggableElements = [...container.querySelectorAll('.overview-card:not(.dragging)')];
     return draggableElements.reduce((closest, child) => {
