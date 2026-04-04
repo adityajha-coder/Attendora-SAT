@@ -50,11 +50,6 @@ async function setupNewUser(user) {
 import { showDashboard } from '../main.js';
 
 export const signInWithGoogle = () => {
-    // 1. ABSOLUTELY NO ASYNC/AWAIT ALLOWED BEFORE POPUP.
-    // Ensure the popup happens synchronously to prevent strict browser blocks.
-    const authPromise = signInWithPopup(auth, googleProvider);
-
-    // 2. Safely manipulate DOM after popup begins
     const btn = document.getElementById('google-signin-btn');
     const originalText = btn.innerHTML;
 
@@ -66,33 +61,43 @@ export const signInWithGoogle = () => {
     btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
     btn.disabled = true;
 
-    authPromise
-        .then(async (result) => {
-            await setupNewUser(result.user);
-            showToast("Signed in with Google! Loading...", "success");
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            // Seamlessly transition the UI to the dashboard instead of reloading.
-            // Reloading was actively aborting Firebase's auth token save on mobile!
-            showDashboard();
-        })
-        .catch((error) => {
-            if (error.code === 'auth/popup-closed-by-user') {
-                showToast("Sign-in cancelled.", "warning");
-            } else if (error.code === 'auth/popup-blocked') {
-                showToast("Popups blocked. Using secure redirect fallback...", "info");
-                signInWithRedirect(auth, googleProvider);
-                return;
-            } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
-                showToast("Environment must use HTTPS. Please test via Vercel.", "error");
-            } else if (error.code !== 'auth/cancelled-popup-request') {
-                console.error('[Auth] Sign-in error:', error);
-                showToast("Sign-in error: " + error.message, "error");
-            }
+    // Detect mobile device to bypass strict popup blockers and state loss on Redmi/Mi Browsers
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // Must be called synchronously to the click event on strict browsers
+        signInWithRedirect(auth, googleProvider).catch(error => {
+            console.error('[Auth] Redirect error:', error);
+            showToast("Sign-in error: " + error.message, "error");
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
+    } else {
+        signInWithPopup(auth, googleProvider)
+            .then(async (result) => {
+                await setupNewUser(result.user);
+                showToast("Signed in with Google! Loading...", "success");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showDashboard();
+            })
+            .catch((error) => {
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showToast("Sign-in cancelled.", "warning");
+                } else if (error.code === 'auth/popup-blocked') {
+                    showToast("Popups blocked. Using secure redirect fallback...", "info");
+                    signInWithRedirect(auth, googleProvider);
+                    return;
+                } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
+                    showToast("Environment must use HTTPS. Please test via Vercel.", "error");
+                } else if (error.code !== 'auth/cancelled-popup-request') {
+                    console.error('[Auth] Sign-in error:', error);
+                    showToast("Sign-in error: " + error.message, "error");
+                }
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+    }
 };
 
 // ── Logout ──────────────────────────────────
