@@ -41,29 +41,32 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 const { base64Image } = JSON.parse(body);
-                const groqApiKey = process.env.GROQ_API_KEY;
+                const openRouterApiKey = process.env.OPENROUTER_API_KEY;
 
-                if (!groqApiKey) {
+                if (!openRouterApiKey) {
                      res.writeHead(500, { 'Content-Type': 'application/json' });
-                     return res.end(JSON.stringify({ error: 'GROQ_API_KEY is not configured in .env' }));
+                     return res.end(JSON.stringify({ error: 'OPENROUTER_API_KEY is not configured in .env' }));
                 }
 
                 const modelsToTry = [
-                    'llama-3.2-90b-vision-preview',
-                    'llama-3.2-11b-vision-preview'
+                    'openai/gpt-4o-mini',
+                    'google/gemini-1.5-flash',
+                    'google/gemini-2.0-flash-lite-preview-02-05:free'
                 ];
-                console.log("Testing Groq model paths:", modelsToTry);
+                console.log("Testing OpenRouter model paths:", modelsToTry);
 
                 let apiResponse = null;
                 let lastError = '';
 
                 for (const model of modelsToTry) {
                     try {
-                        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                             method: 'POST',
                             headers: {
-                                'Authorization': `Bearer ${groqApiKey}`,
-                                'Content-Type': 'application/json'
+                                'Authorization': `Bearer ${openRouterApiKey}`,
+                                'Content-Type': 'application/json',
+                                'HTTP-Referer': 'http://localhost:3000',
+                                'X-Title': 'Attendora'
                             },
                             body: JSON.stringify({
                                 model: model,
@@ -108,7 +111,7 @@ const server = http.createServer(async (req, res) => {
 
                 if (!apiResponse) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    return res.end(JSON.stringify({ error: `Groq Error for all models. Last Error: ${lastError}` }));
+                    return res.end(JSON.stringify({ error: `OpenRouter Error for all models. Last Error: ${lastError}` }));
                 }
 
                 const data = await apiResponse.json();

@@ -5,16 +5,17 @@ module.exports = async function handler(request, response) {
 
     try {
         const { base64Image } = request.body;
-        const groqApiKey = process.env.GROQ_API_KEY;
+        const openRouterApiKey = process.env.OPENROUTER_API_KEY;
         
-        if (!groqApiKey) {
-            console.error("Missing Groq API Key configured in Vercel.");
+        if (!openRouterApiKey) {
+            console.error("Missing OpenRouter API Key configured in Environment.");
             return response.status(500).json({ error: "Missing API Key configuration." });
         }
 
         const modelsToTry = [
-            'llama-3.2-90b-vision-preview',
-            'llama-3.2-11b-vision-preview'
+            'openai/gpt-4o-mini',
+            'google/gemini-1.5-flash',
+            'google/gemini-2.0-flash-lite-preview-02-05:free'
         ];
 
         let apiResponse = null;
@@ -22,11 +23,13 @@ module.exports = async function handler(request, response) {
 
         for (const model of modelsToTry) {
             try {
-                const responseFromApi = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                const responseFromApi = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${groqApiKey}`,
-                        'Content-Type': 'application/json'
+                        'Authorization': `Bearer ${openRouterApiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://attendora.vercel.app',
+                        'X-Title': 'Attendora'
                     },
                     body: JSON.stringify({
                         model: model,
@@ -69,7 +72,7 @@ module.exports = async function handler(request, response) {
         }
 
         if (!apiResponse) {
-            return response.status(400).json({ error: `Groq Error for all AI models. Last Error: ${lastError}` });
+            return response.status(400).json({ error: `OpenRouter Error for all AI models. Last Error: ${lastError}` });
         }
 
         const data = await apiResponse.json();
