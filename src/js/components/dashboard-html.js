@@ -159,8 +159,7 @@ export const dashboardHtml = `
                             <button id="export-csv-btn" class="btn-primary text-white font-semibold py-2 px-5 rounded-lg" aria-label="Export history to CSV">Export Full History (CSV)</button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="subject-chart-container">
-                    </div>
+
                     <div class="card rounded-xl p-6 mt-8 no-hover">
                         <h3 class="text-xl font-bold text-white mb-4">Overall Attendance Trend</h3>
                         <canvas id="trends-chart"></canvas>

@@ -119,15 +119,12 @@ export function calculateStreak(courseName) {
 export function renderReports() {
     const filterType = document.getElementById('reports-filter').value;
     const filteredHistory = getFilteredHistory(filterType);
-    const container = document.getElementById('subject-chart-container');
-    container.innerHTML = '';
-        Object.values(chartInstances).forEach(chart => {
+    Object.values(chartInstances).forEach(chart => {
         if(chart && typeof chart.destroy === 'function') chart.destroy();
-        });
+    });
     chartInstances = {};
     const uniqueCourses = [...new Set(state.schedule.map(item => item.name))];
     if(uniqueCourses.length === 0) {
-        container.innerHTML = `<p class="col-span-full text-center" style="color: var(--text-secondary);">No courses to generate a report for. Add courses via 'My Schedule'.</p>`;
         const trendsCtx = document.getElementById('trends-chart').getContext('2d');
         if(chartInstances.trends) chartInstances.trends.destroy();
         trendsCtx.clearRect(0, 0, trendsCtx.canvas.width, trendsCtx.canvas.height);
@@ -135,51 +132,6 @@ export function renderReports() {
     }
     const gridTextColor = getComputedStyle(document.body).getPropertyValue('--text-secondary');
     const chartBorderColor = getComputedStyle(document.body).getPropertyValue('--background-color');
-    const calculateStatsFromHistory = (courseName) => {
-            const courseInstances = state.schedule.filter(s => s.name === courseName);
-            const courseInstanceIds = courseInstances.map(i => i.id);
-            const historyForCourse = filteredHistory.filter(h => courseInstanceIds.includes(h.classId));
-            const presentCount = historyForCourse.filter(h => h.status === 'Present').length;
-            const absentCount = historyForCourse.filter(h => h.status === 'Absent').length;
-            const cancelledCount = historyForCourse.filter(h => h.status === 'Cancelled').length;
-            const totalTracked = presentCount + absentCount;
-            const percentage = totalTracked === 0 ? 100 : Math.round((presentCount / totalTracked) * 100);
-            return { present: presentCount, absent: absentCount, cancelled: cancelledCount, total: totalTracked, percentage };
-    };
-    uniqueCourses.forEach(courseName => {
-        const stats = calculateStatsFromHistory(courseName);
-        const chartWrapper = document.createElement('div');
-        chartWrapper.className = 'card rounded-xl p-4 flex flex-col items-center no-hover';
-        chartWrapper.innerHTML = `
-            <h4 class="text-lg font-bold mb-2">${courseName}</h4>
-            <canvas id="chart-${courseName.replace(/\s+/g, '')}"></canvas>
-        `;
-        container.appendChild(chartWrapper);
-        const ctx = document.getElementById(`chart-${courseName.replace(/\s+/g, '')}`).getContext('2d');
-        chartInstances[courseName] = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Present', 'Absent', 'Cancelled'],
-                datasets: [{
-                    label: 'Attendance',
-                    data: [stats.present, stats.absent, stats.cancelled],
-                    backgroundColor: ['#22c55e', '#ef4444', '#6b7280'],
-                    borderColor: chartBorderColor,
-                    borderWidth: 4,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: gridTextColor }
-                    },
-                    title: { display: true, text: `${stats.percentage}% Overall`, color: gridTextColor }
-                }
-            }
-        });
-    });
     const trendsCtx = document.getElementById('trends-chart').getContext('2d');
     const historyByDate = filteredHistory.reduce((acc, h) => {
         if (h.status === 'Present' || h.status === 'Absent') {
