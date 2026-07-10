@@ -40,15 +40,20 @@ export const dashboardHtml = `
                 </div>
             </aside>
 
-            <main class="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto pb-24 md:pb-6">
+            <main class="flex-1 min-w-0 p-4 sm:p-6 lg:py-8 lg:px-6 overflow-y-auto pb-24 md:pb-6">
                 <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-4 py-3 bg-black/40 backdrop-blur-xl border-b border-white/5 mb-4 shadow-sm">
                     <a href="#" class="flex items-center gap-2">
                         <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border border-white/20">
                         <span class="text-xl font-bold font-brand text-white tracking-wide">ATTENDORA</span>
                     </a>
-                    <div id="mobile-top-streak-indicator" class="inline-flex md:hidden items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs shadow-sm backdrop-blur-md" style="display: none;">
-                        <span id="mobile-top-streak-count" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
-                        <span class="text-sm filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                    <div class="flex items-center gap-3">
+                        <div id="mobile-top-streak-indicator" class="inline-flex md:hidden items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs shadow-sm backdrop-blur-md" style="display: none;">
+                            <span id="mobile-top-streak-count" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
+                            <span class="text-sm filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                        </div>
+                        <button id="mobile-logout-btn" class="p-2 rounded-lg hover:bg-red-500/20 transition-colors text-red-400" aria-label="Logout">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        </button>
                     </div>
                 </div>
                 

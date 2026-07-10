@@ -422,6 +422,7 @@ function setupEventListeners() {
     document.getElementById('sidebar-nav').addEventListener('click', handleSidebarNav);
 
     document.getElementById('logout-btn').addEventListener('click', logoutUser);
+    document.getElementById('mobile-logout-btn').addEventListener('click', logoutUser);
 
 }
 

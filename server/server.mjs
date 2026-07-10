@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '.env') });
 
-let PORT = process.env.PORT || 3000;
+let PORT = process.env.PORT || 3010;
 
 const MIME_TYPES = {
     '.html': 'text/html',

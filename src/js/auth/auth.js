@@ -138,7 +138,7 @@ export function renderProfile() {
     document.getElementById('profile-name-display').textContent = profile.name || contact.split('@')[0];
     document.getElementById('profile-email').textContent = contact;
     document.getElementById('profile-mobile').textContent = contact;
-    document.getElementById('profile-img').src = `https://placehold.co/128x128/${getComputedStyle(document.documentElement).getPropertyValue('--primary-color-start').substring(1)}/FFFFFF?text=${firstLetter}`;
+    document.getElementById('profile-img').src = `assets/images/logo.png`; // profile logo
     document.getElementById('profile-status-tier').textContent = `Attendance Tier: ${tier}`;
     document.getElementById('profile-status-tier').className = `text-sm px-3 py-1 mt-1 rounded-full font-semibold ${cls}`;
     document.getElementById('profile-total-credits').textContent = totalCredits;
