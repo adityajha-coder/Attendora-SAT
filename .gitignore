@@ -29,3 +29,4 @@ yarn-error.log*
 # Supabase CLI
 supabase/.temp/
 .supabase/
+plan.md
