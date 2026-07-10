@@ -1,0 +1,24 @@
+{
+  "name": "attendora-sat",
+  "version": "1.0.0",
+  "description": "Smart Attendance Tracker",
+  "main": "index.html",
+  "scripts": {
+    "dev": "node --env-file=server/.env server/server.mjs",
+    "start": "node --env-file=server/.env server/server.mjs"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
+  },
+  "keywords": [
+    "attendance",
+    "tracker",
+    "dashboard"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}
