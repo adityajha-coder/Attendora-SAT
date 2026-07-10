@@ -1,0 +1,12 @@
+services:
+  attendora:
+    build: .
+    container_name: attendora-app
+    ports:
+      - "3005:3000"
+    environment:
+      - PORT=3000
+    # Mount the .env file directly into the container so the server can read it
+    volumes:
+      - ./server/.env:/usr/src/app/server/.env
+    restart: unless-stopped
