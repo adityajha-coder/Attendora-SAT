@@ -187,8 +187,8 @@ export const modalsHtml = `
                          <div class="bg-white/5 rounded-2xl border border-white/5 p-6">
                              <div class="flex items-center justify-between">
                                  <div class="pr-4">
-                                     <span class="block font-medium text-white mb-1">Class Reminders</span>
-                                     <span id="notification-status-text" class="text-xs text-gray-400">Get notified before classes start.</span>
+                                     <span class="block font-medium text-white mb-1">Push Notifications</span>
+                                     <span id="notification-status-text" class="text-xs text-gray-400">Get Web Push reminders before classes start.</span>
                                  </div>
                                  <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in flex-shrink-0">
                                      <input type="checkbox" name="toggle-notifications" id="notification-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" aria-label="Toggle class reminders"/>

@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "strip-comments": "^2.0.1",
-    "vercel": "^39.0.0"
+    "vercel": "^39.0.0",
+    "web-push": "^3.6.7"
   },
   "keywords": [
     "attendance",

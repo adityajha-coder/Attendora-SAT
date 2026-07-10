@@ -427,7 +427,7 @@ function setupEventListeners() {
 }
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('pwa/sw.js').then((registration) => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
         registration.update().catch(() => { });
     }).catch(() => { });
 }
