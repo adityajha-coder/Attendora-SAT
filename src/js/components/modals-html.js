@@ -46,11 +46,11 @@ export const modalsHtml = `
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="instructor-name" class="block mb-2 text-sm font-medium text-gray-300">Instructor Name</label>
-                        <input type="text" id="instructor-name" class="form-input" placeholder="e.g., Dr. Smith">
+                        <input type="text" id="instructor-name" class="form-input" placeholder="e.g., Dr. Asheem Dubey">
                     </div>
                     <div>
                          <label for="room-number" class="block mb-2 text-sm font-medium text-gray-300">Room/Building</label>
-                        <input type="text" id="room-number" class="form-input" placeholder="e.g., A201">
+                        <input type="text" id="room-number" class="form-input" placeholder="e.g., 303">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -79,16 +79,6 @@ export const modalsHtml = `
                         </div>
                     </div>
                     <div id="duration-feedback" class="text-sm text-center font-semibold text-blue-400 mb-2">Duration: 0 minutes</div>
-                    <div class="flex items-center gap-4">
-                        <span class="text-sm text-gray-400">or set duration:</span>
-                        <select id="duration-preset" class="form-input p-2 text-sm w-32" aria-label="Class duration preset">
-                            <option value="0">Custom</option>
-                            <option value="60">1 Hour</option>
-                            <option value="90">1.5 Hours</option>
-                            <option value="50">50 Minutes</option>
-                            <option value="120">2 Hours</option>
-                        </select>
-                    </div>
                     <div id="time-validation-error" class="form-error absolute -bottom-5 left-0 right-0 text-center hidden">End time must be after start time.</div>
                 </div>
                 <div class="flex justify-end gap-4 pt-4">
@@ -286,7 +276,7 @@ export const modalsHtml = `
             <h2 class="text-2xl font-bold text-white mb-6">Attendance Note</h2>
             <form id="notes-form">
                 <input type="hidden" id="note-history-id">
-                <textarea id="note-textarea" rows="4" class="form-input" placeholder="e.g., Missed class, get notes from Priya..." aria-label="Note details"></textarea>
+                <textarea id="note-textarea" rows="4" class="form-input" placeholder="e.g., Missed class, get notes from Aditya..." aria-label="Note details"></textarea>
                 <div class="flex justify-end gap-4 mt-6">
                     <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
                     <button type="submit" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Save note">Save Note</button>
@@ -432,7 +422,7 @@ export const modalsHtml = `
                 <h2 id="calendar-day-title" class="text-2xl font-bold text-white">Attendance Detail</h2>
                 <button class="close-modal-btn text-gray-400 hover:text-white text-3xl" aria-label="Close modal">&times;</button>
             </div>
-            <div id="calendar-day-log" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+            <div id="calendar-day-log" class="space-y-3 pr-2">
                 <!-- Log entries will be injected here -->
             </div>
             <div class="flex justify-end mt-6">

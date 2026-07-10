@@ -198,15 +198,30 @@ export function showDayDetails(dateStr) {
     } else {
         dayLog.innerHTML = history.map(h => {
              const statusColor = h.status === 'Present' ? 'text-green-400' : (h.status === 'Absent' ? 'text-red-400' : 'text-gray-400');
+             const scheduleItem = state.schedule.find(s => s.id === h.classId);
+             const courseName = scheduleItem ? scheduleItem.name : 'Unknown Course';
+             const type = scheduleItem ? scheduleItem.type : 'Class';
+             
+             let detailsHtml = '';
+             if (h.reason && h.reason !== 'AUTOMATED') {
+                 detailsHtml += `<p class="text-xs italic text-yellow-400 mt-1">Reason: ${h.reason}</p>`;
+             }
+             if (h.note) {
+                 detailsHtml += `<p class="text-xs italic mt-1" style="color: var(--text-secondary);"><span class="font-semibold">Note:</span> ${h.note}</p>`;
+             }
+
              return `
-                <div class="p-3 bg-white/5 rounded-lg flex justify-between items-center">
-                    <div>
-                        <p class="font-bold text-white">${h.courseName}</p>
-                        <p class="text-xs text-gray-500">${h.type || 'Class'}</p>
+                <div class="p-3 bg-white/5 rounded-lg flex flex-col mb-2">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-white">${courseName}</p>
+                            <p class="text-xs text-gray-500">${type}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-black ${statusColor}">${h.status.toUpperCase()}</span>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="font-black ${statusColor}">${h.status.toUpperCase()}</span>
-                    </div>
+                    ${detailsHtml ? `<div class="mt-2 pt-2 border-t border-white/10">${detailsHtml}</div>` : ''}
                 </div>
              `;
         }).join('');

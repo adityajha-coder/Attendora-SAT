@@ -138,7 +138,7 @@ export function openClassModal(day = null, type = 'Class') {
     document.getElementById('time-validation-error').classList.add('hidden');
     document.getElementById('end-time').classList.remove('is-invalid');
     document.getElementById('duration-feedback').textContent = 'Duration: 0 minutes';
-    document.getElementById('duration-preset').value = 0;
+
     toggleModal(document.getElementById('class-modal'), true);
 }
 
@@ -156,7 +156,7 @@ export function populateModalForEdit(classId) {
     document.getElementById('end-time').value = classToEdit.end;
     document.getElementById('time-validation-error').classList.add('hidden');
     document.getElementById('end-time').classList.remove('is-invalid');
-    document.getElementById('duration-preset').value = 0;
+
     updateDurationFeedback(); 
     toggleModal(document.getElementById('class-modal'), true);
 }

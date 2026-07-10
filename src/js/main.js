@@ -199,7 +199,6 @@ function setupEventListeners() {
 
     document.getElementById('start-time').addEventListener('input', updateDurationFeedback);
     document.getElementById('end-time').addEventListener('input', updateDurationFeedback);
-    document.getElementById('duration-preset').addEventListener('change', handleDurationPreset);
 
     document.getElementById('add-class-btn').addEventListener('click', () => openClassModal(null, 'Class'));
     document.getElementById('add-assignment-btn').addEventListener('click', () => openAssignmentModal());
@@ -385,6 +384,13 @@ function setupEventListeners() {
         if (noteBtn) {
             openNoteModal(parseInt(noteBtn.dataset.historyId));
             return;
+        }
+    });
+
+    document.getElementById('course-details-modal').addEventListener('click', (e) => {
+        const noteBtn = e.target.closest('.add-note-btn');
+        if (noteBtn) {
+            openNoteModal(parseInt(noteBtn.dataset.historyId));
         }
     });
 
