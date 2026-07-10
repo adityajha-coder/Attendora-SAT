@@ -3,42 +3,28 @@ import { showToast } from '../ui/ui.js';
 import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
-import { auth, db, googleProvider } from '../core/firebase.js';
-import { signOut, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { supabase } from '../core/supabase.js';
 
 // ── Listen for Redirects (Non-blocking) ──
-// Call this on app load so Firebase processes returning users from mobile redirect
+// Supabase handles redirects automatically, listener is now in main.js
 export function setupAuthListener() {
-    getRedirectResult(auth)
-        .then(async (result) => {
-            if (result && result.user) {
-                console.log('[Auth] Redirect sign-in success!');
-                await setupNewUser(result.user);
-                showToast("Signed in successfully!", "success");
-            }
-        })
-        .catch((error) => {
-            console.warn('[Auth] Redirect sign-in error:', error);
-            // Don't show toast on load unless necessary, just log it.
-        });
+    // Deprecated in favor of supabase.auth.onAuthStateChange in main.js
 }
 
 // ── Setup New User ──────────────────────────
 async function setupNewUser(user) {
     try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-                name: user.displayName || '',
+        const { data: userDoc, error } = await supabase.from('users').select('*').eq('id', user.id).single();
+        if (!userDoc) {
+            await supabase.from('users').insert([{
+                id: user.id,
+                name: user.user_metadata?.full_name || '',
                 email: user.email,
                 course: '',
                 year: '',
-                createdAt: new Date().toISOString()
-            });
+            }]);
         }
-        state.userProfile.name = state.userProfile.name || user.displayName || user.email.split('@')[0];
+        state.userProfile.name = state.userProfile.name || user.user_metadata?.full_name || user.email.split('@')[0];
         state.userProfile.contact = user.email;
         saveData();
     } catch (err) {
@@ -49,61 +35,45 @@ async function setupNewUser(user) {
 // ── Google Sign-In ──────────────────────────
 import { showDashboard } from '../main.js';
 
-export const signInWithGoogle = () => {
+export const signInWithGoogle = async () => {
     const btn = document.getElementById('google-signin-btn');
     const originalText = btn.innerHTML;
 
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        showToast("Local IP testing blocks Firebase. Use localhost or deploy.", "error");
+        showToast("Local IP testing blocks OAuth. Use localhost or deploy.", "error");
         return;
     }
 
     btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
     btn.disabled = true;
 
-    // Detect mobile device to bypass strict popup blockers and state loss on Redmi/Mi Browsers
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    if (isMobile) {
-        // Must be called synchronously to the click event on strict browsers
-        signInWithRedirect(auth, googleProvider).catch(error => {
-            console.error('[Auth] Redirect error:', error);
+    try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin
+            }
+        });
+        
+        if (error) {
+            console.error('[Auth] Sign-in error:', error);
             showToast("Sign-in error: " + error.message, "error");
             btn.innerHTML = originalText;
             btn.disabled = false;
-        });
-    } else {
-        signInWithPopup(auth, googleProvider)
-            .then(async (result) => {
-                await setupNewUser(result.user);
-                showToast("Signed in with Google! Loading...", "success");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showDashboard();
-            })
-            .catch((error) => {
-                if (error.code === 'auth/popup-closed-by-user') {
-                    showToast("Sign-in cancelled.", "warning");
-                } else if (error.code === 'auth/popup-blocked') {
-                    showToast("Popups blocked. Using secure redirect fallback...", "info");
-                    signInWithRedirect(auth, googleProvider);
-                    return;
-                } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
-                    showToast("Environment must use HTTPS. Please test via Vercel.", "error");
-                } else if (error.code !== 'auth/cancelled-popup-request') {
-                    console.error('[Auth] Sign-in error:', error);
-                    showToast("Sign-in error: " + error.message, "error");
-                }
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+        }
+        // If successful, Supabase redirects the page, so no need to reset button state.
+    } catch (err) {
+        console.error('[Auth] Sign-in exception:', err);
+        showToast("Sign-in failed.", "error");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 };
 
 // ── Logout ──────────────────────────────────
 export const logoutUser = async () => {
     try {
-        await signOut(auth);
+        await supabase.auth.signOut();
         localStorage.removeItem('loggedIn');
         localStorage.removeItem('attendoraState');
         window.location.reload();
@@ -113,8 +83,9 @@ export const logoutUser = async () => {
 };
 
 // ── Edit Profile Modal ──────────────────────
-export function openEditProfileModal() {
-    if (!auth.currentUser) return showToast("You must be signed in.", "error");
+export async function openEditProfileModal() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return showToast("You must be signed in.", "error");
 
     document.getElementById('auth-page').classList.remove('hidden');
     document.getElementById('dashboard-app').classList.add('hidden');

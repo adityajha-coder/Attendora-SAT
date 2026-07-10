@@ -11,9 +11,8 @@ import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
 import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
-import { auth, db } from './core/firebase.js';
-import { onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { supabase } from './core/supabase.js';
+// Firebase imports removed, using Supabase now
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
@@ -52,19 +51,18 @@ const showAuthPage = () => {
     dismissLoader();
 };
 
-// Ensure new users from redirect have Firestore profiles created
+// Ensure new users from redirect have profiles created
 async function setupNewUserFromRedirect(user) {
     try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-                name: user.displayName || '',
+        const { data: userDoc, error } = await supabase.from('users').select('*').eq('id', user.id).single();
+        if (!userDoc) {
+            await supabase.from('users').insert([{
+                id: user.id,
+                name: user.user_metadata?.full_name || '',
                 email: user.email,
                 course: '',
                 year: '',
-                createdAt: new Date().toISOString()
-            });
+            }]);
         }
     } catch (e) {
         console.warn('[Setup] Failed to register new user docs:', e);
@@ -77,21 +75,19 @@ const initializeAttendora = async () => {
     loadData();
     setupEventListeners();
 
-    // EXTREMELY CRITICAL FOR MOBILE: 
-    // Wait for any pending Google Redirects to evaluate *before* checking local auth state.
-    // If we don't await this, Firebase will initially assume logged out, 
-    // flash the login screen, and break the user experience.
+    // Supabase handles redirects automatically via session recovery.
+    // Check if we just signed in from a redirect
     try {
-        const redirectResult = await getRedirectResult(auth);
-        if (redirectResult && redirectResult.user) {
-            console.log('[Auth] Detected returning mobile user');
-            await setupNewUserFromRedirect(redirectResult.user);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+            await setupNewUserFromRedirect(session.user);
         }
     } catch (error) {
         console.warn('[Auth] Redirect processing failed:', error);
     }
 
-    onAuthStateChanged(auth, async (user) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        const user = session?.user;
         if (user) {
             // Show loading indicator while syncing from cloud
             const syncIndicator = document.getElementById('cloud-sync-indicator');
@@ -121,7 +117,7 @@ const initializeAttendora = async () => {
                 state.userProfile.contact = user.email;
             }
             if (!state.userProfile.name) {
-                state.userProfile.name = user.displayName || user.email.split('@')[0];
+                state.userProfile.name = user.user_metadata?.full_name || user.email.split('@')[0];
             }
             saveData();
 

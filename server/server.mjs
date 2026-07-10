@@ -31,7 +31,16 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer(async (req, res) => {
-    // Handle API route
+    // Handle API config route
+    if (req.method === 'GET' && req.url === '/api/config') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({
+            supabaseUrl: process.env.VITE_SUPABASE_URL,
+            supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY
+        }));
+    }
+
+    // Handle API scan route
     if (req.method === 'POST' && req.url === '/api/scan') {
         let body = '';
         req.on('data', chunk => {

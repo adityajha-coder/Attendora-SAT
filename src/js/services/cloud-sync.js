@@ -6,13 +6,7 @@
  * - Provides a visual sync status indicator for UX.
  */
 
-import { db, auth } from '../core/firebase.js';
-import { 
-    doc, 
-    setDoc, 
-    getDoc,
-    serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { supabase } from '../core/supabase.js';
 import { showToast } from '../ui/ui.js';
 
 let syncTimeoutId = null;
@@ -112,20 +106,29 @@ export function schedulCloudSync(state) {
     if (syncTimeoutId) clearTimeout(syncTimeoutId);
 
     syncTimeoutId = setTimeout(async () => {
-        const user = auth.currentUser;
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
         if (!user) return; // not logged in
 
         try {
             setSyncStatus('syncing');
             const persistable = extractPersistableState(state);
-            await setDoc(doc(db, "userData", user.uid), {
-                ...persistable,
-                lastSyncedAt: serverTimestamp(),
-                email: user.email
-            }, { merge: true });
+            await supabase.from('user_data').upsert({
+                id: user.id,
+                email: user.email,
+                user_profile: persistable.userProfile,
+                schedule: persistable.schedule,
+                history: persistable.history,
+                assignments: persistable.assignments,
+                gpa_courses: persistable.gpaCourses,
+                archived_terms: persistable.archivedTerms,
+                achievements: persistable.achievements,
+                settings: persistable.settings,
+                last_synced_at: new Date().toISOString()
+            });
             setSyncStatus('synced');
         } catch (error) {
-            console.error('[CloudSync] Failed to save to Firestore:', error);
+            console.error('[CloudSync] Failed to save to Supabase:', error);
             setSyncStatus('error');
         }
     }, SYNC_DEBOUNCE_MS);
@@ -136,21 +139,32 @@ export function schedulCloudSync(state) {
  * Returns null if no cloud data exists.
  */
 export async function loadFromCloud() {
-    const user = auth.currentUser;
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return null;
 
     try {
         setSyncStatus('syncing');
-        const docSnap = await getDoc(doc(db, "userData", user.uid));
-        if (docSnap.exists()) {
+        const { data: docSnap, error } = await supabase.from('user_data').select('*').eq('id', user.id).single();
+        
+        if (docSnap) {
             setSyncStatus('synced');
-            return docSnap.data();
+            return {
+                userProfile: docSnap.user_profile,
+                schedule: docSnap.schedule,
+                history: docSnap.history,
+                assignments: docSnap.assignments,
+                gpaCourses: docSnap.gpa_courses,
+                archivedTerms: docSnap.archived_terms,
+                achievements: docSnap.achievements,
+                settings: docSnap.settings
+            };
         } else {
             setSyncStatus('idle');
             return null;
         }
     } catch (error) {
-        console.error('[CloudSync] Failed to load from Firestore:', error);
+        console.error('[CloudSync] Failed to load from Supabase:', error);
         setSyncStatus('error');
         return null;
     }
@@ -226,17 +240,26 @@ export function mergeCloudData(state, cloudData) {
  * Force-push current state to cloud immediately (for initial sync after signup).
  */
 export async function forceCloudSave(state) {
-    const user = auth.currentUser;
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
 
     try {
         setSyncStatus('syncing');
         const persistable = extractPersistableState(state);
-        await setDoc(doc(db, "userData", user.uid), {
-            ...persistable,
-            lastSyncedAt: serverTimestamp(),
-            email: user.email
-        }, { merge: true });
+        await supabase.from('user_data').upsert({
+            id: user.id,
+            email: user.email,
+            user_profile: persistable.userProfile,
+            schedule: persistable.schedule,
+            history: persistable.history,
+            assignments: persistable.assignments,
+            gpa_courses: persistable.gpaCourses,
+            archived_terms: persistable.archivedTerms,
+            achievements: persistable.achievements,
+            settings: persistable.settings,
+            last_synced_at: new Date().toISOString()
+        });
         setSyncStatus('synced');
     } catch (error) {
         console.error('[CloudSync] Force save failed:', error);
