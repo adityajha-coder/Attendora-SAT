@@ -36,35 +36,48 @@ export function renderSchedule() {
         scheduleContainer.classList.remove('hidden');
         scheduleEmptyPrompt.classList.add('hidden');
     }
-    scheduleContainer.innerHTML = `<div class="grid grid-cols-7 min-w-[700px] gap-2 md:gap-4" id="schedule-grid"></div>`;
+    scheduleContainer.innerHTML = `<div class="grid grid-cols-7 min-w-[1100px] gap-3 sm:gap-4" id="schedule-grid"></div>`;
     const scheduleGrid = document.getElementById('schedule-grid');
     days.forEach(day => {
-        const dayCol = document.createElement('div');
-        dayCol.className = `space-y-4 p-2 rounded-lg ${day === today ? 'bg-white/5' : ''}`;
-        dayCol.innerHTML = `<h3 class="text-xl font-bold text-center border-b-2 pb-2" style="border-color: var(--card-border);">${day}</h3>`;
         const classesForDay = state.schedule.filter(c => c.day === day).sort((a, b) => a.start.localeCompare(b.start));
+        
+        const isToday = day === today;
+
+        const dayCol = document.createElement('div');
+        dayCol.className = `space-y-3 p-2 sm:p-3 rounded-xl border border-white/5 bg-white/[0.02] ${isToday ? 'bg-white/5 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : ''}`;
+        dayCol.innerHTML = `<h3 class="text-sm sm:text-base font-bold text-center border-b border-white/10 pb-2 mb-3 text-white tracking-wide">${day}</h3>`;
+        
         if (classesForDay.length > 0) {
             classesForDay.forEach(c => {
                 let typeIndicator = '';
-                if (c.type === 'Lab') typeIndicator = `<div class="absolute top-2 left-2 text-xs font-bold bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Lab</div>`;
-                else if (c.type === 'Class & Lab') typeIndicator = `<div class="absolute top-2 left-2 text-xs font-bold bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Hybrid</div>`;
+                if (c.type === 'Lab') typeIndicator = `<div class="absolute top-2 left-2 text-[10px] uppercase font-bold bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full tracking-wider border border-green-500/20">Lab</div>`;
+                else if (c.type === 'Class & Lab') typeIndicator = `<div class="absolute top-2 left-2 text-[10px] uppercase font-bold bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full tracking-wider border border-purple-500/20">Hybrid</div>`;
+                
                 const classCard = document.createElement('div');
-                classCard.className = 'p-3 bg-white/5 rounded-lg relative group pt-8';
+                classCard.className = 'p-4 bg-black/40 hover:bg-white/5 border border-white/5 hover:border-white/10 rounded-xl relative group transition-all duration-200';
+                
                 classCard.innerHTML = `
                     ${typeIndicator}
-                    <div class="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button class="edit-class-btn p-2" data-class-id="${c.id}" title="Edit" role="button" aria-label="Edit class ${c.name}" style="color: var(--text-secondary);"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                        <button class="delete-class-btn p-2 text-red-400" data-class-id="${c.id}" title="Delete" role="button" aria-label="Delete class ${c.name}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                    <div class="absolute top-2 right-2 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <button class="edit-class-btn p-1.5 bg-white/10 hover:bg-blue-500/80 rounded-md text-gray-300 hover:text-white transition-colors backdrop-blur-sm" data-class-id="${c.id}" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                        <button class="delete-class-btn p-1.5 bg-white/10 hover:bg-red-500/80 rounded-md text-gray-300 hover:text-white transition-colors backdrop-blur-sm" data-class-id="${c.id}" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
                     </div>
-                    <p class="font-semibold">${c.name}</p>
-                    <p class="text-sm" style="color: var(--text-secondary);">${c.start} - ${c.end}</p>
-                    ${c.room ? `<p class="text-xs italic" style="color: var(--text-secondary);">${c.room}</p>` : ''}
-                    ${c.instructor ? `<p class="text-xs italic" style="color: var(--text-secondary);">(${c.instructor})</p>` : ''}
+                    <div class="${typeIndicator ? 'mt-4' : ''}">
+                        <h4 class="font-bold text-white text-sm sm:text-base leading-snug mb-2.5 pr-14">${c.name}</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-center text-[11px] sm:text-xs text-gray-300 font-medium mt-1 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5 opacity-70" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                                ${c.start} - ${c.end}
+                            </div>
+                            ${c.room ? `<div class="flex items-start text-[11px] sm:text-xs text-gray-400 mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5 opacity-70 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg><span class="leading-tight">${c.room}</span></div>` : ''}
+                            ${c.instructor ? `<div class="flex items-start text-[11px] sm:text-xs text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5 opacity-70 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg><span class="leading-tight">${c.instructor}</span></div>` : ''}
+                        </div>
+                    </div>
                 `;
                 dayCol.appendChild(classCard);
             });
         } else {
-            dayCol.innerHTML += `<div class="text-center text-sm py-4 h-full flex items-center justify-center" style="color: var(--text-secondary);">No Classes</div>`;
+            dayCol.innerHTML += `<div class="text-center text-xs sm:text-sm py-6 h-full flex items-center justify-center text-gray-500 italic">No Classes</div>`;
         }
         scheduleGrid.appendChild(dayCol);
     });

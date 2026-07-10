@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 let PORT = process.env.PORT || 3000;
@@ -89,7 +89,7 @@ const server = http.createServer(async (req, res) => {
                                         content: [
                                             {
                                                 type: 'text',
-                                                text: 'Extract the classes schedule from this Bhagwan Parshuram Institute of Technology (BPIT) timetable. RULES: 1. Extract all classes (9:30 AM to 5:00 PM). 2. Map abbreviations (e.g., DS, OOPS, CM, DM, DLCD) to full names using the legend in the image provided (e.g., "Data Structure", "Computational Methods"). 3. Convert all PM times to 24-hour format (12:50-1:40 is 12:50-13:40). 4. If groups are mentioned like (G1) or (G2), include them in the name. 5. Ignore "LUNCH", "LIB", "PDP". Return ONLY a JSON array with this structure: [{"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "407"}].'
+                                                text: 'Extract the classes schedule from this Bhagwan Parshuram Institute of Technology (BPIT) timetable. RULES: 1. Extract EVERY SINGLE class for the entire day, from the earliest morning class to the absolute last evening class. DO NOT skip or omit any classes. 2. Map abbreviations (e.g., DS, OOPS, CM, DM, DLCD) to full names using the legend in the image provided (e.g., "Data Structure", "Computational Methods"). 3. Convert all PM times to 24-hour format (12:50-1:40 is 12:50-13:40). 4. If groups are mentioned like (G1) or (G2), include them in the name. 5. Ignore "LUNCH", "LIB", "PDP". Return ONLY a JSON array with this structure: [{"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "407"}].'
                                             },
                                             {
                                                 type: 'image_url',
@@ -100,7 +100,7 @@ const server = http.createServer(async (req, res) => {
                                         ]
                                     }
                                 ],
-                                max_tokens: 1500
+                                max_tokens: 4000
                             })
                         });
 

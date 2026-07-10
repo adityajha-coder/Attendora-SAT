@@ -156,7 +156,6 @@ export const dashboardHtml = `
                                 <option value="cumulative">Cumulative</option>
                             </select>
                             <button id="semester-wrapped-btn" class="bg-purple-500/80 text-white font-semibold py-2 px-5 rounded-lg hover:bg-purple-500/100 transition-colors" aria-label="Generate semester summary">Semester Wrapped</button>
-                            <button id="export-csv-btn" class="btn-primary text-white font-semibold py-2 px-5 rounded-lg" aria-label="Export history to CSV">Export Full History (CSV)</button>
                         </div>
                     </div>
 

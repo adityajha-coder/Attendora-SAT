@@ -4,7 +4,7 @@ import { dashboardHtml } from './components/dashboard-html.js';
 import { modalsHtml } from './components/modals-html.js';
 import { updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, renderArchivedTermsList, toggleArchivedTermsList, updateTermDatesUI, saveTermDates, archiveCurrentTerm, renderOverviewCards } from './services/app-helpers.js';
 import { checkNotificationStatus, handleNotificationToggle } from './ui/notifications.js';
-import { exportHistoryToCSV, exportData, importData } from './services/data.js';
+import { exportData, importData } from './services/data.js';
 import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
 import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
@@ -266,7 +266,6 @@ function setupEventListeners() {
         btn.addEventListener('click', openEditProfileModal);
     });
 
-    document.getElementById('export-csv-btn').addEventListener('click', exportHistoryToCSV);
     document.getElementById('export-data-btn').addEventListener('click', exportData);
     document.getElementById('import-data-input').addEventListener('change', importData);
     document.getElementById('semester-wrapped-btn').addEventListener('click', generateSemesterWrapped);
