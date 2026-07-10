@@ -1,7 +1,6 @@
 import { schedulCloudSync } from '../services/cloud-sync.js';
 
 export const THEMES = {
-    'default': { name: 'Default', start: '#3b82f6', end: '#8b5cf6' },
     'sunset': { name: 'Sunset', start: '#f97316', end: '#ef4444' },
     'ocean': { name: 'Ocean', start: '#06b6d4', end: '#3b82f6' },
     'forest': { name: 'Forest', start: '#22c55e', end: '#15803d' },
@@ -18,7 +17,7 @@ export const state = {
     settings: {
         notifications: false,
         isLightMode: false,
-        selectedTheme: 'default',
+        selectedTheme: 'ocean',
         dashboardOrder: ['overview-card-attendance', 'overview-card-courses', 'overview-card-streaks', 'overview-card-countdown'], 
         hasCompletedTour: false,
         termStartDate: new Date().toISOString().slice(0, 10),
@@ -88,11 +87,13 @@ export const loadData = () => {
 };
 
 export const applyTheme = (themeName) => {
-    const theme = THEMES[themeName] || THEMES['default'];
+    // If the old 'default' theme is stored, or an invalid theme is passed, fallback to 'ocean'
+    const validThemeName = THEMES[themeName] ? themeName : 'ocean';
+    const theme = THEMES[validThemeName];
     const root = document.documentElement;
     root.style.setProperty('--primary-color-start', theme.start);
     root.style.setProperty('--primary-color-end', theme.end);
-    state.settings.selectedTheme = themeName;
+    state.settings.selectedTheme = validThemeName;
 };
 
 export const applyLightMode = (isLight) => {

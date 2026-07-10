@@ -19,7 +19,7 @@ export const landingHtml = `
                     <p class="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-8">Stay on top of your classes with predictive insights, goal tracking, and motivational achievements.</p>
                     <button id="go-to-login-landing-btn" class="btn-primary text-white font-bold py-4 px-10 rounded-full text-lg">Sign In to Get Started</button>
                 </div>
-                <div class="relative z-10 w-full max-w-4xl mx-auto px-6">
+
             </section>
         </main>
     </div>
