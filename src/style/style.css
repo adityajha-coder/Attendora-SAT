@@ -40,7 +40,7 @@ body {
 }
 
 .font-brand {
-    font-family: 'Righteous', cursive;
+    font-family: 'Satisfy', cursive;
     letter-spacing: 1px;
 }
 
@@ -69,7 +69,6 @@ body {
 }
 
 .card:not(.no-hover):hover {
-    transform: translateY(-8px);
     border-color: rgba(255, 255, 255, 0.2);
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.05);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
