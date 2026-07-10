@@ -1,50 +1,124 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Attendora - Smart attendance tracking with predictive insights, goal tracking, GPA calculator, and gamified achievements for students.">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Attendora - Smart attendance tracking with predictive insights, goal tracking, GPA calculator, and gamified achievements for students."
+    />
     <title>Attendora - Smart Attendance Tracker</title>
-    <link rel="icon" href="assets/images/fevicon.png" type="image/png" sizes="32x32">
-    <link rel="manifest" href="pwa/manifest.json">
-    <meta name="theme-color" content="#f1f5f9">
+    <link
+      rel="icon"
+      href="assets/images/fevicon.png"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link rel="manifest" href="pwa/manifest.json" />
+    <meta name="theme-color" content="#f1f5f9" />
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="stylesheet" href="src/style/style.css">
-    
+
+    <link rel="stylesheet" href="src/style/style.css" />
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" defer></script>
-    <link rel="stylesheet" href="https://unpkg.com/intro.js/minified/introjs.min.css">
+    <script
+      src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/intro.js/minified/introjs.min.css"
+    />
     <script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-</head>
-<body class="relative">
-    
-    <div id="app-loader" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--background-color,#000010);gap:24px;transition:opacity 0.5s ease;">
-        <div class="logo-spinner-container" style="position:relative; width:80px; height:80px;">
-            <img src="assets/images/fevicon.png" alt="Attendora Logo" style="width:100%; height:100%; border-radius:50%; object-fit:cover; position:relative; z-index:2; border:2px solid rgba(255,255,255,0.1); box-shadow:0 8px 24px rgba(0,0,0,0.2);">
-            <div class="spinner-ring" style="position:absolute; inset:-4px; border-radius:50%; border:2px solid transparent; border-top-color:var(--primary-color-start,#3b82f6); border-right-color:var(--primary-color-end,#8b5cf6); animation:spin 1s linear infinite; z-index:1;"></div>
-        </div>
-        <span style="font-family:'Satisfy',cursive;font-size:2rem;letter-spacing:1px;color:var(--text-primary,#fff);">ATTENDORA</span>
-        <p style="color:var(--text-secondary,#94a3b8);font-size:0.875rem;">Loading your dashboard...</p>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Satisfy&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="relative">
+    <div
+      id="app-loader"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--background-color, #000010);
+        gap: 24px;
+        transition: opacity 0.5s ease;
+      "
+    >
+      <div
+        class="logo-spinner-container"
+        style="position: relative; width: 80px; height: 80px"
+      >
+        <img
+          src="assets/images/fevicon.png"
+          alt="Attendora Logo"
+          style="
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            position: relative;
+            z-index: 2;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+          "
+        />
+        <div
+          class="spinner-ring"
+          style="
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--primary-color-start, #3b82f6);
+            border-right-color: var(--primary-color-end, #8b5cf6);
+            animation: spin 1s linear infinite;
+            z-index: 1;
+          "
+        ></div>
+      </div>
+      <span
+        style="
+          font-family: &quot;Satisfy&quot;, cursive;
+          font-size: 2rem;
+          letter-spacing: 1px;
+          color: var(--text-primary, #fff);
+        "
+        >ATTENDORA</span
+      >
+      <p style="color: var(--text-secondary, #94a3b8); font-size: 0.875rem">
+        Loading your dashboard...
+      </p>
     </div>
     <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-    
+
     <div id="app"></div>
 
-    <div id="toast" class="fixed bottom-0 right-0 m-8 p-4 rounded-lg bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold shadow-lg transform translate-y-20 opacity-0 z-50">
-        Toast message
+    <div
+      id="toast"
+      class="fixed bottom-0 right-0 m-8 p-4 rounded-lg bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold shadow-lg transform translate-y-20 opacity-0 z-50"
+    >
+      Toast message
     </div>
 
     <script type="module" src="src/js/main.js"></script>
-</body>
+  </body>
 </html>

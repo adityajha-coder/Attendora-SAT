@@ -15,9 +15,9 @@ export const landingHtml = `
         <main>
             <section id="home" class="min-h-screen flex items-center justify-center text-center overflow-hidden relative pt-20">
                 <div class="container mx-auto px-6 z-10">
-                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 leading-tight tracking-tight drop-shadow-xl">Smart Attendance Tracking</h1>
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-brand font-black text-white mb-4 leading-tight tracking-tight drop-shadow-xl">Smart Attendance Tracking</h1>
                     <p class="text-base sm:text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">Stay on top of your classes with predictive insights, goal tracking, and motivational achievements.</p>
-                    <button id="go-to-login-landing-btn" class="btn-primary text-white font-bold py-4 px-10 rounded-xl text-lg shadow-[0_10px_30px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95 transition-all">Sign In to Get Started</button>
+                    <button id="go-to-login-landing-btn" class="btn-primary text-white font-bold py-4 px-10 rounded-xl text-lg hover:scale-105 active:scale-95 transition-all">Sign In to Get Started</button>
                 </div>
             </section>
         </main>

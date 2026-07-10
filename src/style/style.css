@@ -79,11 +79,9 @@ body {
 .btn-primary {
     background: linear-gradient(90deg, var(--primary-color-start), var(--primary-color-end));
     transition: all 0.3s ease;
-    box-shadow: 0 0 15px color-mix(in srgb, var(--primary-color-start) 50%, var(--primary-color-end) 50%, transparent 50%);
 }
 
 .btn-primary:hover {
-    box-shadow: 0 0 25px color-mix(in srgb, var(--primary-color-start) 50%, var(--primary-color-end) 50%, transparent 20%);
     transform: scale(1.05);
 }
 
