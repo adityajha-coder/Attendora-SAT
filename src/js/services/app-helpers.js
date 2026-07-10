@@ -45,12 +45,21 @@ export function updateOverviewStats() {
     }
 
     // Top Bar Streak logic
-    const topStreakCount = document.getElementById('top-streak-count');
-    const topStreakIndicator = document.getElementById('top-streak-indicator');
-    if (topStreakCount) topStreakCount.textContent = longestStreak;
-    if (topStreakIndicator) {
-        topStreakIndicator.classList.toggle('hidden', longestStreak === 0);
-    }
+    const streakElements = [
+        { count: document.getElementById('top-streak-count'), indicator: document.getElementById('top-streak-indicator') },
+        { count: document.getElementById('mobile-top-streak-count'), indicator: document.getElementById('mobile-top-streak-indicator') }
+    ];
+
+    streakElements.forEach(({ count, indicator }) => {
+        if (count) count.textContent = longestStreak;
+        if (indicator) {
+            if (longestStreak === 0) {
+                indicator.style.display = 'none';
+            } else {
+                indicator.style.display = ''; // Reverts to CSS-defined display (like md:inline-flex)
+            }
+        }
+    });
 }
 
 export function updateGoalOrientedCard() {

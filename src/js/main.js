@@ -178,6 +178,16 @@ function setupEventListeners() {
     document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
 
     document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
+    const bottomMobileMenuBtn = document.querySelector('#mobile-bottom-nav #mobile-menu-btn');
+    if (bottomMobileMenuBtn) {
+        bottomMobileMenuBtn.addEventListener('click', toggleMobileSidebar);
+    }
+    
+    const mobileBottomNav = document.getElementById('mobile-bottom-nav');
+    if (mobileBottomNav) {
+        mobileBottomNav.addEventListener('click', handleSidebarNav);
+    }
+
     document.getElementById('close-sidebar-btn').addEventListener('click', closeMobileSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
 
@@ -222,6 +232,15 @@ function setupEventListeners() {
         toggleModal(document.getElementById('profile-modal'), true);
         if (window.innerWidth < 768) closeMobileSidebar();
     });
+
+    const mobileProfileBtn = document.getElementById('mobile-profile-btn');
+    if (mobileProfileBtn) {
+        mobileProfileBtn.addEventListener('click', () => {
+            const overviewTabBtn = document.querySelector('.profile-tab-btn[data-tab="profile-overview"]');
+            if (overviewTabBtn) overviewTabBtn.click();
+            toggleModal(document.getElementById('profile-modal'), true);
+        });
+    }
 
     document.querySelectorAll('.profile-tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {

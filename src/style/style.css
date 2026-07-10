@@ -44,6 +44,10 @@ body {
     letter-spacing: 1px;
 }
 
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
 #shooting-stars-canvas {
     position: fixed;
     top: 0;

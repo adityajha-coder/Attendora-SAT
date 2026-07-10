@@ -40,28 +40,30 @@ export const dashboardHtml = `
                 </div>
             </aside>
 
-            <main class="flex-1 p-6 sm:p-10 overflow-y-auto">
-                <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-6 py-4 bg-[#000010]/80 backdrop-blur-lg border-b border-white/5 mb-6">
-                    <button id="mobile-menu-btn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white active:scale-95 transition-all shadow-lg" aria-label="Open menu">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-                    </button>
-                    <span class="text-xl font-bold font-brand text-white">ATTENDORA</span>
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">A</div>
+            <main class="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto pb-24 md:pb-6">
+                <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-4 py-3 bg-black/40 backdrop-blur-xl border-b border-white/5 mb-4 shadow-sm">
+                    <a href="#" class="flex items-center gap-2">
+                        <img src="assets/images/logo.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border border-white/20">
+                        <span class="text-xl font-bold font-brand text-white tracking-wide">ATTENDORA</span>
+                    </a>
+                    <div id="mobile-top-streak-indicator" class="inline-flex md:hidden items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs shadow-sm backdrop-blur-md" style="display: none;">
+                        <span id="mobile-top-streak-count" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
+                        <span class="text-sm filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                    </div>
                 </div>
                 
                 <div id="overview-view" class="dashboard-view active">
-                    <div class="relative flex flex-col items-center text-center mb-10 pt-4 px-4 overflow-visible">
-                        <!-- Minimalist Streak Indicator -->
-                        <div id="top-streak-indicator" class="absolute top-0 right-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/[0.03] border border-white/5 text-white font-bold text-xs shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95 translate-y-[-12px]">
-                            <span id="top-streak-count" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
-                            <span class="text-sm filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                    <div class="relative flex flex-col items-center md:flex-row md:justify-between md:items-center text-center md:text-left mb-6 pt-2 px-2 overflow-visible">
+                        <div>
+                             <h1 id="welcome-message" class="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight drop-shadow-xl mb-1">Welcome!</h1>
+                             <p class="text-gray-400 text-sm sm:text-base max-w-md leading-relaxed hidden md:block">Here's your smart summary for today.</p>
                         </div>
-
-                        <div class="mb-6 relative">
-                             <h1 id="welcome-message" class="text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-2xl">Welcome!</h1>
-                             <div class="h-1.5 w-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mt-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                        
+                        <!-- Desktop Streak Indicator -->
+                        <div id="top-streak-indicator" class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95">
+                            <span id="top-streak-count" class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
+                            <span class="text-lg filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
                         </div>
-                        <p class="text-gray-400 text-lg max-w-md leading-relaxed mb-6">Here's your smart summary for today.</p>
                     </div>
 
                     <div id="goal-oriented-card" class="card p-6 rounded-xl mb-6 hidden no-hover">
@@ -215,6 +217,30 @@ export const dashboardHtml = `
 
 
             </main>
+            
+            <!-- Mobile Bottom Nav -->
+            <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 z-50 flex justify-around items-center pb-safe h-[68px] px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+                <a href="#overview" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-blue-400 active transition-colors" aria-label="Home">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                    <span class="text-[10px] font-medium tracking-wide">Home</span>
+                </a>
+                <a href="#schedule" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Schedule">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-[10px] font-medium tracking-wide">Schedule</span>
+                </a>
+                <a href="#courses" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Courses">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
+                    <span class="text-[10px] font-medium tracking-wide">Courses</span>
+                </a>
+                <a href="#calendar" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Calendar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <span class="text-[10px] font-medium tracking-wide">Calendar</span>
+                </a>
+                <button id="mobile-menu-btn" class="flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="More Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    <span class="text-[10px] font-medium tracking-wide">Menu</span>
+                </button>
+            </nav>
         </div>
     </div>
 `;

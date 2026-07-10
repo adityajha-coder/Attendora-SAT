@@ -2,19 +2,32 @@ import { renderReports } from '../features/attendance.js';
 
 export function handleSidebarNav(e) {
     e.preventDefault();
-    const link = e.target.closest('a.sidebar-link');
+    const link = e.target.closest('a.sidebar-link') || e.target.closest('a.bottom-nav-link');
     if (!link) return;
     const viewId = link.getAttribute('href').substring(1);
     navigateTo(viewId);
-    if (window.innerWidth < 768) {
+    // Only close sidebar if we clicked a sidebar link (not a bottom nav link)
+    if (window.innerWidth < 768 && e.target.closest('a.sidebar-link')) {
         closeMobileSidebar();
     }
 }
 
 export function navigateTo(viewId) {
     document.querySelectorAll('#sidebar-nav a').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('#mobile-bottom-nav a').forEach(a => {
+        a.classList.remove('active', 'text-blue-400');
+        a.classList.add('text-gray-400');
+    });
+
     const link = document.querySelector(`#sidebar-nav a[href="#${viewId}"]`);
     if (link) link.classList.add('active');
+
+    const bottomLink = document.querySelector(`#mobile-bottom-nav a[href="#${viewId}"]`);
+    if (bottomLink) {
+        bottomLink.classList.add('active', 'text-blue-400');
+        bottomLink.classList.remove('text-gray-400');
+    }
+
     const targetId = viewId + '-view';
     document.querySelectorAll('.dashboard-view').forEach(view => {
         const wasActive = view.classList.contains('active');

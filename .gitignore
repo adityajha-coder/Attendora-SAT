@@ -11,6 +11,7 @@ node_modules/
 dist/
 .vercel
 /node_modules
+models.json
 
 # OS Files
 .DS_Store
