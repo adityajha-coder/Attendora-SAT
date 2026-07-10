@@ -203,10 +203,57 @@ function setupEventListeners() {
     document.getElementById('settings-btn').addEventListener('click', () => {
         updateTermDatesUI();
         renderArchivedTermsList();
+        
+        // Reset to General tab
+        const generalTabBtn = document.querySelector('.settings-tab-btn[data-tab="settings-general"]');
+        if (generalTabBtn) {
+            generalTabBtn.click();
+        }
+        
         toggleModal(document.getElementById('settings-modal'), true);
     });
 
-    document.getElementById('edit-profile-btn').addEventListener('click', openEditProfileModal);
+    document.getElementById('profile-btn').addEventListener('click', () => {
+        // Reset to Overview tab
+        const overviewTabBtn = document.querySelector('.profile-tab-btn[data-tab="profile-overview"]');
+        if (overviewTabBtn) {
+            overviewTabBtn.click();
+        }
+        toggleModal(document.getElementById('profile-modal'), true);
+        if (window.innerWidth < 768) closeMobileSidebar();
+    });
+
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetTabId = e.currentTarget.dataset.tab;
+            
+            // Update buttons
+            document.querySelectorAll('.profile-tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-white/10', 'text-white');
+                b.classList.add('text-gray-400');
+                b.classList.remove('hover:bg-white/10');
+                b.classList.add('hover:bg-white/5');
+            });
+            e.currentTarget.classList.add('active', 'bg-white/10', 'text-white');
+            e.currentTarget.classList.remove('text-gray-400', 'hover:bg-white/5');
+            e.currentTarget.classList.add('hover:bg-white/10');
+            
+            // Update content
+            document.querySelectorAll('.profile-tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('active');
+            });
+            const targetContent = document.getElementById(targetTabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('active');
+            }
+        });
+    });
+
+    document.querySelectorAll('#edit-profile-btn').forEach(btn => {
+        btn.addEventListener('click', openEditProfileModal);
+    });
 
     document.getElementById('export-csv-btn').addEventListener('click', exportHistoryToCSV);
     document.getElementById('export-data-btn').addEventListener('click', exportData);
@@ -237,6 +284,34 @@ function setupEventListeners() {
             renderThemePicker();
             saveData();
         }
+    });
+
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetTabId = e.currentTarget.dataset.tab;
+            
+            // Update buttons
+            document.querySelectorAll('.settings-tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-white/10', 'text-white');
+                b.classList.add('text-gray-400');
+                b.classList.remove('hover:bg-white/10');
+                b.classList.add('hover:bg-white/5');
+            });
+            e.currentTarget.classList.add('active', 'bg-white/10', 'text-white');
+            e.currentTarget.classList.remove('text-gray-400', 'hover:bg-white/5');
+            e.currentTarget.classList.add('hover:bg-white/10');
+            
+            // Update content
+            document.querySelectorAll('.settings-tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('active');
+            });
+            const targetContent = document.getElementById(targetTabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('active');
+            }
+        });
     });
 
     document.getElementById('theme-toggle').addEventListener('change', (e) => {
