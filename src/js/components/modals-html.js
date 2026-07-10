@@ -271,7 +271,7 @@ export const modalsHtml = `
                      <div class="pt-4">
                          <h3 class="text-xl font-bold text-red-400 mb-2">Danger Zone</h3>
                          <div class="bg-red-500/10 rounded-2xl border border-red-500/20 p-6 relative overflow-hidden">
-                             <div class="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
                              <p class="text-sm text-red-300 mb-6 relative z-10">Actions here are permanent and will affect your current progress.</p>
                              <button id="archive-term-btn-danger" class="w-full bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 font-semibold py-3.5 rounded-xl transition-colors relative z-10 shadow-lg" aria-label="Archive current term">Archive Current Term & Start New</button>
                          </div>
@@ -378,7 +378,7 @@ export const modalsHtml = `
     <div id="semester-wrapped-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
         <div class="modal-content card max-w-lg w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
             <div class="text-center mb-6">
-                <h2 class="text-4xl font-bold text-white font-brand hero-glow">Your Semester Wrapped!</h2>
+                <h2 class="text-4xl font-bold text-white font-brand">Your Semester Wrapped!</h2>
                 <p class="text-gray-400">A summary of your academic journey.</p>
             </div>
             <div id="wrapped-content" class="space-y-4 text-white max-h-80 overflow-y-auto pr-4">

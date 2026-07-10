@@ -6,11 +6,8 @@ export const dashboardHtml = `
             <aside id="sidebar" class="w-64 flex-shrink-0 sidebar-theme border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 transform -translate-x-full transition-all duration-300 ease-in-out">
                 <div class="h-20 flex items-center justify-between border-b border-white/5 px-6">
                      <a href="#" class="flex items-center gap-3">
-                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                           <defs><linearGradient id="logoGradientSidebar" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--primary-color-start)"/><stop offset="100%" stop-color="var(--primary-color-end)"/></linearGradient></defs>
-                           <circle cx="12" cy="12" r="10" stroke="url(#logoGradientSidebar)" stroke-width="2"/><path d="M8 12L11 15L16 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span class="text-2xl font-bold text-white hero-glow font-brand">ATTENDORA</span>
+                        <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border-2 border-white/10 shadow-md">
+                        <span class="text-2xl font-bold text-white font-brand">ATTENDORA</span>
                     </a>
                     <button id="close-sidebar-btn" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors text-white" aria-label="Close sidebar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -48,7 +45,7 @@ export const dashboardHtml = `
                     <button id="mobile-menu-btn" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white active:scale-95 transition-all shadow-lg" aria-label="Open menu">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
                     </button>
-                    <span class="text-xl font-bold hero-glow font-brand text-white">ATTENDORA</span>
+                    <span class="text-xl font-bold font-brand text-white">ATTENDORA</span>
                     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">A</div>
                 </div>
                 

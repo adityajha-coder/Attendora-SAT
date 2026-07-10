@@ -54,9 +54,7 @@ body {
     transition: opacity 0.5s ease;
 }
 
-.hero-glow {
-    text-shadow: 0 0 8px rgba(191, 219, 254, 0.5), 0 0 20px rgba(191, 219, 254, 0.3);
-}
+
 
 .card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
@@ -316,10 +314,6 @@ select option {
     background-color: var(--primary-color-start);
 }
 
-.light-mode .hero-glow {
-    text-shadow: none;
-}
-
 .light-mode .bg-gradient-to-r {
     background-image: none;
 }
@@ -377,6 +371,27 @@ select option {
 
 .light-mode .bg-white\/10 {
     background-color: var(--input-background);
+}
+
+.light-mode .hover\:bg-white\/5:hover,
+.light-mode .hover\:bg-white\/10:hover,
+.light-mode .hover\:bg-white\/20:hover {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode .bg-black\/40,
+.light-mode .bg-black\/20 {
+    background-color: var(--card-background) !important;
+    border: 1px solid var(--card-border) !important;
+}
+
+.light-mode .bg-gray-800,
+.light-mode .bg-gray-700 {
+    background-color: #d1d5db !important;
+}
+
+.light-mode .text-gray-500 {
+    color: var(--text-secondary) !important;
 }
 
 .light-mode .text-green-400 {

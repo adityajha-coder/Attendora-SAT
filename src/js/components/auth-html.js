@@ -1,7 +1,6 @@
 export const authHtml = `
     <div id="auth-page" class="min-h-screen flex items-center justify-center p-4 relative hidden">
-         <div class="absolute top-[-100px] left-[-150px] w-[300px] h-[300px] bg-gradient-to-br from-indigo-500/20 to-sky-500/20 rounded-full blur-3xl opacity-50"></div>
-         <div class="absolute bottom-[-150px] md:bottom-[-250px] right-[-150px] md:right-[-250px] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-gradient-to-tl from-blue-500/20 to-purple-600/20 rounded-full blur-3xl opacity-60"></div>
+
         <div class="card max-w-md w-full p-6 sm:p-8 rounded-2xl z-10 no-hover">
 
             <!-- LOGIN (Google only) -->

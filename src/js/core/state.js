@@ -1,4 +1,3 @@
-import { initVisuals } from './utils.js';
 import { schedulCloudSync } from '../services/cloud-sync.js';
 
 export const THEMES = {
@@ -44,7 +43,6 @@ export const state = {
     }
 };
 
-export const visuals = initVisuals();
 
 export const saveData = () => {
     localStorage.setItem('attendoraState', JSON.stringify(state));
@@ -101,15 +99,6 @@ export const applyLightMode = (isLight) => {
     document.body.classList.toggle('light-mode', isLight);
     const toggleBtn = document.getElementById('theme-toggle');
     if(toggleBtn) toggleBtn.checked = isLight;
-    const canvasEl = document.getElementById('shooting-stars-canvas');
-    if (isLight) {
-        if(canvasEl) canvasEl.style.opacity = '0';
-        visuals?.stopAnimate();
-    } else {
-        if(canvasEl) canvasEl.style.opacity = '1';
-        visuals?.initStars();
-        visuals?.animate();
-    }
     state.settings.isLightMode = isLight;
 };
 
