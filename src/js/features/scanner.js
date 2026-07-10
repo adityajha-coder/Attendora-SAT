@@ -23,7 +23,7 @@ export async function handleTimetableScan(event) {
     reader.onload = async (e) => {
         const img = new Image();
         img.onload = async () => {
-            // Downscale image to max 1024px width to prevent API 400 errors for too large payloads
+            
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
@@ -38,8 +38,7 @@ export async function handleTimetableScan(event) {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            
-            // Compress heavily to ensure Groq accepts it
+
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
             try {
@@ -70,10 +69,9 @@ export async function handleTimetableScan(event) {
                 
                 let scannedData = [];
                 try {
-                    // Strips potential introductory text/markdown and handles edge cases
-                    let jsonStr = aiResponseText;
                     
-                    // Remove markdown code blocks if present
+                    let jsonStr = aiResponseText;
+
                     if (jsonStr.includes('```')) {
                         jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '');
                     }

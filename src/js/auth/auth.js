@@ -1,3 +1,4 @@
+// Handles user authentication, profile editing, and session management.
 import { state, saveData } from '../core/state.js';
 import { showToast } from '../ui/ui.js';
 import { calculateGpa } from '../features/academics.js';
@@ -5,13 +6,10 @@ import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
 import { supabase } from '../core/supabase.js';
 
-// ── Listen for Redirects (Non-blocking) ──
-// Supabase handles redirects automatically, listener is now in main.js
 export function setupAuthListener() {
-    // Deprecated in favor of supabase.auth.onAuthStateChange in main.js
+    
 }
 
-// ── Setup New User ──────────────────────────
 async function setupNewUser(user) {
     try {
         const { data: userDoc, error } = await supabase.from('users').select('*').eq('id', user.id).single();
@@ -32,7 +30,7 @@ async function setupNewUser(user) {
     }
 }
 
-// ── Google Sign-In ──────────────────────────
+// Google Sign-In
 import { showDashboard } from '../main.js';
 
 export const signInWithGoogle = async () => {
@@ -61,7 +59,7 @@ export const signInWithGoogle = async () => {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
-        // If successful, Supabase redirects the page, so no need to reset button state.
+        
     } catch (err) {
         console.error('[Auth] Sign-in exception:', err);
         showToast("Sign-in failed.", "error");
@@ -70,7 +68,6 @@ export const signInWithGoogle = async () => {
     }
 };
 
-// ── Logout ──────────────────────────────────
 export const logoutUser = async () => {
     try {
         await supabase.auth.signOut();
@@ -82,7 +79,6 @@ export const logoutUser = async () => {
     }
 };
 
-// ── Edit Profile Modal ──────────────────────
 export async function openEditProfileModal() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return showToast("You must be signed in.", "error");
@@ -92,7 +88,6 @@ export async function openEditProfileModal() {
     document.getElementById('login-form').classList.add('hidden');
     document.getElementById('edit-profile-form').classList.remove('hidden');
 
-    // Populate fields
     document.getElementById('edit-name').value = state.userProfile.name || '';
     document.getElementById('edit-course').value = state.userProfile.course || '';
     document.getElementById('edit-year').value = state.userProfile.year || '';
@@ -113,7 +108,6 @@ export async function openEditProfileModal() {
         showToast("Profile updated!", "success");
     };
 
-    // Cancel handler
     document.getElementById('cancel-edit-profile-btn').onclick = () => {
         closeEditProfile();
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
@@ -126,7 +120,6 @@ function closeEditProfile() {
     document.getElementById('dashboard-app').classList.remove('hidden');
 }
 
-// ── Render Profile View ─────────────────────
 export function renderProfile() {
     const profile = state.userProfile || {};
     const contact = profile.contact || 'user@example.com';

@@ -1,18 +1,9 @@
-/**
- * CLOUD SYNC SERVICE
- * Handles bidirectional sync between localStorage (fast offline) and Firestore (cloud backup).
- * - On login: loads cloud data, merges with local, writes back to both.
- * - On saveData(): debounced write to Firestore + immediate localStorage write.
- * - Provides a visual sync status indicator for UX.
- */
-
 import { supabase } from '../core/supabase.js';
 import { showToast } from '../ui/ui.js';
 
 let syncTimeoutId = null;
-const SYNC_DEBOUNCE_MS = 2000; // 2 seconds after last change
+const SYNC_DEBOUNCE_MS = 2000; 
 
-// Keys from state to persist to the cloud
 const PERSISTABLE_KEYS = [
     'userProfile',
     'schedule',
@@ -24,9 +15,6 @@ const PERSISTABLE_KEYS = [
     'settings'
 ];
 
-/**
- * Shows a small sync status indicator in the UI
- */
 function setSyncStatus(status) {
     let indicator = document.getElementById('cloud-sync-indicator');
     if (!indicator) return;
@@ -50,7 +38,7 @@ function setSyncStatus(status) {
                 <span class="text-xs text-green-400">Synced</span>
             `;
             indicator.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 transition-all duration-300';
-            // Fade out after 3s
+            
             setTimeout(() => {
                 if (indicator.querySelector('.text-green-400')) {
                     indicator.innerHTML = `
@@ -85,30 +73,23 @@ function setSyncStatus(status) {
     }
 }
 
-/**
- * Extracts the persistable subset from the app state.
- */
 function extractPersistableState(state) {
     const data = {};
     PERSISTABLE_KEYS.forEach(key => {
         if (state[key] !== undefined) {
-            data[key] = JSON.parse(JSON.stringify(state[key])); // deep clone to strip proxies/refs
+            data[key] = JSON.parse(JSON.stringify(state[key])); 
         }
     });
     return data;
 }
 
-/**
- * Saves the current app state to Firestore (debounced).
- * Call this every time saveData() is called.
- */
 export function schedulCloudSync(state) {
     if (syncTimeoutId) clearTimeout(syncTimeoutId);
 
     syncTimeoutId = setTimeout(async () => {
         const { data: { session } } = await supabase.auth.getSession();
         const user = session?.user;
-        if (!user) return; // not logged in
+        if (!user) return; 
 
         try {
             setSyncStatus('syncing');
@@ -134,10 +115,6 @@ export function schedulCloudSync(state) {
     }, SYNC_DEBOUNCE_MS);
 }
 
-/**
- * Loads user data from Firestore.
- * Returns null if no cloud data exists.
- */
 export async function loadFromCloud() {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
@@ -170,22 +147,16 @@ export async function loadFromCloud() {
     }
 }
 
-/**
- * Merges cloud data into the local state.
- * Strategy: Cloud wins if cloud data has content and local is empty/default,
- * otherwise uses a "most data wins" merge with cloud taking priority.
- */
 export function mergeCloudData(state, cloudData) {
     if (!cloudData) return false;
 
     let merged = false;
-    
-    // If local has no real data but cloud does, cloud wins entirely
+
     const localHasData = state.schedule.length > 0 || state.history.length > 0;
     const cloudHasData = (cloudData.schedule?.length > 0) || (cloudData.history?.length > 0);
 
     if (!localHasData && cloudHasData) {
-        // Fresh device: cloud data wins entirely
+        
         PERSISTABLE_KEYS.forEach(key => {
             if (cloudData[key] !== undefined) {
                 if (key === 'settings') {
@@ -199,7 +170,7 @@ export function mergeCloudData(state, cloudData) {
         });
         merged = true;
     } else if (localHasData && cloudHasData) {
-        // Both have data: use the one with more history entries (more recent data)
+        
         const localHistoryCount = state.history.length;
         const cloudHistoryCount = cloudData.history?.length || 0;
 
@@ -209,7 +180,7 @@ export function mergeCloudData(state, cloudData) {
                     if (key === 'settings') {
                         Object.assign(state[key], cloudData[key]);
                     } else if (key === 'achievements') {
-                        // Merge achievements: keep unlocked ones from both
+                        
                         const mergedAchievements = { ...state[key] };
                         Object.keys(cloudData[key] || {}).forEach(achKey => {
                             const cloudAch = cloudData[key][achKey];
@@ -228,17 +199,14 @@ export function mergeCloudData(state, cloudData) {
             });
             merged = true;
         }
-        // If local has more data, we keep local and the next saveData() will push it to cloud
+        
     } else if (!cloudHasData && localHasData) {
-        // Local has data, cloud is empty — do nothing, next save will push to cloud
+        
     }
 
     return merged;
 }
 
-/**
- * Force-push current state to cloud immediately (for initial sync after signup).
- */
 export async function forceCloudSave(state) {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;

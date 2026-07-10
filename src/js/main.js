@@ -12,7 +12,7 @@ import { state, saveData, loadData, applyTheme, applyLightMode } from './core/st
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
 import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
 import { supabase } from './core/supabase.js';
-// Firebase imports removed, using Supabase now
+
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
@@ -51,7 +51,6 @@ const showAuthPage = () => {
     dismissLoader();
 };
 
-// Ensure new users from redirect have profiles created
 async function setupNewUserFromRedirect(user) {
     try {
         const { data: userDoc, error } = await supabase.from('users').select('*').eq('id', user.id).single();
@@ -75,8 +74,6 @@ const initializeAttendora = async () => {
     loadData();
     setupEventListeners();
 
-    // Supabase handles redirects automatically via session recovery.
-    // Check if we just signed in from a redirect
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session && session.user) {
@@ -89,11 +86,10 @@ const initializeAttendora = async () => {
     supabase.auth.onAuthStateChange(async (event, session) => {
         const user = session?.user;
         if (user) {
-            // Show loading indicator while syncing from cloud
+            
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
 
-            // Load cloud data and merge with local
             try {
                 const cloudData = await loadFromCloud();
                 if (cloudData) {
@@ -112,7 +108,6 @@ const initializeAttendora = async () => {
                 console.warn('[CloudSync] Sync on login failed, using local data:', err);
             }
 
-            // Ensure profile has user's info (handles first-time Google sign-in)
             if (!state.userProfile.contact) {
                 state.userProfile.contact = user.email;
             }
@@ -213,8 +208,7 @@ function setupEventListeners() {
     document.getElementById('settings-btn').addEventListener('click', () => {
         updateTermDatesUI();
         renderArchivedTermsList();
-        
-        // Reset to General tab
+
         const generalTabBtn = document.querySelector('.settings-tab-btn[data-tab="settings-general"]');
         if (generalTabBtn) {
             generalTabBtn.click();
@@ -224,7 +218,7 @@ function setupEventListeners() {
     });
 
     document.getElementById('profile-btn').addEventListener('click', () => {
-        // Reset to Overview tab
+        
         const overviewTabBtn = document.querySelector('.profile-tab-btn[data-tab="profile-overview"]');
         if (overviewTabBtn) {
             overviewTabBtn.click();
@@ -245,8 +239,7 @@ function setupEventListeners() {
     document.querySelectorAll('.profile-tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetTabId = e.currentTarget.dataset.tab;
-            
-            // Update buttons
+
             document.querySelectorAll('.profile-tab-btn').forEach(b => {
                 b.classList.remove('active', 'bg-white/10', 'text-white');
                 b.classList.add('text-gray-400');
@@ -256,8 +249,7 @@ function setupEventListeners() {
             e.currentTarget.classList.add('active', 'bg-white/10', 'text-white');
             e.currentTarget.classList.remove('text-gray-400', 'hover:bg-white/5');
             e.currentTarget.classList.add('hover:bg-white/10');
-            
-            // Update content
+
             document.querySelectorAll('.profile-tab-content').forEach(content => {
                 content.classList.add('hidden');
                 content.classList.remove('active');
@@ -308,8 +300,7 @@ function setupEventListeners() {
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetTabId = e.currentTarget.dataset.tab;
-            
-            // Update buttons
+
             document.querySelectorAll('.settings-tab-btn').forEach(b => {
                 b.classList.remove('active', 'bg-white/10', 'text-white');
                 b.classList.add('text-gray-400');
@@ -319,8 +310,7 @@ function setupEventListeners() {
             e.currentTarget.classList.add('active', 'bg-white/10', 'text-white');
             e.currentTarget.classList.remove('text-gray-400', 'hover:bg-white/5');
             e.currentTarget.classList.add('hover:bg-white/10');
-            
-            // Update content
+
             document.querySelectorAll('.settings-tab-content').forEach(content => {
                 content.classList.add('hidden');
                 content.classList.remove('active');
@@ -433,7 +423,6 @@ function setupEventListeners() {
     document.getElementById('sidebar-nav').addEventListener('click', handleSidebarNav);
 
     document.getElementById('logout-btn').addEventListener('click', logoutUser);
-
 
 }
 

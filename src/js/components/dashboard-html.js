@@ -43,7 +43,7 @@ export const dashboardHtml = `
             <main class="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto pb-24 md:pb-6">
                 <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-4 py-3 bg-black/40 backdrop-blur-xl border-b border-white/5 mb-4 shadow-sm">
                     <a href="#" class="flex items-center gap-2">
-                        <img src="assets/images/logo.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border border-white/20">
+                        <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border border-white/20">
                         <span class="text-xl font-bold font-brand text-white tracking-wide">ATTENDORA</span>
                     </a>
                     <div id="mobile-top-streak-indicator" class="inline-flex md:hidden items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs shadow-sm backdrop-blur-md" style="display: none;">
@@ -213,7 +213,6 @@ export const dashboardHtml = `
                         </div>
                     </div>
                 </div>
-
 
             </main>
             

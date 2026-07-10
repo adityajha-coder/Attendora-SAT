@@ -58,8 +58,6 @@ body {
     transition: opacity 0.5s ease;
 }
 
-
-
 .card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
     backdrop-filter: blur(24px);
@@ -99,7 +97,6 @@ body {
     background-color: color-mix(in srgb, var(--danger-color) 80%, black 20%);
 }
 
-/* --- DASHBOARD & COMPONENTS --- */
 .sidebar-link {
     color: var(--text-secondary);
     border-radius: 8px;
@@ -199,7 +196,6 @@ select option {
     color: var(--text-primary);
 }
 
-/* Calendar */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -471,9 +467,6 @@ select option {
     transition: background-color 0.3s ease;
 }
 
-/* --- UX Polish Animations --- */
-
-/* Shake Animation for Form Validation */
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     20%, 60% { transform: translateX(-4px); }
@@ -487,7 +480,6 @@ select option {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger-color) 30%, transparent) !important;
 }
 
-/* Toast Spring Animation */
 @keyframes toast-slide-up {
     0% { transform: translateY(100px) scale(0.9); opacity: 0; }
     70% { transform: translateY(-10px) scale(1.02); opacity: 1; }
@@ -505,7 +497,6 @@ select option {
     animation: toast-slide-down 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Staggered Fade-in for Lists */
 @keyframes fade-slide-up {
     0% { opacity: 0; transform: translateY(15px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -523,7 +514,6 @@ select option {
 .stagger-item:nth-child(7) { animation-delay: 0.35s; }
 .stagger-item:nth-child(n+8) { animation-delay: 0.4s; }
 
-/* Loading Spinner for Buttons */
 @keyframes spin-fast {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }

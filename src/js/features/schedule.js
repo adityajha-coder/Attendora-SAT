@@ -1,3 +1,4 @@
+// Handles creating, editing, and deleting classes in the schedule.
 import { state, saveData, dateIsWithinTerm } from '../core/state.js';
 import { checkAchievements } from './gamification.js';
 import { showConfirmationModal, showToast, toggleModal } from '../ui/ui.js';

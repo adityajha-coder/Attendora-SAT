@@ -1,3 +1,4 @@
+// Reusable UI components like modals, toasts, and theme pickers.
 import { state, THEMES, applyTheme, applyLightMode, saveData } from '../core/state.js';
 import { renderReports } from '../features/attendance.js';
 
@@ -17,8 +18,7 @@ export const toggleModal = (modal, show) => {
 let toastTimeout = null;
 export const showToast = (message, type = 'success') => {
     const toast = document.getElementById('toast');
-    
-    // Define SVG icons for each type
+
     const icons = {
         success: `<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
         error: `<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
@@ -124,15 +124,13 @@ export function renderCalendar() {
     
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    // Fill empty slots
+
     for (let i = 0; i < firstDay; i++) {
         const emptyDay = document.createElement('div');
         emptyDay.className = "calendar-day empty";
         calendarGrid.appendChild(emptyDay);
     }
-    
-    // Current date for comparison
+
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     

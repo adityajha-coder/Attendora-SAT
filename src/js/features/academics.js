@@ -1,3 +1,4 @@
+// Manages assignments and GPA calculator logic.
 import { state, saveData, dateIsWithinTerm } from '../core/state.js';
 import { checkAchievements } from './gamification.js';
 import { showConfirmationModal, showToast, toggleModal } from '../ui/ui.js';

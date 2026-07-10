@@ -1,8 +1,8 @@
+// Helper functions to calculate dashboard overview statistics, progress bars, and streaks.
 import { state, saveData, dateIsWithinTerm } from '../core/state.js';
 import { calculateOverallAttendance, calculateStreak, renderReports } from '../features/attendance.js';
 import { toggleModal, showToast, showConfirmationModal } from '../ui/ui.js';
 
-// We get countdownInterval from main.js dynamically or pass it
 let countdownInterval = null;
 export function getCountdownInterval() { return countdownInterval; }
 export function updateInterval(v) { countdownInterval = v; }
@@ -35,7 +35,6 @@ export function updateOverviewStats() {
     const absentClassesEl = document.getElementById('overview-absent-classes');
     if (absentClassesEl) absentClassesEl.textContent = absent;
 
-    // Redesigned: Professional Segmented Progress Bar logic
     const totalTracked = present + absent;
     const presentBar = document.getElementById('overview-present-bar');
     const absentBar = document.getElementById('overview-absent-bar');
@@ -44,7 +43,6 @@ export function updateOverviewStats() {
         absentBar.style.width = `${(absent / totalTracked) * 100}%`;
     }
 
-    // Top Bar Streak logic
     const streakElements = [
         { count: document.getElementById('top-streak-count'), indicator: document.getElementById('top-streak-indicator') },
         { count: document.getElementById('mobile-top-streak-count'), indicator: document.getElementById('mobile-top-streak-indicator') }

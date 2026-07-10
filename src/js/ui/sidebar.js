@@ -1,3 +1,4 @@
+// Handles navigation between UI tabs and manages the mobile drawer state.
 import { renderReports } from '../features/attendance.js';
 
 export function handleSidebarNav(e) {
@@ -6,7 +7,7 @@ export function handleSidebarNav(e) {
     if (!link) return;
     const viewId = link.getAttribute('href').substring(1);
     navigateTo(viewId);
-    // Only close sidebar if we clicked a sidebar link (not a bottom nav link)
+    
     if (window.innerWidth < 768 && e.target.closest('a.sidebar-link')) {
         closeMobileSidebar();
     }
@@ -49,7 +50,7 @@ export function toggleMobileSidebar() {
     if (isHidden) {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden', 'opacity-0');
-        // Prevent background scrolling
+        
         document.body.style.overflow = 'hidden';
     } else {
         closeMobileSidebar();
@@ -59,6 +60,6 @@ export function toggleMobileSidebar() {
 export function closeMobileSidebar() {
     document.getElementById('sidebar').classList.add('-translate-x-full');
     document.getElementById('sidebar-overlay').classList.add('hidden', 'opacity-0');
-    // Restore background scrolling
+    
     document.body.style.overflow = '';
 }

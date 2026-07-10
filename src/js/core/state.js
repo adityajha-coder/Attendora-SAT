@@ -1,3 +1,4 @@
+// Core state management. Holds global data (schedule, history, etc.) and handles LocalStorage saving/loading.
 import { schedulCloudSync } from '../services/cloud-sync.js';
 
 export const THEMES = {
@@ -42,10 +43,9 @@ export const state = {
     }
 };
 
-
 export const saveData = () => {
     localStorage.setItem('attendoraState', JSON.stringify(state));
-    // Also schedule a debounced cloud sync
+    
     schedulCloudSync(state);
 };
 
@@ -87,7 +87,7 @@ export const loadData = () => {
 };
 
 export const applyTheme = (themeName) => {
-    // If the old 'default' theme is stored, or an invalid theme is passed, fallback to 'ocean'
+    
     const validThemeName = THEMES[themeName] ? themeName : 'ocean';
     const theme = THEMES[validThemeName];
     const root = document.documentElement;

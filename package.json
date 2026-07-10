@@ -8,6 +8,7 @@
     "start": "node --env-file=server/.env server/server.mjs"
   },
   "devDependencies": {
+    "strip-comments": "^2.0.1",
     "vercel": "^39.0.0"
   },
   "keywords": [

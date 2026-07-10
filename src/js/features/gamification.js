@@ -1,8 +1,8 @@
+// Contains logic for unlocking achievements based on attendance milestones.
 import { state, saveData, dateIsWithinTerm } from '../core/state.js';
 import { showToast, toggleModal } from '../ui/ui.js';
 import { calculateOverallAttendance, calculateAttendanceForCourse } from './attendance.js';
 
-// Local copy to avoid circular dependency with academics.js
 const calculateGpaLocal = () => {
     const totalPoints = state.gpaCourses.reduce((acc, course) => acc + (course.grade * course.credits), 0);
     const totalCredits = state.gpaCourses.reduce((acc, course) => acc + course.credits, 0);
