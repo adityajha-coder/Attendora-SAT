@@ -10,15 +10,15 @@ export function renderAssignments() {
     upcomingAssignmentsList.innerHTML = '';
     if (state.schedule.length === 0) {
         const emptyState = `
-            <div class="col-span-full text-center py-20 px-6 card border-dashed border-2 border-white/5 no-hover rounded-3xl">
-                <div class="mb-6 inline-flex p-5 rounded-full bg-amber-500/10">
-                    <svg class="h-12 w-12 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="col-span-full text-center py-24 px-6 card border-dashed border-2 border-white/5 no-hover rounded-3xl">
+                <div class="mb-8 inline-flex p-6 rounded-full bg-amber-500/10 shadow-[0_0_50px_rgba(245,158,11,0.2)]">
+                    <svg class="h-16 w-16 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 6.75 6h.75c.621 0 1.125.504 1.125 1.125v3.026a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-1.5a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 0 0 18 19.5h1.5a2.25 2.25 0 002.25-2.25V6.75Z" />
                     </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-white mb-2">Track your Assignments</h3>
-                <p class="text-gray-400 mb-8 max-w-sm mx-auto">Never miss a deadline again. Once you add your first course, you can start tracking assignments here.</p>
-                <button onclick="window.location.hash='#schedule'" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-white">
+                <h3 class="text-3xl font-black text-white mb-3 tracking-tight">Track your Assignments</h3>
+                <p class="text-gray-400 text-lg mb-8 max-w-sm mx-auto">Never miss a deadline again. Add a class to your schedule first to start tracking.</p>
+                <button onclick="window.location.hash='#schedule'" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-white hover:scale-105 active:scale-95 shadow-md">
                     Setup My Schedule
                 </button>
             </div>`;
@@ -74,22 +74,56 @@ export function renderAssignments() {
 
 export function handleAssignmentFormSubmit(e) {
     e.preventDefault();
-    const editingId = document.getElementById('editing-assignment-id').value;
-    const assignmentData = {
-        title: document.getElementById('assignment-title').value,
-        course: document.getElementById('assignment-course').value,
-        type: document.getElementById('assignment-type').value,
-        dueDate: document.getElementById('assignment-due-date').value
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const titleInput = document.getElementById('assignment-title');
+    const courseInput = document.getElementById('assignment-course');
+    const dateInput = document.getElementById('assignment-due-date');
+    
+    let hasError = false;
+    const validateField = (input) => {
+        if (!input.value.trim()) {
+            input.classList.remove('shake');
+            void input.offsetWidth; 
+            input.classList.add('shake', 'input-error');
+            hasError = true;
+            input.addEventListener('input', () => input.classList.remove('input-error'), { once: true });
+        }
     };
-    if (editingId) {
-        const index = state.assignments.findIndex(a => a.id === editingId);
-        if (index > -1) state.assignments[index] = { ...state.assignments[index], ...assignmentData };
-    } else {
-        state.assignments.push({ id: `asg-${Date.now()}`, ...assignmentData });
+
+    validateField(titleInput);
+    validateField(courseInput);
+    validateField(dateInput);
+
+    if (hasError) {
+        import('../ui/ui.js').then(module => module.showToast("Please fill out all required fields.", "warning"));
+        return;
     }
-    saveData();
-    window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-    toggleModal(document.getElementById('assignment-modal'), false); 
+    
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="btn-spinner"></span> Saving...`;
+
+    setTimeout(() => {
+        const editingId = document.getElementById('editing-assignment-id').value;
+        const assignmentData = {
+            title: titleInput.value,
+            course: courseInput.value,
+            type: document.getElementById('assignment-type').value,
+            dueDate: dateInput.value
+        };
+        if (editingId) {
+            const index = state.assignments.findIndex(a => a.id === editingId);
+            if (index > -1) state.assignments[index] = { ...state.assignments[index], ...assignmentData };
+        } else {
+            state.assignments.push({ id: `asg-${Date.now()}`, ...assignmentData });
+        }
+        saveData();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        import('../ui/ui.js').then(module => module.toggleModal(document.getElementById('assignment-modal'), false)); 
+    }, 400);
 }
 
 export function handleDeleteAssignment(assignmentId) {
@@ -107,28 +141,63 @@ export function handleDeleteAssignment(assignmentId) {
 
 export function handleGpaFormSubmit(e) {
     e.preventDefault();
-    const editingId = document.getElementById('editing-gpa-id').value;
-    const estimatedPercent = document.getElementById('gpa-estimated-percent').value;
-    const gpaData = {
-        name: document.getElementById('gpa-course-name').value,
-        credits: parseFloat(document.getElementById('gpa-credits').value),
-        grade: parseInt(document.getElementById('gpa-grade').value), 
-        estimatedPercent: estimatedPercent ? parseInt(estimatedPercent) : null, 
-        date: new Date().toISOString().slice(0,10) 
-    };
-    if (editingId) {
-        const index = state.gpaCourses.findIndex(c => c.id === editingId);
-        if (index > -1) {
-            gpaData.date = state.gpaCourses[index].date;
-            state.gpaCourses[index] = { ...state.gpaCourses[index], ...gpaData };
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const nameInput = document.getElementById('gpa-course-name');
+    const creditsInput = document.getElementById('gpa-credits');
+    const gradeInput = document.getElementById('gpa-grade');
+    const estimatedPercentInput = document.getElementById('gpa-estimated-percent');
+    
+    let hasError = false;
+    const validateField = (input) => {
+        if (!input.value.trim()) {
+            input.classList.remove('shake');
+            void input.offsetWidth; 
+            input.classList.add('shake', 'input-error');
+            hasError = true;
+            input.addEventListener('input', () => input.classList.remove('input-error'), { once: true });
         }
-    } else {
-        state.gpaCourses.push({ id: `gpa-${Date.now()}`, ...gpaData });
+    };
+
+    validateField(nameInput);
+    validateField(creditsInput);
+    validateField(gradeInput);
+
+    if (hasError) {
+        import('../ui/ui.js').then(module => module.showToast("Please fill out all required fields.", "warning"));
+        return;
     }
-    checkAchievements(); 
-    saveData();
-    renderGpaCalculator();
-    toggleModal(document.getElementById('gpa-modal'), false); 
+    
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="btn-spinner"></span> Saving...`;
+
+    setTimeout(() => {
+        const editingId = document.getElementById('editing-gpa-id').value;
+        const estimatedPercent = estimatedPercentInput.value;
+        const gpaData = {
+            name: nameInput.value,
+            credits: parseFloat(creditsInput.value),
+            grade: parseInt(gradeInput.value), 
+            estimatedPercent: estimatedPercent ? parseInt(estimatedPercent) : null, 
+            date: new Date().toISOString().slice(0,10) 
+        };
+        if (editingId) {
+            const index = state.gpaCourses.findIndex(c => c.id === editingId);
+            if (index > -1) {
+                gpaData.date = state.gpaCourses[index].date;
+                state.gpaCourses[index] = { ...state.gpaCourses[index], ...gpaData };
+            }
+        } else {
+            state.gpaCourses.push({ id: `gpa-${Date.now()}`, ...gpaData });
+        }
+        checkAchievements(); 
+        saveData();
+        renderGpaCalculator();
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        import('../ui/ui.js').then(module => module.toggleModal(document.getElementById('gpa-modal'), false)); 
+    }, 400);
 }
 
 export function handleDeleteGpaCourse(gpaId) {

@@ -13,18 +13,18 @@ export function renderSchedule() {
         scheduleEmptyPrompt.classList.remove('hidden');
         scheduleEmptyPrompt.innerHTML = `
             <div class="py-20 px-6 text-center">
-                <div class="mb-6 inline-flex p-5 rounded-full bg-cyan-500/10">
-                    <svg class="h-12 w-12 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="mb-8 inline-flex p-6 rounded-full bg-cyan-500/10 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
+                    <svg class="h-16 w-16 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2.25 2.25 0 002.25-2.25V7a2.25 2.25 0 00-2.25-2.25H5A2.25 2.25 0 002.75 7v11.75A2.25 2.25 0 005 21z" />
                     </svg>
                 </div>
-                <h3 class="text-3xl font-bold text-white mb-2">Build your Weekly Schedule</h3>
-                <p class="text-gray-400 mb-8 max-w-md mx-auto">Upload a photo of your timetable or add your classes manually to start tracking.</p>
+                <h3 class="text-4xl font-black text-white mb-4 tracking-tight">Build your Weekly Schedule</h3>
+                <p class="text-gray-400 text-lg mb-10 max-w-md mx-auto leading-relaxed">Upload a photo of your timetable or add your classes manually to start tracking.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button id="scan-timetable-prompt-btn" class="btn-primary text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform hover:scale-105">
+                    <button id="scan-timetable-prompt-btn" class="btn-primary text-white font-bold py-3.5 px-8 rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.3)] transition-all hover:scale-105 active:scale-95 animate-bounce">
                         Scan Timetable (AI)
                     </button>
-                    <button id="add-class-prompt-btn" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-white">
+                    <button id="add-class-prompt-btn" class="px-8 py-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-white hover:scale-105 active:scale-95">
                         Add Manually
                     </button>
                 </div>
@@ -149,61 +149,97 @@ export function populateModalForEdit(classId) {
 
 export function handleClassFormSubmit(e) {
     e.preventDefault();
-    const startTime = document.getElementById('start-time').value;
-    const endTime = document.getElementById('end-time').value;
-    const errorDiv = document.getElementById('time-validation-error');
+    
+    const nameInput = document.getElementById('course-name');
+    const startTimeInput = document.getElementById('start-time');
     const endTimeInput = document.getElementById('end-time');
-    if (endTime <= startTime) {
-        errorDiv.classList.remove('hidden');
-        endTimeInput.classList.add('is-invalid');
-        return; 
-    } else {
-        errorDiv.classList.add('hidden');
-        endTimeInput.classList.remove('is-invalid');
-    }
-    const editingId = parseFloat(document.getElementById('editing-class-id').value);
-    const classData = { 
-        name: document.getElementById('course-name').value, 
-        instructor: document.getElementById('instructor-name').value, 
-        room: document.getElementById('room-number').value, 
-        day: document.getElementById('day-of-week').value, 
-        type: document.getElementById('course-type').value, 
-        start: startTime, 
-        end: endTime,
-    };
-    if (editingId) {
-        const index = state.schedule.findIndex(c => c.id === editingId);
-        if (index > -1) {
-            const oldClassName = state.schedule[index].name;
-            const newClassName = classData.name;
-            state.schedule[index] = { ...state.schedule[index], ...classData };
-            if (oldClassName !== newClassName) {
-                state.schedule.forEach(c => {
-                    if (c.name === oldClassName) {
-                        c.name = newClassName;
-                    }
-                });
-                state.assignments.forEach(a => {
-                    if (a.course === oldClassName) {
-                        a.course = newClassName;
-                    }
-                });
-                state.gpaCourses.forEach(g => {
-                    if (g.name === oldClassName) {
-                        g.name = newClassName;
-                    }
-                });
-                showToast(`Renamed course '${oldClassName}' to '${newClassName}'.`);
-            }
+    const errorDiv = document.getElementById('time-validation-error');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    let hasError = false;
+
+    const validateField = (input) => {
+        if (!input.value.trim()) {
+            input.classList.remove('shake');
+            void input.offsetWidth; 
+            input.classList.add('shake', 'input-error');
+            hasError = true;
+            input.addEventListener('input', () => input.classList.remove('input-error'), { once: true });
         }
-    } else {
-        state.schedule.push({ id: Date.now(), ...classData });
+    };
+
+    validateField(nameInput);
+    validateField(startTimeInput);
+    validateField(endTimeInput);
+
+    if (startTimeInput.value && endTimeInput.value && endTimeInput.value <= startTimeInput.value) {
+        errorDiv.classList.remove('hidden');
+        endTimeInput.classList.remove('shake');
+        void endTimeInput.offsetWidth;
+        endTimeInput.classList.add('shake', 'input-error');
+        hasError = true;
+        endTimeInput.addEventListener('input', () => endTimeInput.classList.remove('input-error'), { once: true });
+    } else if (!hasError) {
+        errorDiv.classList.add('hidden');
     }
-    state.schedule.sort((a,b) => a.start.localeCompare(b.start)); 
-    checkAchievements();
-    saveData();
-    window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-    toggleModal(document.getElementById('class-modal'), false); 
+
+    if (hasError) {
+        import('../ui/ui.js').then(module => module.showToast("Please fill out all required fields correctly.", "warning"));
+        return;
+    }
+    
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="btn-spinner"></span> Saving...`;
+
+    setTimeout(() => {
+    const editingId = parseFloat(document.getElementById('editing-class-id').value);
+        const classData = { 
+            name: nameInput.value, 
+            instructor: document.getElementById('instructor-name').value, 
+            room: document.getElementById('room-number').value, 
+            day: document.getElementById('day-of-week').value, 
+            type: document.getElementById('course-type').value, 
+            start: startTimeInput.value, 
+            end: endTimeInput.value,
+        };
+        if (editingId) {
+            const index = state.schedule.findIndex(c => c.id === editingId);
+            if (index > -1) {
+                const oldClassName = state.schedule[index].name;
+                const newClassName = classData.name;
+                state.schedule[index] = { ...state.schedule[index], ...classData };
+                if (oldClassName !== newClassName) {
+                    state.schedule.forEach(c => {
+                        if (c.name === oldClassName) {
+                            c.name = newClassName;
+                        }
+                    });
+                    state.assignments.forEach(a => {
+                        if (a.course === oldClassName) {
+                            a.course = newClassName;
+                        }
+                    });
+                    state.gpaCourses.forEach(g => {
+                        if (g.name === oldClassName) {
+                            g.name = newClassName;
+                        }
+                    });
+                    import('../ui/ui.js').then(module => module.showToast(`Renamed course '${oldClassName}' to '${newClassName}'.`));
+                }
+            }
+        } else {
+            state.schedule.push({ id: Date.now(), ...classData });
+        }
+        state.schedule.sort((a,b) => a.start.localeCompare(b.start)); 
+        checkAchievements();
+        saveData();
+        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        import('../ui/ui.js').then(module => module.toggleModal(document.getElementById('class-modal'), false));
+    }, 400); 
 }
 
 export function handleDeleteClass(classId) {

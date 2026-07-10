@@ -14,21 +14,40 @@ export const toggleModal = (modal, show) => {
     }
 };
 
+let toastTimeout = null;
 export const showToast = (message, type = 'success') => {
     const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = 'fixed bottom-0 right-0 m-8 p-4 rounded-lg text-white font-bold shadow-lg transform translate-y-20 opacity-0 z-50'; 
+    
+    // Define SVG icons for each type
+    const icons = {
+        success: `<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+        error: `<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+        warning: `<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`,
+        info: `<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+    };
+    
+    const icon = icons[type] || icons.info;
+
+    toast.innerHTML = `<div class="flex items-center gap-3">${icon}<span>${message}</span></div>`;
+    
+    toast.className = 'fixed bottom-[90px] md:bottom-8 right-4 md:right-8 p-4 rounded-xl text-white font-bold shadow-2xl z-50 flex items-center toast-enter'; 
+    
     if (type === 'success') {
-        toast.classList.add('bg-gradient-to-r', 'from-green-400', 'to-teal-500');
+        toast.classList.add('bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
     } else if (type === 'error') {
-        toast.classList.add('bg-gradient-to-r', 'from-red-500', 'to-orange-500');
+        toast.classList.add('bg-gradient-to-r', 'from-red-500', 'to-rose-600');
     } else if (type === 'warning') {
-            toast.classList.add('bg-gradient-to-r', 'from-yellow-500', 'to-orange-400');
+        toast.classList.add('bg-gradient-to-r', 'from-amber-500', 'to-orange-500');
+    } else {
+        toast.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-indigo-600');
     }
-    toast.classList.remove('translate-y-20', 'opacity-0');
-    setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-    }, 3000);
+    
+    if (toastTimeout) clearTimeout(toastTimeout);
+    
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+    }, 3500);
 };
 
 export const showConfirmationModal = (title, message, onConfirm) => {
