@@ -24,9 +24,7 @@ Managing university life is overwhelming. Between remembering which classes you 
 
 Attendora is built using modern web technologies to ensure a fast, responsive, and reliable experience across all devices.
 
-* **Frontend Structure:** Pure HTML5 for semantic and accessible layout building.
-* **Styling and Animations:** Vanilla CSS3 enhanced with modern layout techniques and smooth micro animations.
-* **Logic and Interactivity:** Vanilla JavaScript for a lightweight, dependency free frontend architecture.
+* **Frontend Structure:** Built using semantic HTML5, Tailwind CSS & CSS3, and pure JavaScript to deliver a fast, responsive, accessible, and dependency free user interface with smooth animations, intuitive interactions, and a maintainable architecture.
 * **Backend and Database:** Supabase for real time cloud synchronization, secure authentication, and robust data storage.
 * **AI Integration:** Google Gemini API for intelligently parsing timetable images.
 * **Architecture:** Fully compliant Progressive Web App, meaning it can be installed on any device and works entirely offline.
