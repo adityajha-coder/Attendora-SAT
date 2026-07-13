@@ -36,7 +36,8 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({
             supabaseUrl: process.env.VITE_SUPABASE_URL,
-            supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY
+            supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY,
+            vapidPublicKey: process.env.VITE_VAPID_PUBLIC_KEY
         }));
     }
 

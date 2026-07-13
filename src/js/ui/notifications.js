@@ -4,51 +4,75 @@ import { state, saveData } from '../core/state.js';
 export function checkNotificationStatus() {
     const toggle = document.getElementById('notification-toggle');
     if (!toggle) return;
-    if (Notification.permission === 'granted' && state.settings.notifications) {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && state.settings.notifications) {
         toggle.checked = true;
     } else {
         toggle.checked = false;
-        state.settings.notifications = false;
-        saveData();
+        if (state.settings.notifications) {
+            state.settings.notifications = false;
+            saveData();
+        }
     }
 }
 
 export async function requestNotificationPermission() {
+    if (typeof Notification === 'undefined') {
+        showToast("Notifications are not supported on this browser.", "error");
+        return false;
+    }
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            const PUBLIC_VAPID_KEY = 'BAIyDUZbcQ2HMLsF1BiaieX56u89ch7YRO_j-kkf8tfDcVtSlAOybewq1qq4aen5WLr1QlccKr0jPxOjsqv2-O8';
-            
-            function urlBase64ToUint8Array(base64String) {
-                const padding = '='.repeat((4 - base64String.length % 4) % 4);
-                const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-                const rawData = window.atob(base64);
-                const outputArray = new Uint8Array(rawData.length);
-                for (let i = 0; i < rawData.length; ++i) {
-                    outputArray[i] = rawData.charCodeAt(i);
-                }
-                return outputArray;
-            }
-
-            const registration = await navigator.serviceWorker.ready;
-            let subscription = await registration.pushManager.getSubscription();
-            if (!subscription) {
-                subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-                });
-            }
-
-            // Save to Supabase
-            const { supabase } = await import('../core/supabase.js');
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && session.user) {
-                await supabase.from('users').update({ push_subscription: subscription }).eq('id', session.user.id);
-            }
-
+            // save the local preference 
             state.settings.notifications = true;
             saveData();
-            showToast("Push Notifications enabled!");
+            try {
+                const configRes = await fetch('/api/config');
+                let PUBLIC_VAPID_KEY = '';
+                if (configRes.ok) {
+                    const configData = await configRes.json();
+                    PUBLIC_VAPID_KEY = configData.vapidPublicKey;
+                }
+
+                if (!PUBLIC_VAPID_KEY) {
+                    throw new Error("VAPID public key not found in environment.");
+                }
+
+                function urlBase64ToUint8Array(base64String) {
+                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const rawData = window.atob(base64);
+                    const outputArray = new Uint8Array(rawData.length);
+                    for (let i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                }
+
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready;
+                    if (registration && registration.pushManager) {
+                        let subscription = await registration.pushManager.getSubscription();
+                        if (!subscription) {
+                            subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+                            });
+                        }
+
+                        // Save to Supabase
+                        const { supabase } = await import('../core/supabase.js');
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session && session.user) {
+                            await supabase.from('users').update({ push_subscription: subscription }).eq('id', session.user.id);
+                        }
+                    }
+                }
+            } catch (pushError) {
+                console.warn("[Notifications] Push subscription setup failed. Local notifications will still function:", pushError);
+            }
+
+            showToast("Notifications enabled!");
             return true;
         } else {
             state.settings.notifications = false;

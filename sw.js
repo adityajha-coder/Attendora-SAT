@@ -1,6 +1,6 @@
 // Service Worker for Attendora Push Notifications & PWA Offline Caching
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `attendora-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',

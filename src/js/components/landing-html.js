@@ -3,7 +3,7 @@ export const landingHtml = `
         <header class="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-xl border-b border-white/5">
             <div class="container mx-auto px-6 py-4 flex justify-between items-center">
                 <a href="#" class="flex items-center gap-3">
-                    <img src="assets/images/logo.png" alt="Attendora Logo" class="w-10 h-10 rounded-full border border-white/20">
+                    <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-10 h-10 rounded-full border border-white/20">
                     <span class="text-2xl font-bold tracking-wide text-white font-brand">ATTENDORA</span>
                 </a>
                 <div class="hidden md:flex items-center gap-4">
