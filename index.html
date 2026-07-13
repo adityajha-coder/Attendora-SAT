@@ -62,27 +62,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Attendora" />
+
+    <!-- Module Preloads to eliminate ESM waterfall delay -->
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm" />
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/auth-js@2.110.2/+esm" />
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="src/style/style.css" />
 
+    <!-- Defer heavy charting libraries so they do not block main thread -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script
       src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
       defer
     ></script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/intro.js/minified/introjs.min.css"
-    />
-    <script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Non-blocking font loading pattern -->
     <link
       href="https://fonts.googleapis.com/css2?family=Satisfy&family=Montserrat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Satisfy&family=Montserrat:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body class="relative">
     <div
