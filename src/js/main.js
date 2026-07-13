@@ -129,16 +129,41 @@ const initializeAttendora = async () => {
     });
 };
 
+// Lazy Rendering State
+export let currentView = 'overview';
+export const dirtyViews = new Set();
+
+// Maps view IDs to their render functions
+const viewRenderers = {
+    'overview':     () => { renderOverviewCards(); renderTodaysClasses(); updateOverviewStats(); updateGoalOrientedCard(); updateNextClassCountdown(); },
+    'schedule':     () => { renderSchedule(); },
+    'courses':      () => { renderCourses(); },
+    'assignments':  () => { renderAssignments(); renderGpaCalculator(); },
+    'calendar':     () => { renderCalendar(); },
+    'achievements': () => { renderAchievements(); },
+    'reports':      () => { renderReports(); },
+};
+
+export function setCurrentView(viewId) {
+    currentView = viewId;
+}
+
+export function renderView(viewId) {
+    const renderer = viewRenderers[viewId];
+    if (renderer) renderer();
+    dirtyViews.delete(viewId);
+}
+
 const initializeDashboard = () => {
     autoMarkMissedClasses();
     renderThemePicker();
     checkNotificationStatus();
     updateTermDatesUI();
-    updateAllViews();
-
+    fullRenderAllViews();
 };
 
-export const updateAllViews = () => {
+/** Full render (only used on first load). */
+function fullRenderAllViews() {
     renderOverviewCards();
     renderSchedule();
     renderTodaysClasses();
@@ -152,7 +177,27 @@ export const updateAllViews = () => {
     updateOverviewStats();
     updateGoalOrientedCard();
     updateNextClassCountdown();
+    updateAssignmentBtnState();
+    dirtyViews.clear();
+}
 
+export const updateAllViews = () => {
+    updateOverviewStats();
+    updateGoalOrientedCard();
+    updateNextClassCountdown();
+    updateAssignmentBtnState();
+
+    // Re-render only the currently visible view
+    renderView(currentView);
+
+    for (const viewId of Object.keys(viewRenderers)) {
+        if (viewId !== currentView) {
+            dirtyViews.add(viewId);
+        }
+    }
+};
+
+function updateAssignmentBtnState() {
     const addAssignmentBtn = document.getElementById('add-assignment-btn');
     const hasCourses = state.schedule.length > 0;
     if (addAssignmentBtn) {
@@ -161,11 +206,16 @@ export const updateAllViews = () => {
         addAssignmentBtn.classList.toggle('cursor-not-allowed', !hasCourses);
         addAssignmentBtn.title = hasCourses ? '' : 'Please add a course first before adding an assignment.';
     }
-};
+}
 
 function setupEventListeners() {
+    let pendingRenderFrame = null;
     window.addEventListener('attendora-update-ui', () => {
-        updateAllViews();
+        if (pendingRenderFrame) cancelAnimationFrame(pendingRenderFrame);
+        pendingRenderFrame = requestAnimationFrame(() => {
+            pendingRenderFrame = null;
+            updateAllViews();
+        });
     });
 
     document.getElementById('go-to-login-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(); });

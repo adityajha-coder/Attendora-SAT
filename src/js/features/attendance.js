@@ -1,5 +1,6 @@
 // Manages attendance logging, history tracking, and report generation.
 import { state, saveData, dateIsWithinTerm } from '../core/state.js';
+import { getCached, setCached } from '../core/cache.js';
 import { checkAchievements } from './gamification.js';
 import { showToast, toggleModal } from '../ui/ui.js';
 
@@ -74,15 +75,24 @@ export function autoMarkMissedClasses() {
 }
 
 export function calculateOverallAttendance() {
+    const cacheKey = 'overall_attendance';
+    const cached = getCached(cacheKey, state._cacheVersion);
+    if (cached) return cached;
+
     const trackedHistory = state.history.filter(h => dateIsWithinTerm(h.date)); 
     const presentCount = trackedHistory.filter(h => h.status === 'Present').length;
     const absentCount = trackedHistory.filter(h => h.status === 'Absent').length;
     const total = presentCount + absentCount;
     const percentage = total === 0 ? 100 : Math.round((presentCount / total) * 100);
-    return { present: presentCount, absent: absentCount, total: total, percentage: percentage };
+    
+    return setCached(cacheKey, { present: presentCount, absent: absentCount, total: total, percentage: percentage }, state._cacheVersion);
 }
 
 export function calculateAttendanceForCourse(courseName) {
+    const cacheKey = `attendance_course_${courseName}`;
+    const cached = getCached(cacheKey, state._cacheVersion);
+    if (cached) return cached;
+
     const courseInstances = state.schedule.filter(s => s.name === courseName);
     const courseInstanceIds = courseInstances.map(i => i.id);
     const historyForCourse = state.history.filter(h => courseInstanceIds.includes(h.classId) && dateIsWithinTerm(h.date));
@@ -101,10 +111,14 @@ export function calculateAttendanceForCourse(courseName) {
             break;
         }
     }
-    return { present: presentCount, absent: absentCount, cancelled: cancelledCount, total: totalTracked, percentage, wasBelow70 };
+    return setCached(cacheKey, { present: presentCount, absent: absentCount, cancelled: cancelledCount, total: totalTracked, percentage, wasBelow70 }, state._cacheVersion);
 }
 
 export function calculateStreak(courseName) {
+    const cacheKey = `streak_${courseName}`;
+    const cached = getCached(cacheKey, state._cacheVersion);
+    if (cached) return cached;
+
     const courseInstances = state.schedule.filter(s => s.name === courseName);
     const courseInstanceIds = courseInstances.map(i => i.id);
     const historyForCourse = state.history.filter(h => courseInstanceIds.includes(h.classId) && dateIsWithinTerm(h.date))
@@ -114,7 +128,7 @@ export function calculateStreak(courseName) {
         if (record.status === 'Present') streak++;
         else if (record.status === 'Absent') break;
     }
-    return streak;
+    return setCached(cacheKey, streak, state._cacheVersion);
 }
 
 export function renderReports() {

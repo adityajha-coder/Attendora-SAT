@@ -239,7 +239,7 @@ export function archiveCurrentTerm() {
 
 export function renderOverviewCards() {
     const grid = document.getElementById('overview-grid');
-    grid.innerHTML = '';
+    if (!grid) return;
     const cardHTML = {
         'overview-card-attendance': `
             <div id="overview-card-attendance" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
@@ -291,6 +291,15 @@ export function renderOverviewCards() {
         dashboardOrder = requiredOrder;
     }
     state.settings.dashboardOrder = dashboardOrder;
+    
+    // Skip rebuild if match the dash order
+    const currentChildrenIds = Array.from(grid.children).map(child => child.id);
+    if (currentChildrenIds.length === dashboardOrder.length && 
+        currentChildrenIds.every((id, index) => id === dashboardOrder[index])) {
+        return;
+    }
+
+    grid.innerHTML = '';
     dashboardOrder.forEach(cardId => {
         if (cardHTML[cardId]) {
             grid.innerHTML += cardHTML[cardId];

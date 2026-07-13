@@ -40,10 +40,12 @@ export const state = {
         classId: null,
         historyId: null,
         courseName: null,
-    }
+    },
+    _cacheVersion: 0
 };
 
 export const saveData = () => {
+    state._cacheVersion = (state._cacheVersion || 0) + 1;
     localStorage.setItem('attendoraState', JSON.stringify(state));
     
     schedulCloudSync(state);

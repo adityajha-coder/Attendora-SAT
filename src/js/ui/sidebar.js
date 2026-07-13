@@ -1,5 +1,6 @@
 // Handles navigation between UI tabs and manages the mobile drawer state.
 import { renderReports } from '../features/attendance.js';
+import { setCurrentView, dirtyViews, renderView } from '../main.js';
 
 export function handleSidebarNav(e) {
     e.preventDefault();
@@ -31,15 +32,21 @@ export function navigateTo(viewId) {
 
     const targetId = viewId + '-view';
     document.querySelectorAll('.dashboard-view').forEach(view => {
-        const wasActive = view.classList.contains('active');
         const isActive = view.id === targetId;
         view.classList.toggle('active', isActive);
-        if (isActive && !wasActive && (targetId === 'reports-view' || targetId === 'overview-view')) {
-            setTimeout(() => {
-                renderReports();
-            }, 50);
-        }
     });
+
+    // Update lazy rendering
+    setCurrentView(viewId);
+
+    if (dirtyViews.has(viewId)) {
+        renderView(viewId);
+    }
+    if (viewId === 'reports' || viewId === 'overview') {
+        setTimeout(() => {
+            renderReports();
+        }, 50);
+    }
 }
 
 export function toggleMobileSidebar() {
