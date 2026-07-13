@@ -72,12 +72,10 @@ export async function requestNotificationPermission() {
                 console.warn("[Notifications] Push subscription setup failed. Local notifications will still function:", pushError);
             }
 
-            showToast("Notifications enabled!");
             return true;
         } else {
             state.settings.notifications = false;
             saveData();
-            showToast("Notification permission denied.", "error");
             return false;
         }
     } catch (error) {
@@ -92,7 +90,6 @@ export function handleNotificationToggle(e) {
     } else {
         state.settings.notifications = false;
         saveData();
-        showToast("Notifications disabled.");
     }
 }
 
