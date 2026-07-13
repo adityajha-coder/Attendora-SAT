@@ -12,7 +12,7 @@ const urlsToCache = [
   '/src/js/core/state.js',
   '/src/js/core/utils.js',
   '/src/js/core/supabase.js',
-  '/src/js/core/supabase-config.js',
+  '/src/js/core/cache.js',
   '/src/js/ui/ui.js',
   '/src/js/ui/sidebar.js',
   '/src/js/ui/notifications.js',
@@ -30,7 +30,9 @@ const urlsToCache = [
   '/src/js/components/modals-html.js',
   '/src/js/components/landing-html.js',
   '/assets/images/fevicon.png',
-  '/assets/images/android.png'
+  '/assets/images/fevicon-192.png',
+  '/assets/images/fevicon-512.png',
+  '/assets/images/logo.png'
 ];
 
 self.addEventListener('install', (e) => {

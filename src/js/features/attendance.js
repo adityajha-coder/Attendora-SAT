@@ -131,7 +131,36 @@ export function calculateStreak(courseName) {
     return setCached(cacheKey, streak, state._cacheVersion);
 }
 
-export function renderReports() {
+let chartJsPromise = null;
+
+function loadChartJs() {
+    if (chartJsPromise) return chartJsPromise;
+
+    chartJsPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = () => {
+            const adapter = document.createElement('script');
+            adapter.src = 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js';
+            adapter.onload = resolve;
+            adapter.onerror = reject;
+            document.head.appendChild(adapter);
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+
+    return chartJsPromise;
+}
+
+export async function renderReports() {
+    try {
+        await loadChartJs();
+    } catch (e) {
+        console.error('Failed to load Chart.js dynamically:', e);
+        return;
+    }
+
     const filterType = document.getElementById('reports-filter').value;
     const filteredHistory = getFilteredHistory(filterType);
     Object.values(chartInstances).forEach(chart => {

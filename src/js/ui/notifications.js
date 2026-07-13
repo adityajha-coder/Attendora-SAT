@@ -76,7 +76,7 @@ export function sendLocalNotification(title, body) {
     if (Notification.permission === 'granted' && state.settings.notifications) {
         new Notification(title, {
             body: body,
-            icon: 'assets/images/android.png'
+            icon: 'assets/images/fevicon.png'
         });
     }
 }
