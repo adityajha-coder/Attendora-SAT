@@ -116,7 +116,12 @@ export function renderCalendar() {
     if (!calendarGrid || !header) return;
     
     calendarGrid.innerHTML = '';
-    const date = state.currentCalendarDate || new Date();
+    let date = state.currentCalendarDate;
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        date = new Date(date || Date.now());
+        if (isNaN(date.getTime())) date = new Date();
+        state.currentCalendarDate = date;
+    }
     const year = date.getFullYear();
     const month = date.getMonth();
     

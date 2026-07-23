@@ -404,11 +404,17 @@ function setupEventListeners() {
     document.getElementById('assignments-search').addEventListener('keyup', (e) => debouncedFilterAssignments(e.target.value));
 
     document.getElementById('prev-month-btn').addEventListener('click', () => {
+        if (!(state.currentCalendarDate instanceof Date) || isNaN(state.currentCalendarDate.getTime())) {
+            state.currentCalendarDate = new Date(state.currentCalendarDate || Date.now());
+        }
         state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() - 1);
         renderCalendar();
         saveData();
     });
     document.getElementById('next-month-btn').addEventListener('click', () => {
+        if (!(state.currentCalendarDate instanceof Date) || isNaN(state.currentCalendarDate.getTime())) {
+            state.currentCalendarDate = new Date(state.currentCalendarDate || Date.now());
+        }
         state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() + 1);
         renderCalendar();
         saveData();
