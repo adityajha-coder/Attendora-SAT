@@ -328,3 +328,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
     console.log(`Attendora Backend Server running at http://localhost:${PORT}`);
 });
+
+export default app;
