@@ -11,7 +11,7 @@ import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
 import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
-import { supabase } from './core/supabase.js';
+import { getCurrentUser } from './core/api-client.js';
 
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
@@ -51,23 +51,6 @@ const showAuthPage = () => {
     dismissLoader();
 };
 
-async function setupNewUserFromRedirect(user) {
-    try {
-        const { data: userDoc, error } = await supabase.from('users').select('*').eq('id', user.id).single();
-        if (!userDoc) {
-            await supabase.from('users').insert([{
-                id: user.id,
-                name: user.user_metadata?.full_name || '',
-                email: user.email,
-                course: '',
-                year: '',
-            }]);
-        }
-    } catch (e) {
-        console.warn('[Setup] Failed to register new user docs:', e);
-    }
-}
-
 const initializeAttendora = async () => {
     document.getElementById('app').innerHTML = authHtml + landingHtml + dashboardHtml + modalsHtml;
 
@@ -75,18 +58,8 @@ const initializeAttendora = async () => {
     setupEventListeners();
 
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-            await setupNewUserFromRedirect(session.user);
-        }
-    } catch (error) {
-        console.warn('[Auth] Redirect processing failed:', error);
-    }
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        const user = session?.user;
+        const user = await getCurrentUser();
         if (user) {
-            
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
 
@@ -95,45 +68,30 @@ const initializeAttendora = async () => {
                 if (cloudData) {
                     const wasMerged = mergeCloudData(state, cloudData);
                     if (wasMerged) {
-                        localStorage.setItem('attendoraState', JSON.stringify(state));
-                        applyTheme(state.settings.selectedTheme);
-                        applyLightMode(state.settings.isLightMode);
+                        saveData();
+                        showToast('Restored your data from PostgreSQL cloud!', 'info');
                     } else {
                         forceCloudSave(state);
                     }
                 } else {
                     forceCloudSave(state);
                 }
-            } catch (err) {
-                console.warn('[CloudSync] Sync on login failed, using local data:', err);
+            } catch (syncErr) {
+                console.warn('[Sync] Cloud restore warning:', syncErr);
             }
-
-            if (!state.userProfile.contact) {
-                state.userProfile.contact = user.email;
-            }
-            if (!state.userProfile.name) {
-                state.userProfile.name = user.user_metadata?.full_name || user.email.split('@')[0];
-            }
-            saveData();
-
-            localStorage.setItem('loggedIn', 'true');
             showDashboard();
         } else {
-            localStorage.removeItem('loggedIn');
-            if (document.getElementById('auth-page').classList.contains('hidden')) {
-                showLandingPage();
-            } else {
-                dismissLoader();
-            }
+            showLandingPage();
         }
-    });
+    } catch (error) {
+        console.warn('[Auth] Auth check failed:', error);
+        showLandingPage();
+    }
 };
 
-// Lazy Rendering State
 export let currentView = 'overview';
 export const dirtyViews = new Set();
 
-// Maps view IDs to their render functions
 const viewRenderers = {
     'overview':     () => { renderOverviewCards(); renderTodaysClasses(); updateOverviewStats(); updateGoalOrientedCard(); updateNextClassCountdown(); },
     'schedule':     () => { renderSchedule(); },
@@ -162,7 +120,6 @@ const initializeDashboard = () => {
     fullRenderAllViews();
 };
 
-/** Full render (only used on first load). */
 function fullRenderAllViews() {
     renderOverviewCards();
     renderSchedule();
@@ -187,7 +144,6 @@ export const updateAllViews = () => {
     updateNextClassCountdown();
     updateAssignmentBtnState();
 
-    // Re-render only the currently visible view
     renderView(currentView);
 
     for (const viewId of Object.keys(viewRenderers)) {

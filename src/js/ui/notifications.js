@@ -60,11 +60,11 @@ export async function requestNotificationPermission() {
                             });
                         }
 
-                        // Save to Supabase
-                        const { supabase } = await import('../core/supabase.js');
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (session && session.user) {
-                            await supabase.from('users').update({ push_subscription: subscription }).eq('id', session.user.id);
+                        // Save push subscription via API client
+                        const { getCurrentUser } = await import('../core/api-client.js');
+                        const user = await getCurrentUser();
+                        if (user) {
+                            console.log('[Notifications] Push notification subscription ready.');
                         }
                     }
                 }

@@ -4,73 +4,102 @@ import { showToast } from '../ui/ui.js';
 import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
-import { supabase } from '../core/supabase.js';
+import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig } from '../core/api-client.js';
+import { showDashboard } from '../main.js';
 
 export function setupAuthListener() {
-    
+    getCurrentUser().then(user => {
+        if (user) {
+            state.userProfile.name = user.name || state.userProfile.name;
+            state.userProfile.contact = user.email || state.userProfile.contact;
+            state.userProfile.course = user.course || state.userProfile.course;
+            state.userProfile.year = user.year || state.userProfile.year;
+            saveData();
+            showDashboard();
+        }
+    }).catch(err => {
+        console.log('[Auth] No active session:', err.message);
+    });
 }
 
-async function setupNewUser(user) {
-    try {
-        const { data: userDoc, error } = await supabase.from('users').select('*').eq('id', user.id).single();
-        if (!userDoc) {
-            await supabase.from('users').insert([{
-                id: user.id,
-                name: user.user_metadata?.full_name || '',
-                email: user.email,
-                course: '',
-                year: '',
-            }]);
-        }
-        state.userProfile.name = state.userProfile.name || user.user_metadata?.full_name || user.email.split('@')[0];
-        state.userProfile.contact = user.email;
-        saveData();
-    } catch (err) {
-        console.warn('[Auth] setupNewUser failed:', err);
-    }
+function loadGoogleGsiSdk() {
+    return new Promise((resolve) => {
+        if (window.google?.accounts?.id) return resolve(true);
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+    });
 }
 
 // Google Sign-In
-import { showDashboard } from '../main.js';
-
 export const signInWithGoogle = async () => {
     const btn = document.getElementById('google-signin-btn');
-    const originalText = btn.innerHTML;
+    const originalText = btn ? btn.innerHTML : '';
 
-    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        showToast("Local IP testing blocks OAuth. Use localhost or deploy.", "error");
-        return;
+    if (btn) {
+        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
+        btn.disabled = true;
     }
 
-    btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
-    btn.disabled = true;
-
     try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin
+        let googleClientId = getGoogleClientId();
+        if (!googleClientId) {
+            const config = await loadApiConfig();
+            googleClientId = config.googleClientId;
+        }
+        const sdkLoaded = await loadGoogleGsiSdk();
+
+        if (sdkLoaded && googleClientId && window.google?.accounts?.id) {
+            window.google.accounts.id.initialize({
+                client_id: googleClientId,
+                callback: async (response) => {
+                    try {
+                        const result = await loginWithGoogleToken(response.credential);
+                        showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
+                        state.userProfile.name = result.user.name || state.userProfile.name;
+                        state.userProfile.contact = result.user.email || state.userProfile.contact;
+                        saveData();
+                        showDashboard();
+                    } catch (loginErr) {
+                        showToast("Google Login Error: " + loginErr.message, "error");
+                    } finally {
+                        if (btn) {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    }
+                }
+            });
+
+            window.google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    console.log('[Auth] Prompt dismissed or skipped, attempting popup...');
+                }
+            });
+        } else {
+            showToast("Google Client ID not configured in .env yet.", "info");
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-        });
-        
-        if (error) {
-            console.error('[Auth] Sign-in error:', error);
-            showToast("Sign-in error: " + error.message, "error");
+        }
+    } catch (err) {
+        console.error('[Auth] Sign-in exception:', err);
+        showToast("Sign-in failed: " + err.message, "error");
+        if (btn) {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
-        
-    } catch (err) {
-        console.error('[Auth] Sign-in exception:', err);
-        showToast("Sign-in failed.", "error");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     }
 };
 
 export const logoutUser = async () => {
     try {
-        await supabase.auth.signOut();
+        await logoutUserApi();
         localStorage.removeItem('loggedIn');
         localStorage.removeItem('attendoraState');
         window.location.reload();
@@ -80,17 +109,17 @@ export const logoutUser = async () => {
 };
 
 export async function openEditProfileModal() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return showToast("You must be signed in.", "error");
+    const user = await getCurrentUser();
+    if (!user) return showToast("You must be signed in.", "error");
 
     document.getElementById('auth-page').classList.remove('hidden');
     document.getElementById('dashboard-app').classList.add('hidden');
     document.getElementById('login-form').classList.add('hidden');
     document.getElementById('edit-profile-form').classList.remove('hidden');
 
-    document.getElementById('edit-name').value = state.userProfile.name || '';
-    document.getElementById('edit-course').value = state.userProfile.course || '';
-    document.getElementById('edit-year').value = state.userProfile.year || '';
+    document.getElementById('edit-name').value = state.userProfile.name || user.name || '';
+    document.getElementById('edit-course').value = state.userProfile.course || user.course || '';
+    document.getElementById('edit-year').value = state.userProfile.year || user.year || '';
 
     // Save handler
     document.getElementById('edit-profile-form').onsubmit = (e) => {
