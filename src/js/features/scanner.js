@@ -208,15 +208,12 @@ export function handleSaveScannedSchedule() {
     }
     if (newClassesAdded > 0) {
         state.schedule = newSchedule;
-        state.history = [];
-        state.assignments = [];
-        state.gpaCourses = [];
         state.schedule.sort((a, b) => a.start.localeCompare(b.start));
         checkAchievements();
         saveData();
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));
         toggleModal(document.getElementById('scan-timetable-modal'), false);
-        showToast(`${newClassesAdded} classes added, replacing your old schedule!`);
+        showToast(`${newClassesAdded} classes added to your schedule!`);
     } else if (errorCount === 0) {
         showToast("No valid classes were found to save.", "error");
     }
