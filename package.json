@@ -5,7 +5,8 @@
   "main": "index.html",
   "scripts": {
     "dev": "nodemon --env-file=server/.env server/server.mjs",
-    "start": "node --env-file=server/.env server/server.mjs"
+    "start": "node --env-file=server/.env server/server.mjs",
+    "build": "powershell -Command \"Remove-Item -Path 'www' -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Path 'www' -Force; Copy-Item -Path 'index.html', 'src', 'assets', 'pwa' -Destination 'www' -Recurse -Force\""
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
@@ -20,6 +21,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
