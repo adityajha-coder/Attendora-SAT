@@ -79,7 +79,10 @@ export function calculateOverallAttendance() {
     const cached = getCached(cacheKey, state._cacheVersion);
     if (cached) return cached;
 
-    const trackedHistory = state.history.filter(h => dateIsWithinTerm(h.date)); 
+    let trackedHistory = state.history.filter(h => dateIsWithinTerm(h.date)); 
+    if (trackedHistory.length === 0 && state.history.length > 0) {
+        trackedHistory = state.history;
+    }
     const presentCount = trackedHistory.filter(h => h.status === 'Present').length;
     const absentCount = trackedHistory.filter(h => h.status === 'Absent').length;
     const total = presentCount + absentCount;

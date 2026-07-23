@@ -8,9 +8,7 @@ const PERSISTABLE_KEYS = [
     'schedule',
     'history',
     'assignments',
-    'gpaCourses',
     'archivedTerms',
-    'achievements',
     'settings'
 ];
 
@@ -88,8 +86,7 @@ export function schedulCloudSync(state) {
     // Safeguard
     const hasDataToSync = (state.schedule && state.schedule.length > 0) ||
                           (state.history && state.history.length > 0) ||
-                          (state.assignments && state.assignments.length > 0) ||
-                          (state.gpaCourses && state.gpaCourses.length > 0);
+                          (state.assignments && state.assignments.length > 0);
 
     if (!hasDataToSync) return;
 
@@ -140,7 +137,6 @@ export function mergeCloudData(state, cloudData) {
         (cloudData.schedule && cloudData.schedule.length > 0) ||
         (cloudData.history && cloudData.history.length > 0) ||
         (cloudData.assignments && cloudData.assignments.length > 0) ||
-        (cloudData.gpaCourses && cloudData.gpaCourses.length > 0) ||
         (cloudData.archivedTerms && cloudData.archivedTerms.length > 0);
 
     if (!cloudHasContent) return false;

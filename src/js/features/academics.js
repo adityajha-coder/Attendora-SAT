@@ -1,6 +1,5 @@
-// Manages assignments and GPA calculator logic.
+// Manages assignments logic.
 import { state, saveData, dateIsWithinTerm } from '../core/state.js';
-import { checkAchievements } from './gamification.js';
 import { showConfirmationModal, showToast, toggleModal } from '../ui/ui.js';
 import { calculateAttendanceForCourse } from './attendance.js';
 
@@ -140,129 +139,6 @@ export function handleDeleteAssignment(assignmentId) {
     });
 }
 
-export function handleGpaFormSubmit(e) {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const nameInput = document.getElementById('gpa-course-name');
-    const creditsInput = document.getElementById('gpa-credits');
-    const gradeInput = document.getElementById('gpa-grade');
-    const estimatedPercentInput = document.getElementById('gpa-estimated-percent');
-    
-    let hasError = false;
-    const validateField = (input) => {
-        if (!input.value.trim()) {
-            input.classList.remove('shake');
-            void input.offsetWidth; 
-            input.classList.add('shake', 'input-error');
-            hasError = true;
-            input.addEventListener('input', () => input.classList.remove('input-error'), { once: true });
-        }
-    };
-
-    validateField(nameInput);
-    validateField(creditsInput);
-    validateField(gradeInput);
-
-    if (hasError) {
-        import('../ui/ui.js').then(module => module.showToast("Please fill out all required fields.", "warning"));
-        return;
-    }
-    
-    const originalBtnText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="btn-spinner"></span> Saving...`;
-
-    setTimeout(() => {
-        const editingId = document.getElementById('editing-gpa-id').value;
-        const estimatedPercent = estimatedPercentInput.value;
-        const gpaData = {
-            name: nameInput.value,
-            credits: parseFloat(creditsInput.value),
-            grade: parseInt(gradeInput.value), 
-            estimatedPercent: estimatedPercent ? parseInt(estimatedPercent) : null, 
-            date: new Date().toISOString().slice(0,10) 
-        };
-        if (editingId) {
-            const index = state.gpaCourses.findIndex(c => c.id === editingId);
-            if (index > -1) {
-                gpaData.date = state.gpaCourses[index].date;
-                state.gpaCourses[index] = { ...state.gpaCourses[index], ...gpaData };
-            }
-        } else {
-            state.gpaCourses.push({ id: `gpa-${Date.now()}`, ...gpaData });
-        }
-        checkAchievements(); 
-        saveData();
-        renderGpaCalculator();
-        
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-        import('../ui/ui.js').then(module => module.toggleModal(document.getElementById('gpa-modal'), false)); 
-    }, 400);
-}
-
-export function handleDeleteGpaCourse(gpaId) {
-    const course = state.gpaCourses.find(c => c.id === gpaId);
-    if (!course) return;
-    const title = `Delete '${course.name}'?`;
-    const message = `This GPA entry will be permanently removed.`;
-    showConfirmationModal(title, message, () => {
-        state.gpaCourses = state.gpaCourses.filter(c => c.id !== gpaId);
-        saveData();
-        renderGpaCalculator();
-        showToast('GPA entry deleted.');
-    });
-}
-
-export function renderGpaCalculator() {
-    const tbody = document.getElementById('gpa-courses-tbody');
-    tbody.innerHTML = '';
-    if (state.gpaCourses.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8" style="color: var(--text-secondary);">
-            <svg class="mx-auto h-24 w-24 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-            </svg>
-            <h3 class="mt-4 text-xl font-semibold text-white">No grades added yet</h3>
-            <p class="mt-1">Add courses to start calculating your GPA.</p>
-        </td></tr>`;
-    } else {
-        state.gpaCourses.forEach(course => {
-            const finalGradeDisplay = course.grade > 0 ? course.grade : 'F';
-            const estimatedDisplay = course.estimatedPercent !== null ? `<br><span class="text-xs text-yellow-400">Est: ${course.estimatedPercent}%</span>` : '';
-            const tr = document.createElement('tr');
-            tr.className = 'border-b border-white/5';
-            tr.dataset.searchContent = course.name.toLowerCase();
-            tr.innerHTML = `
-                <td class="p-4 font-semibold">${course.name}</td>
-                <td class="p-4 text-center">${course.credits}</td>
-                <td class="p-4 text-center">
-                    ${finalGradeDisplay}
-                    ${estimatedDisplay}
-                </td>
-                <td class="p-4 text-center">
-                    <button class="edit-gpa-btn p-2" data-gpa-id="${course.id}" title="Edit" role="button" aria-label="Edit GPA entry for ${course.name}" style="color: var(--text-secondary);"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                    <button class="delete-gpa-btn p-2 text-red-400" data-gpa-id="${course.id}" title="Delete" role="button" aria-label="Delete GPA entry for ${course.name}"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-    const { totalCredits, gpa } = calculateGpa();
-    document.getElementById('gpa-total-credits').textContent = totalCredits;
-    document.getElementById('gpa-current-gpa').textContent = gpa.toFixed(2);
-    document.getElementById('gpa-total-courses').textContent = state.gpaCourses.length;
-    checkAchievements(); 
-}
-
-export function calculateGpa() {
-    const totalPoints = state.gpaCourses.reduce((acc, course) => acc + (course.grade * course.credits), 0);
-    const totalCredits = state.gpaCourses.reduce((acc, course) => acc + course.credits, 0);
-    let gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
-    // Round to 2 decimal places as requested
-    gpa = Math.round(gpa * 100) / 100;
-    return { totalCredits, gpa };
-}
-
 export function openAssignmentModal(assignmentId = null) {
     const form = document.getElementById('assignment-form');
     form.reset();
@@ -284,28 +160,6 @@ export function openAssignmentModal(assignmentId = null) {
         document.getElementById('assignment-modal-title').textContent = 'Add New Assignment';
     }
     toggleModal(document.getElementById('assignment-modal'), true);
-}
-
-export function openGpaModal(gpaId = null) {
-    const form = document.getElementById('gpa-form');
-    form.reset();
-    document.getElementById('editing-gpa-id').value = '';
-    const courseNameInput = document.getElementById('gpa-course-name');
-    const estimatedPercentInput = document.getElementById('gpa-estimated-percent');
-    if (gpaId) {
-        const course = state.gpaCourses.find(c => c.id === gpaId);
-        if (course) {
-            document.getElementById('gpa-modal-title').textContent = 'Edit GPA Entry';
-            document.getElementById('editing-gpa-id').value = course.id;
-            courseNameInput.value = course.name;
-            document.getElementById('gpa-credits').value = course.credits;
-            document.getElementById('gpa-grade').value = course.grade;
-            estimatedPercentInput.value = course.estimatedPercent || ''; 
-        }
-    } else {
-            document.getElementById('gpa-modal-title').textContent = 'Add Course for GPA';
-    }
-    toggleModal(document.getElementById('gpa-modal'), true);
 }
 
 export function openNoteModal(historyId) {

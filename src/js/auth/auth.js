@@ -1,9 +1,7 @@
 // Handles user authentication, profile editing, and session management.
 import { state, saveData } from '../core/state.js';
 import { showToast } from '../ui/ui.js';
-import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
-import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
 import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig } from '../core/api-client.js';
 import { loadFromCloud, mergeCloudData } from '../services/cloud-sync.js';
 import { showDashboard } from '../main.js';
@@ -173,10 +171,9 @@ function closeEditProfile() {
 }
 
 export function renderProfile() {
+    state._cacheVersion = (state._cacheVersion || 0) + 1;
     const profile = state.userProfile || {};
     const contact = profile.contact || 'user@example.com';
-    const firstLetter = (profile.name || contact).charAt(0).toUpperCase() || 'A';
-    const { totalCredits, gpa } = calculateGpa();
     const stats = calculateOverallAttendance();
     const pct = stats.percentage;
 
@@ -184,27 +181,23 @@ export function renderProfile() {
     if (pct >= 90) { tier = 'High Performer'; cls = 'bg-green-500/20 text-green-400'; }
     else if (pct >= 75) { tier = 'On Track'; cls = 'bg-yellow-500/20 text-yellow-400'; }
 
-    const unlocked = Object.values(ALL_ACHIEVEMENTS).filter(a => state.achievements[a.id]?.unlocked).length;
-    const total = Object.keys(ALL_ACHIEVEMENTS).length;
-
-    document.getElementById('profile-name-display').textContent = profile.name || contact.split('@')[0];
-    document.getElementById('profile-email').textContent = contact;
-    document.getElementById('profile-mobile').textContent = contact;
-    document.getElementById('profile-img').src = `assets/images/fevicon.png`; // profile logo
-    document.getElementById('profile-status-tier').textContent = `Attendance Tier: ${tier}`;
-    document.getElementById('profile-status-tier').className = `text-sm px-3 py-1 mt-1 rounded-full font-semibold ${cls}`;
-    document.getElementById('profile-total-credits').textContent = totalCredits;
-    document.getElementById('profile-year').textContent = profile.year || 'Not set';
-    document.getElementById('profile-course').textContent = profile.course || 'Not set';
-    document.getElementById('profile-overall-attendance').textContent = `${pct}%`;
-
     const el = (id) => document.getElementById(id);
+    if (el('profile-name-display')) el('profile-name-display').textContent = profile.name || contact.split('@')[0];
+    if (el('profile-email')) el('profile-email').textContent = contact;
+    if (el('profile-mobile')) el('profile-mobile').textContent = contact;
+    if (el('profile-img')) el('profile-img').src = `assets/images/fevicon.png`;
+    if (el('profile-status-tier')) {
+        el('profile-status-tier').textContent = `Attendance Tier: ${tier}`;
+        el('profile-status-tier').className = `text-sm px-3 py-1 mt-1 rounded-full font-semibold ${cls}`;
+    }
+    if (el('profile-year')) el('profile-year').textContent = profile.year || 'Not set';
+    if (el('profile-course')) el('profile-course').textContent = profile.course || 'Not set';
+    if (el('profile-overall-attendance')) el('profile-overall-attendance').textContent = `${pct}%`;
+
     if (el('profile-total-classes')) el('profile-total-classes').textContent = stats.total;
     if (el('profile-total-present')) el('profile-total-present').textContent = stats.present;
     if (el('profile-total-absent')) el('profile-total-absent').textContent = stats.absent;
 
-    document.getElementById('profile-calculated-gpa').textContent = gpa.toFixed(2);
-    document.getElementById('profile-attendance-bar').style.width = `${pct}%`;
-    document.getElementById('profile-achievements-unlocked').textContent = `${unlocked} / ${total}`;
-    document.getElementById('welcome-message').textContent = `Welcome, ${(profile.name || '').split(' ')[0] || contact.split('@')[0]}!`;
+    if (el('profile-attendance-bar')) el('profile-attendance-bar').style.width = `${pct}%`;
+    if (el('welcome-message')) el('welcome-message').textContent = `Welcome, ${(profile.name || '').split(' ')[0] || contact.split('@')[0]}!`;
 }

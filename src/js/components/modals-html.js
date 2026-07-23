@@ -446,8 +446,200 @@ export const modalsHtml = `
                     <button class="profile-tab-btn w-full text-left px-4 py-3 rounded-xl text-gray-400 font-medium hover:bg-white/5 transition-colors flex items-center gap-3" data-tab="profile-personal">
                         <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Personal Info
                     </button>
-                    <button class="profile-tab-btn w-full text-left px-4 py-3 rounded-xl text-gray-400 font-medium hover:bg-white/5 transition-colors flex items-center gap-3" data-tab="profile-achievements">
-                        <svg class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg> Achievements
+                </div>
+            </div>
+
+            <!-- Profile Content Area -->
+            <div class="flex-1 p-6 md:p-10 overflow-y-auto relative custom-scrollbar">
+                 <button class="close-modal-btn absolute top-6 right-6 text-gray-400 hover:text-white text-3xl hidden md:block" aria-label="Close profile">&times;</button>
+                 
+                 <!-- Overview Tab -->
+                 <div id="profile-overview" class="profile-tab-content active space-y-8 animate-fade-in">
+                     <div>
+                         <h3 class="text-xl font-bold text-white mb-2">Academic Overview</h3>
+                         <p class="text-sm text-gray-400 mb-6">Your current standing and enrolled course details.</p>
+                         
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                             <div class="bg-white/5 rounded-2xl border border-white/5 p-5">
+                                 <p class="text-sm font-medium text-gray-400 mb-1">Current Course</p>
+                                 <p id="profile-course" class="text-xl font-bold text-white">Not set</p>
+                             </div>
+                             <div class="bg-white/5 rounded-2xl border border-white/5 p-5">
+                                 <p class="text-sm font-medium text-gray-400 mb-1">Academic Year</p>
+                                 <p id="profile-year" class="text-xl font-bold text-white">Not set</p>
+                             </div>
+                         </div>
+                     </div>
+                     
+                     <div>
+                         <h3 class="text-xl font-bold text-white mb-4">Performance Metrics</h3>
+                         <div class="space-y-4">
+                             <!-- Overall Attendance -->
+                             <div class="bg-black/20 rounded-2xl p-6 border border-white/5 flex flex-col justify-center relative overflow-hidden">
+                                  <div class="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                                  <h3 class="text-sm font-medium text-gray-400 mb-1">Overall Attendance</h3>
+                                  <p id="profile-overall-attendance" class="text-4xl font-black text-green-400 mb-3">-%</p>
+                                  <div class="w-full bg-gray-800 rounded-full h-1.5 mb-3">
+                                       <div id="profile-attendance-bar" class="h-1.5 rounded-full" style="width: 0%; background-color: var(--primary-color-start);"></div>
+                                  </div>
+                                  <div class="flex justify-between text-xs font-medium">
+                                       <span class="text-gray-400">Total: <span id="profile-total-classes" class="text-white">0</span></span>
+                                       <span class="text-green-400">P: <span id="profile-total-present">0</span></span>
+                                       <span class="text-red-400">A: <span id="profile-total-absent">0</span></span>
+                                  </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Personal Info Tab -->
+                 <div id="profile-personal" class="profile-tab-content hidden space-y-8 animate-fade-in">
+                     <div class="flex flex-col items-center text-center space-y-6 pt-4">
+                         <div class="relative">
+                             <img id="profile-img" class="h-32 w-32 rounded-full object-cover border-4 border-white/10 shadow-xl" src="https://placehold.co/128x128/3b82f6/FFFFFF?text=A" alt="Profile picture" loading="lazy">
+                         </div>
+                         <div>
+                             <h2 id="profile-name-display" class="text-3xl font-bold text-white mb-2">User Name</h2>
+                             <p id="profile-email" class="text-sm text-gray-400 mb-4">your.contact@example.com</p>
+                             <p id="profile-status-tier" class="inline-block px-3 py-1 mt-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30">Attendance Tier: High Performer</p>
+                         </div>
+                     </div>
+                     
+                     <div class="bg-white/5 rounded-2xl border border-white/5 p-6 mt-8">
+                         <div class="flex items-center justify-between mb-4">
+                             <h3 class="font-medium text-white">Contact Info</h3>
+                             <button id="edit-profile-btn" class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg> Edit Details
+                             </button>
+                         </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="gpa-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
+            <h2 id="gpa-modal-title" class="text-2xl font-bold text-white mb-6">Add Course for GPA</h2>
+            <form id="gpa-form">
+                <input type="hidden" id="editing-gpa-id">
+                <div class="mb-4">
+                    <label for="gpa-course-name" class="block mb-2 text-sm font-medium text-gray-300">Course Name</label>
+                    <input type="text" id="gpa-course-name" class="form-input" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="gpa-credits" class="block mb-2 text-sm font-medium text-gray-300">Credits</label>
+                        <input type="number" id="gpa-credits" min="0" step="0.5" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="gpa-grade" class="block mb-2 text-sm font-medium text-gray-300">Final Grade (Points)</label>
+                        <select id="gpa-grade" class="form-input" required aria-label="Final Grade Points">
+                            <option value="10">O (90-100 Marks) - 10</option>
+                            <option value="9">A+ (75-89 Marks) - 9</option>
+                            <option value="8">A (65-74 Marks) - 8</option>
+                            <option value="7">B+ (55-64 Marks) - 7</option>
+                            <option value="6">B (50-54 Marks) - 6</option>
+                            <option value="5">C (45-49 Marks) - 5</option>
+                            <option value="4">P (40-44 Marks) - 4</option>
+                            <option value="0">F (Less than 40) - 0</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4 border-t border-white/10 pt-4">
+                    <label for="gpa-estimated-percent" class="block mb-2 text-sm font-medium text-gray-300">Estimated Percentage Grade (for progress tracking)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="gpa-estimated-percent" min="0" max="100" class="form-input" placeholder="e.g., 85" aria-label="Estimated Percentage Grade">
+                        <span class="text-lg font-bold text-gray-400">%</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Simulates grade component weighting (e.g., 20% mid-term, 40% final). Enter the current overall percentage.</p>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
+                    <button type="submit" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Save GPA course">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="semester-wrapped-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-lg w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
+            <div class="text-center mb-6">
+                <h2 class="text-4xl font-bold text-white font-brand">Your Semester Wrapped!</h2>
+                <p class="text-gray-400">A summary of your academic journey.</p>
+            </div>
+            <div id="wrapped-content" class="space-y-4 text-white max-h-80 overflow-y-auto pr-4">
+            </div>
+            <div class="flex justify-end gap-4 mt-8">
+                <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Close modal">Close</button>
+                <button type="button" id="share-wrapped-btn" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Share summary">Share</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scan-timetable-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-4xl w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
+            <div id="scan-upload-view">
+                <h2 class="text-2xl font-bold text-white mb-4">Scan Your Timetable</h2>
+                <p class="text-gray-400 mb-6">Upload a picture of your weekly schedule. We'll use AI to read it and set up your classes automatically.</p>
+                <div class="border-2 border-dashed border-gray-600 rounded-lg p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    <label for="timetable-file-input" class="relative cursor-pointer mt-4 font-semibold text-blue-400 hover:text-blue-300">
+                        <span>Upload a file</span>
+                        <input id="timetable-file-input" name="timetable-file-input" type="file" class="sr-only" accept="image/*">
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1">PNG, JPG, or GIF up to 10MB.</p>
+                </div>
+                 <div class="flex justify-end mt-6">
+                    <button type="button" id="scan-cancel-btn" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
+                </div>
+            </div>
+            <div id="scan-processing-view" class="hidden text-center">
+                 <h2 class="text-2xl font-bold text-white mb-4">Scanning Timetable...</h2>
+                 <p class="text-gray-400">AI is reading your schedule. This might take a moment.</p>
+                 <div class="mt-8">
+                     <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto"></div>
+                 </div>
+            </div>
+            <div id="scan-correction-view" class="hidden">
+                 <h2 class="text-2xl font-bold text-white mb-2">Review & Correct</h2>
+                 <p class="text-gray-400 mb-6">We've scanned your timetable. Please review the entries below and correct any errors before saving.</p>
+                 <div id="correction-grid-container" class="max-h-96 overflow-y-auto pr-2">
+                 </div>
+                 <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" id="scan-cancel-btn-2" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Cancel">Cancel</button>
+                    <button type="button" id="save-scanned-schedule-btn" class="btn-primary text-white font-bold py-2 px-6 rounded-lg" aria-label="Save scanned schedule">Save Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="calendar-day-details-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-md w-full p-6 sm:p-8 rounded-2xl transform scale-95 no-hover">
+            <div class="flex justify-between items-start mb-4">
+                <h2 id="calendar-day-title" class="text-2xl font-bold text-white">Attendance Detail</h2>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl" aria-label="Close modal">&times;</button>
+            </div>
+            <div id="calendar-day-log" class="space-y-3 pr-2">
+                <!-- Log entries will be injected here -->
+            </div>
+            <div class="flex justify-end mt-6">
+                 <button type="button" class="close-modal-btn bg-white/10 text-white font-semibold py-2 px-6 rounded-lg border border-white/20 hover:bg-white/20" aria-label="Close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content card max-w-3xl w-full p-0 rounded-2xl transform scale-95 no-hover overflow-hidden flex flex-col md:flex-row h-[85vh] max-h-[700px]">
+            <!-- Sidebar for Profile Tabs -->
+            <div class="w-full md:w-1/3 bg-black/40 border-r border-white/5 flex flex-col">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center md:block">
+                    <h2 class="text-xl font-bold text-white">My Profile</h2>
+                    <button class="close-modal-btn text-gray-400 hover:text-white text-2xl md:hidden" aria-label="Close profile">&times;</button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                    <button class="profile-tab-btn active w-full text-left px-4 py-3 rounded-xl text-white font-medium bg-white/10 hover:bg-white/10 transition-colors flex items-center gap-3" data-tab="profile-overview">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Overview
+                    </button>
+                    <button class="profile-tab-btn w-full text-left px-4 py-3 rounded-xl text-gray-400 font-medium hover:bg-white/5 transition-colors flex items-center gap-3" data-tab="profile-personal">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Personal Info
                     </button>
                 </div>
             </div>
@@ -471,10 +663,6 @@ export const modalsHtml = `
                                  <p class="text-sm font-medium text-gray-400 mb-1">Academic Year</p>
                                  <p id="profile-year" class="text-xl font-bold text-white">Not set</p>
                              </div>
-                             <div class="bg-white/5 rounded-2xl border border-white/5 p-5 sm:col-span-2">
-                                 <p class="text-sm font-medium text-gray-400 mb-1">Total Credits Logged</p>
-                                 <p id="profile-total-credits" class="text-xl font-bold text-white">0</p>
-                             </div>
                          </div>
                      </div>
                      
@@ -494,14 +682,6 @@ export const modalsHtml = `
                                        <span class="text-green-400">P: <span id="profile-total-present">0</span></span>
                                        <span class="text-red-400">A: <span id="profile-total-absent">0</span></span>
                                   </div>
-                             </div>
-                             
-                             <!-- Calculated GPA -->
-                             <div class="bg-black/20 rounded-2xl p-6 border border-white/5 flex flex-col justify-center relative overflow-hidden">
-                                  <div class="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                                  <h3 class="text-sm font-medium text-gray-400 mb-1">Calculated GPA</h3>
-                                  <p id="profile-calculated-gpa" class="text-4xl font-black text-yellow-400 mb-3">0.00</p>
-                                  <p class="text-xs text-gray-500 mt-auto">Based on final grades added in the GPA Calculator.</p>
                              </div>
                          </div>
                      </div>
@@ -532,29 +712,14 @@ export const modalsHtml = `
                                  <label class="text-xs text-gray-500 block mb-1">Roll Number (Removed)</label>
                                  <p id="profile-roll" class="text-white font-medium">Not set</p>
                              </div>
-                             <div>
-                                 <label class="text-xs text-gray-500 block mb-1">Mobile Number / Alt Email</label>
-                                 <p id="profile-mobile" class="text-white font-medium">Not set</p>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-
-                 <!-- Achievements Tab -->
-                 <div id="profile-achievements" class="profile-tab-content hidden space-y-8 animate-fade-in">
-                     <div>
-                         <h3 class="text-xl font-bold text-white mb-2">Achievements & Badges</h3>
-                         <p class="text-sm text-gray-400 mb-6">Your progress towards becoming an attendance legend.</p>
-                         
-                         <div class="bg-black/20 rounded-2xl p-8 border border-white/5 flex flex-col justify-center relative overflow-hidden text-center">
-                              <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                              <h3 class="text-sm font-medium text-gray-400 mb-2">Total Badges Unlocked</h3>
-                              <p id="profile-achievements-unlocked" class="text-5xl font-black text-purple-400 mb-4">0 <span class="text-xl text-gray-500 font-medium">/ 20</span></p>
-                              <p class="text-sm text-gray-500 max-w-xs mx-auto">Keep attending classes and maintaining high streaks to unlock more exclusive badges!</p>
-                         </div>
-                     </div>
-                 </div>
-            </div>
-        </div>
-    </div>
+                              <div>
+                                  <label class="text-xs text-gray-500 block mb-1">Mobile Number / Alt Email</label>
+                                  <p id="profile-mobile" class="text-white font-medium">Not set</p>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+             </div>
+         </div>
+     </div>
 `;

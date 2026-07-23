@@ -16,8 +16,7 @@ import { getCurrentUser } from './core/api-client.js';
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
-import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, renderGpaCalculator, handleGpaFormSubmit, handleDeleteGpaCourse, openGpaModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './features/academics.js';
-import { checkAchievements, renderAchievements, generateSemesterWrapped, shareSemesterWrapped } from './features/gamification.js';
+import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './features/academics.js';
 
 export const showDashboard = () => {
     document.getElementById('auth-page').classList.add('hidden');
@@ -96,10 +95,10 @@ const viewRenderers = {
     'overview':     () => { renderOverviewCards(); renderTodaysClasses(); updateOverviewStats(); updateGoalOrientedCard(); updateNextClassCountdown(); },
     'schedule':     () => { renderSchedule(); },
     'courses':      () => { renderCourses(); },
-    'assignments':  () => { renderAssignments(); renderGpaCalculator(); },
+    'assignments':  () => { renderAssignments(); },
     'calendar':     () => { renderCalendar(); },
-    'achievements': () => { renderAchievements(); },
     'reports':      () => { renderReports(); },
+    'profile':      () => { renderProfile(); }
 };
 
 export function setCurrentView(viewId) {
@@ -127,10 +126,8 @@ function fullRenderAllViews() {
     renderCourses();
     renderAssignments();
     renderCalendar();
-    renderAchievements();
     renderReports();
     renderProfile();
-    renderGpaCalculator();
     updateOverviewStats();
     updateGoalOrientedCard();
     updateNextClassCountdown();
@@ -201,14 +198,12 @@ function setupEventListeners() {
     document.getElementById('class-form').addEventListener('submit', handleClassFormSubmit);
     document.getElementById('assignment-form').addEventListener('submit', handleAssignmentFormSubmit);
     document.getElementById('notes-form').addEventListener('submit', handleNoteSubmit);
-    document.getElementById('gpa-form').addEventListener('submit', handleGpaFormSubmit);
 
     document.getElementById('start-time').addEventListener('input', updateDurationFeedback);
     document.getElementById('end-time').addEventListener('input', updateDurationFeedback);
 
     document.getElementById('add-class-btn').addEventListener('click', () => openClassModal(null, 'Class'));
     document.getElementById('add-assignment-btn').addEventListener('click', () => openAssignmentModal());
-    document.getElementById('add-gpa-course-btn').addEventListener('click', () => openGpaModal());
 
     document.getElementById('settings-btn').addEventListener('click', () => {
         updateTermDatesUI();
@@ -375,17 +370,6 @@ function setupEventListeners() {
             return;
         }
 
-        const editGpaBtn = e.target.closest('.edit-gpa-btn');
-        if (editGpaBtn) {
-            openGpaModal(editGpaBtn.dataset.gpaId);
-            return;
-        }
-        const deleteGpaBtn = e.target.closest('.delete-gpa-btn');
-        if (deleteGpaBtn) {
-            handleDeleteGpaCourse(deleteGpaBtn.dataset.gpaId);
-            return;
-        }
-
         const noteBtn = e.target.closest('.add-note-btn');
         if (noteBtn) {
             openNoteModal(parseInt(noteBtn.dataset.historyId));
@@ -413,11 +397,9 @@ function setupEventListeners() {
 
     const debouncedFilterCourses = debounce((searchTerm) => filterGrid(searchTerm, '#courses-grid', '.course-card-clickable'), 300);
     const debouncedFilterAssignments = debounce((searchTerm) => filterGrid(searchTerm, '#assignments-list', '.assignment-item'), 300);
-    const debouncedFilterGpa = debounce((searchTerm) => filterTable(searchTerm, '#gpa-courses-tbody'), 300);
 
     document.getElementById('courses-search').addEventListener('keyup', (e) => debouncedFilterCourses(e.target.value));
     document.getElementById('assignments-search').addEventListener('keyup', (e) => debouncedFilterAssignments(e.target.value));
-    document.getElementById('gpa-search').addEventListener('keyup', (e) => debouncedFilterGpa(e.target.value));
 
     document.getElementById('prev-month-btn').addEventListener('click', () => {
         state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() - 1);

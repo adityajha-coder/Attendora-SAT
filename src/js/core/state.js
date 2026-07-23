@@ -12,9 +12,7 @@ export const state = {
     schedule: [],
     history: [], 
     assignments: [],
-    gpaCourses: [], 
     archivedTerms: [], 
-    achievements: {},
     settings: {
         notifications: false,
         isLightMode: false,

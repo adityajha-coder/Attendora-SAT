@@ -20,8 +20,6 @@ export const dashboardHtml = `
                     <a href="#assignments" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Assignments"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg><span>Assignments</span></a>
                     <a href="#calendar" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Calendar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Calendar</span></a>
                     <a href="#reports" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Reports"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg><span>Reports</span></a>
-                    <a href="#achievements" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Achievements"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg><span>Achievements</span></a>
-                    <a href="#gpa" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="GPA Calculator"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h3m-3-10l-1.5-1.5a1.5 1.5 0 00-2.12 0L9 7m0 10l-1.5 1.5a1.5 1.5 0 01-2.12 0L4 17m11-6l1.5 1.5a1.5 1.5 0 010 2.12L15 17m-6 0h2m5-11l-2.09-2.09a1.5 1.5 0 00-2.12 0L9 7m-5 5h2m2 0h2" /></svg><span>GPA Calculator</span></a>
                     <button id="profile-btn" class="w-full text-left sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white" aria-label="My Profile"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span>My Profile</span></button>
                 </nav>
                 <div class="px-4 py-4 border-t border-white/10 space-y-1">
@@ -167,54 +165,6 @@ export const dashboardHtml = `
                     <div class="card rounded-xl p-6 mt-8 no-hover">
                         <h3 class="text-xl font-bold text-white mb-4">Overall Attendance Trend</h3>
                         <canvas id="trends-chart"></canvas>
-                    </div>
-                </div>
-
-                <div id="achievements-view" class="dashboard-view" data-intro="Achievements give you motivational goals to keep your attendance high!" data-step="6">
-                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-8">My Achievements</h1>
-                    <div id="achievements-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                </div>
-
-                <div id="gpa-view" class="dashboard-view" data-intro="Use the GPA calculator to track estimated or final grades and your credit average." data-step="8">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
-                        <div class="flex-grow">
-                             <h1 class="text-2xl sm:text-3xl font-bold text-white">GPA Calculator</h1>
-                             <p class="text-gray-400">Track your grades and calculate your GPA.</p>
-                        </div>
-                         <div class="flex items-center gap-4 w-full sm:w-auto">
-                             <input type="search" id="gpa-search" placeholder="Search courses..." class="search-input w-full sm:w-auto flex-grow px-4 py-2 rounded-lg text-white" aria-label="Search GPA courses">
-                            <button id="add-gpa-course-btn" class="btn-primary text-white font-semibold py-2 px-5 rounded-lg flex-shrink-0" aria-label="Add GPA course">Add Course</button>
-                        </div>
-                    </div>
-                    <div class="card rounded-xl p-6 no-hover">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            <div class="p-4 bg-white/5 rounded-lg text-center">
-                                <h4 class="text-gray-400">Total Credits</h4>
-                                <p id="gpa-total-credits" class="text-3xl font-bold text-white mt-1">0</p>
-                            </div>
-                            <div class="p-4 bg-white/5 rounded-lg text-center">
-                                <h4 class="text-gray-400">Current GPA</h4>
-                                <p id="gpa-current-gpa" class="text-3xl font-bold text-green-400">0.00</p>
-                            </div>
-                            <div class="p-4 bg-white/5 rounded-lg text-center">
-                                <h4 class="text-gray-400">Total Courses</h4>
-                                <p id="gpa-total-courses" class="text-3xl font-bold text-white mt-1">0</p>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left min-w-[400px]">
-                                <thead>
-                                    <tr class="border-b border-white/10">
-                                        <th class="p-4">Course Name</th>
-                                        <th class="p-4 text-center">Credits</th>
-                                        <th class="p-4 text-center">Final Grade</th>
-                                        <th class="p-4 text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="gpa-courses-tbody">
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
 
