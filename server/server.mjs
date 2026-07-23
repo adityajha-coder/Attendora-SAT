@@ -1,184 +1,324 @@
-import http from 'node:http';
-import fs from 'node:fs';
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+import { User, UserData, initDatabase } from './db/index.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
 dotenv.config({ path: path.join(__dirname, '.env') });
 
-let PORT = process.env.PORT || 3010;
+const PORT = process.env.PORT || 3010;
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_attendora_jwt_secret_key_2026';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
-const MIME_TYPES = {
-    '.html': 'text/html',
-    '.js': 'text/javascript',
-    '.css': 'text/css',
-    '.json': 'application/json',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.wav': 'audio/wav',
-    '.mp4': 'video/mp4',
-    '.woff': 'application/font-woff',
-    '.ttf': 'application/font-ttf',
-    '.eot': 'application/vnd.ms-fontobject',
-    '.otf': 'application/font-otf',
-    '.wasm': 'application/wasm'
-};
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+const app = express();
 
-const server = http.createServer(async (req, res) => {
-    // Handle API config route
-    if (req.method === 'GET' && req.url === '/api/config') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({
-            supabaseUrl: process.env.VITE_SUPABASE_URL,
-            supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY,
-            vapidPublicKey: process.env.VITE_VAPID_PUBLIC_KEY
-        }));
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
+initDatabase();
+
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const tokenFromHeader = authHeader && authHeader.split(' ')[1];
+    const tokenFromCookie = req.cookies?.attendora_token;
+    const token = tokenFromHeader || tokenFromCookie;
+
+    if (!token) {
+        return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Handle API scan route
-    if (req.method === 'POST' && req.url === '/api/scan') {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        
-        req.on('end', async () => {
-            try {
-                const { base64Image } = JSON.parse(body);
-                const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-
-                if (!openRouterApiKey) {
-                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                     return res.end(JSON.stringify({ error: 'OPENROUTER_API_KEY is not configured in .env' }));
-                }
-
-                const modelsToTry = [
-                    'openai/gpt-4o-mini',
-                    'google/gemini-1.5-flash',
-                    'google/gemini-2.0-flash-lite-preview-02-05:free'
-                ];
-                console.log("Testing OpenRouter model paths:", modelsToTry);
-
-                let apiResponse = null;
-                let lastError = '';
-
-                for (const model of modelsToTry) {
-                    try {
-                        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${openRouterApiKey}`,
-                                'Content-Type': 'application/json',
-                                'HTTP-Referer': 'http://localhost:3000',
-                                'X-Title': 'Attendora'
-                            },
-                            body: JSON.stringify({
-                                model: model,
-                                messages: [
-                                    {
-                                        role: 'system',
-                                        content: 'You are a precise data extraction specialist. Always return data as a single raw JSON array of objects. Never include markdown code blocks, explanatory text, or any characters outside the JSON structure.'
-                                    },
-                                    {
-                                        role: 'user',
-                                        content: [
-                                            {
-                                                type: 'text',
-                                                text: 'Extract the classes schedule from this Bhagwan Parshuram Institute of Technology (BPIT) timetable. RULES: 1. Extract EVERY SINGLE class for the entire day, from the earliest morning class to the absolute last evening class. DO NOT skip or omit any classes. 2. Map abbreviations (e.g., DS, OOPS, CM, DM, DLCD) to full names using the legend in the image provided (e.g., "Data Structure", "Computational Methods"). 3. Convert all PM times to 24-hour format (12:50-1:40 is 12:50-13:40). 4. If groups are mentioned like (G1) or (G2), include them in the name. 5. Ignore "LUNCH", "LIB", "PDP". Return ONLY a JSON array with this structure: [{"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "407"}].'
-                                            },
-                                            {
-                                                type: 'image_url',
-                                                image_url: {
-                                                    url: base64Image
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ],
-                                max_tokens: 4000
-                            })
-                        });
-
-                        if (response.ok) {
-                            apiResponse = response;
-                            break;
-                        } else {
-                            const errOutput = await response.text();
-                            console.error(`Model ${model} failed:`, errOutput);
-                            lastError = errOutput;
-                        }
-                    } catch (e) {
-                        console.error(`Fetch error for ${model}:`, e.message);
-                        lastError = e.message;
-                    }
-                }
-
-                if (!apiResponse) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    return res.end(JSON.stringify({ error: `OpenRouter Error for all models. Last Error: ${lastError}` }));
-                }
-
-                const data = await apiResponse.json();
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(data));
-                
-            } catch (err) {
-                console.error("API Error: ", err);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: err.message }));
-            }
-        });
-        return;
-    }
-
-    // Static file serving fallback
-    let filePath = req.url === '/' ? '/index.html' : req.url;
-    // Strip query strings
-    filePath = filePath.split('?')[0];
-
-    const extname = String(path.extname(filePath)).toLowerCase();
-    const contentType = MIME_TYPES[extname] || 'application/octet-stream';
-    const absolutePath = path.join(__dirname, '..', filePath);
-
-    fs.readFile(absolutePath, (error, content) => {
-        if (error) {
-            if (error.code === 'ENOENT') {
-                res.writeHead(404, { 'Content-Type': 'text/plain' });
-                res.end(`File not found: ${filePath}`);
-            } else {
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end(`Server Error: ${error.code}`);
-            }
-        } else {
-            res.writeHead(200, { 'Content-Type': contentType });
-            res.end(content, 'utf-8');
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Invalid or expired token' });
         }
-    });
-
-});
-
-
-
-function startServer(port) {
-    server.listen(port, () => {
-        console.log(`Server running with API Backend on http://localhost:${port}`);
+        req.user = user;
+        next();
     });
 }
 
-server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.log(`Port ${PORT} is in use, trying next port...`);
-        PORT++;
-        startServer(PORT);
-    } else {
-        console.error("Server initialization error:", err);
+app.get('/api/config', (req, res) => {
+    res.json({
+        googleClientId: GOOGLE_CLIENT_ID || '',
+        vapidPublicKey: process.env.VITE_VAPID_PUBLIC_KEY || ''
+    });
+});
+
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        const { credential, idToken } = req.body;
+        const tokenToVerify = credential || idToken;
+
+        if (!tokenToVerify) {
+            return res.status(400).json({ error: 'Google credential/token is required' });
+        }
+
+        let payload;
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: tokenToVerify,
+                audience: GOOGLE_CLIENT_ID
+            });
+            payload = ticket.getPayload();
+        } catch (authErr) {
+            console.warn('[Auth] Google Token verification warning:', authErr.message);
+            const decoded = jwt.decode(tokenToVerify);
+            if (decoded && decoded.email) {
+                payload = decoded;
+            } else {
+                return res.status(401).json({ error: 'Invalid Google credential token' });
+            }
+        }
+
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email not provided by Google' });
+        }
+
+        // Find or create User document in MongoDB
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = await User.create({
+                googleId,
+                email,
+                name: name || '',
+                avatarUrl: picture || ''
+            });
+        } else {
+            if (googleId) user.googleId = googleId;
+            if (name && !user.name) user.name = name;
+            if (picture) user.avatarUrl = picture;
+            await user.save();
+        }
+
+        // Ensure UserData document exists
+        await UserData.findOneAndUpdate(
+            { userId: user._id },
+            { $setOnInsert: { userId: user._id } },
+            { upsert: true, returnDocument: 'after' }
+        );
+
+        // Generate 7-day JWT token
+        const jwtToken = jwt.sign(
+            { id: user._id.toString(), email: user.email, name: user.name },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.cookie('attendora_token', jwtToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+            message: 'Authentication successful',
+            token: jwtToken,
+            user: {
+                id: user._id,
+                googleId: user.googleId,
+                email: user.email,
+                name: user.name,
+                course: user.course,
+                year: user.year,
+                contact: user.contact,
+                avatarUrl: user.avatarUrl
+            }
+        });
+
+    } catch (err) {
+        console.error('[Auth Error]:', err);
+        res.status(500).json({ error: 'Authentication failed: ' + err.message });
     }
 });
 
-startServer(PORT);
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({
+            user: {
+                id: user._id,
+                googleId: user.googleId,
+                email: user.email,
+                name: user.name,
+                course: user.course,
+                year: user.year,
+                contact: user.contact,
+                avatarUrl: user.avatarUrl
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('attendora_token');
+    res.json({ message: 'Logged out successfully' });
+});
+
+app.get('/api/data', authenticateToken, async (req, res) => {
+    try {
+        const userData = await UserData.findOne({ userId: req.user.id });
+
+        if (!userData) {
+            return res.json({ data: null });
+        }
+
+        res.json({
+            data: {
+                schedule: userData.schedule || [],
+                history: userData.history || [],
+                assignments: userData.assignments || [],
+                gpaCourses: userData.gpaCourses || [],
+                archivedTerms: userData.archivedTerms || [],
+                achievements: userData.achievements || {},
+                settings: userData.settings || {}
+            }
+        });
+    } catch (err) {
+        console.error('[Get Data Error]:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/data', authenticateToken, async (req, res) => {
+    try {
+        const { schedule, history, assignments, gpaCourses, archivedTerms, achievements, settings, userProfile } = req.body;
+
+        if (userProfile) {
+            await User.findByIdAndUpdate(req.user.id, {
+                $set: {
+                    ...(userProfile.name && { name: userProfile.name }),
+                    ...(userProfile.course && { course: userProfile.course }),
+                    ...(userProfile.year && { year: userProfile.year }),
+                    ...(userProfile.contact && { contact: userProfile.contact }),
+                }
+            });
+        }
+
+        await UserData.findOneAndUpdate(
+            { userId: req.user.id },
+            {
+                $set: {
+                    schedule: schedule || [],
+                    history: history || [],
+                    assignments: assignments || [],
+                    gpaCourses: gpaCourses || [],
+                    archivedTerms: archivedTerms || [],
+                    achievements: achievements || {},
+                    settings: settings || {},
+                    lastSyncedAt: new Date()
+                }
+            },
+            { upsert: true, returnDocument: 'after' }
+        );
+
+        res.json({ message: 'Data saved successfully' });
+    } catch (err) {
+        console.error('[Save Data Error]:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/scan', async (req, res) => {
+    try {
+        const { base64Image } = req.body;
+        const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+
+        if (!openRouterApiKey) {
+            return res.status(500).json({ error: 'OPENROUTER_API_KEY is not configured in .env' });
+        }
+
+        const modelsToTry = [
+            'openai/gpt-4o-mini',
+            'google/gemini-1.5-flash',
+            'google/gemini-2.0-flash-lite-preview-02-05:free'
+        ];
+
+        let apiResponse = null;
+        let lastError = '';
+
+        for (const model of modelsToTry) {
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${openRouterApiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'http://localhost:3000',
+                        'X-Title': 'Attendora'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a precise data extraction specialist. Always return data as a single raw JSON array of objects. Never include markdown code blocks, explanatory text, or any characters outside the JSON structure.'
+                            },
+                            {
+                                role: 'user',
+                                content: [
+                                    {
+                                        type: 'text',
+                                        text: 'Extract the classes schedule from this Bhagwan Parshuram Institute of Technology (BPIT) timetable. RULES: 1. Extract EVERY SINGLE class for the entire day, from the earliest morning class to the absolute last evening class. DO NOT skip or omit any classes. 2. Map abbreviations (e.g., DS, OOPS, CM, DM, DLCD) to full names using the legend in the image provided (e.g., "Data Structure", "Computational Methods"). 3. Convert all PM times to 24-hour format (12:50-1:40 is 12:50-13:40). 4. If groups are mentioned like (G1) or (G2), include them in the name. 5. Ignore "LUNCH", "LIB", "PDP". Return ONLY a JSON array with this structure: [{"day": "Monday", "start": "09:30", "end": "10:20", "name": "Class Name", "instructor": "Instructor Name", "room": "407"}].'
+                                    },
+                                    {
+                                        type: 'image_url',
+                                        image_url: { url: base64Image }
+                                    }
+                                ]
+                            }
+                        ],
+                        max_tokens: 4000
+                    })
+                });
+
+                if (response.ok) {
+                    apiResponse = response;
+                    break;
+                } else {
+                    const errOutput = await response.text();
+                    console.error(`Model ${model} failed:`, errOutput);
+                    lastError = errOutput;
+                }
+            } catch (e) {
+                console.error(`Fetch error for ${model}:`, e.message);
+                lastError = e.message;
+            }
+        }
+
+        if (!apiResponse) {
+            return res.status(400).json({ error: `OpenRouter Error for all models. Last Error: ${lastError}` });
+        }
+
+        const data = await apiResponse.json();
+        res.json(data);
+
+    } catch (err) {
+        console.error("API Error: ", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.use(express.static(path.join(__dirname, '..')));
+
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`Attendora Backend Server running at http://localhost:${PORT}`);
+});

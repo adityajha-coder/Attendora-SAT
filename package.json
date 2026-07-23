@@ -4,10 +4,11 @@
   "description": "Smart Attendance Tracker",
   "main": "index.html",
   "scripts": {
-    "dev": "node --env-file=server/.env server/server.mjs",
+    "dev": "nodemon --env-file=server/.env server/server.mjs",
     "start": "node --env-file=server/.env server/server.mjs"
   },
   "devDependencies": {
+    "nodemon": "^3.1.14",
     "vercel": "^39.0.0",
     "web-push": "^3.6.7"
   },
@@ -19,7 +20,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "google-auth-library": "^10.9.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.9.0"
   }
 }
