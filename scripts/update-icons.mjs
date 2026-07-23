@@ -8,7 +8,6 @@ const fevicon512Source = 'assets/images/fevicon-512.png';
 
 const resDir = 'android/app/src/main/res';
 
-// Mipmap directories for launcher icons
 const mipmapDirs = [
   'mipmap-mdpi',
   'mipmap-hdpi',
@@ -26,7 +25,6 @@ for (const dir of mipmapDirs) {
   }
 }
 
-// Splash screen drawables
 const drawableDirs = [
   'drawable',
   'drawable-land-hdpi',
