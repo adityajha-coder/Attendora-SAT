@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import compression from 'compression';
+import mongoose from 'mongoose';
 import { User, UserData, initDatabase } from './db/index.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
