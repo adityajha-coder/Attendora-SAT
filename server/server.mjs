@@ -203,62 +203,73 @@ app.post('/api/auth/logout', (req, res) => {
     res.json({ message: 'Logged out successfully' });
 });
 
+const memoryDataStore = new Map();
+
 app.get('/api/data', authenticateToken, async (req, res) => {
     try {
-        const userData = await UserData.findOne({ userId: req.user.id });
-
-        if (!userData) {
-            return res.json({ data: null });
+        if (mongoose.connection.readyState === 1) {
+            const userData = await UserData.findOne({ userId: req.user.id });
+            if (userData) {
+                return res.json({
+                    data: {
+                        schedule: userData.schedule || [],
+                        history: userData.history || [],
+                        assignments: userData.assignments || [],
+                        gpaCourses: userData.gpaCourses || [],
+                        archivedTerms: userData.archivedTerms || [],
+                        achievements: userData.achievements || {},
+                        settings: userData.settings || {}
+                    }
+                });
+            }
         }
 
-        res.json({
-            data: {
-                schedule: userData.schedule || [],
-                history: userData.history || [],
-                assignments: userData.assignments || [],
-                gpaCourses: userData.gpaCourses || [],
-                archivedTerms: userData.archivedTerms || [],
-                achievements: userData.achievements || {},
-                settings: userData.settings || {}
-            }
-        });
+        const fallback = memoryDataStore.get(req.user.id);
+        res.json({ data: fallback || null });
     } catch (err) {
         console.error('[Get Data Error]:', err);
-        res.status(500).json({ error: err.message });
+        const fallback = memoryDataStore.get(req.user.id);
+        res.json({ data: fallback || null });
     }
 });
 
 app.put('/api/data', authenticateToken, async (req, res) => {
     try {
         const { schedule, history, assignments, gpaCourses, archivedTerms, achievements, settings, userProfile } = req.body;
+        const payload = {
+            schedule: schedule || [],
+            history: history || [],
+            assignments: assignments || [],
+            gpaCourses: gpaCourses || [],
+            archivedTerms: archivedTerms || [],
+            achievements: achievements || {},
+            settings: settings || {}
+        };
 
-        if (userProfile) {
-            await User.findByIdAndUpdate(req.user.id, {
-                $set: {
-                    ...(userProfile.name && { name: userProfile.name }),
-                    ...(userProfile.course && { course: userProfile.course }),
-                    ...(userProfile.year && { year: userProfile.year }),
-                    ...(userProfile.contact && { contact: userProfile.contact }),
+        memoryDataStore.set(req.user.id, payload);
+
+        if (mongoose.connection.readyState === 1) {
+            try {
+                if (userProfile) {
+                    await User.findByIdAndUpdate(req.user.id, {
+                        $set: {
+                            ...(userProfile.name && { name: userProfile.name }),
+                            ...(userProfile.course && { course: userProfile.course }),
+                            ...(userProfile.year && { year: userProfile.year }),
+                            ...(userProfile.contact && { contact: userProfile.contact }),
+                        }
+                    });
                 }
-            });
+
+                await UserData.findOneAndUpdate(
+                    { userId: req.user.id },
+                    { $set: { ...payload, lastSyncedAt: new Date() } },
+                    { upsert: true, returnDocument: 'after' }
+                );
+            } catch (dbErr) {
+                console.warn('[DB] Save skipped:', dbErr.message);
+            }
         }
-
-        await UserData.findOneAndUpdate(
-            { userId: req.user.id },
-            {
-                $set: {
-                    schedule: schedule || [],
-                    history: history || [],
-                    assignments: assignments || [],
-                    gpaCourses: gpaCourses || [],
-                    archivedTerms: archivedTerms || [],
-                    achievements: achievements || {},
-                    settings: settings || {},
-                    lastSyncedAt: new Date()
-                }
-            },
-            { upsert: true, returnDocument: 'after' }
-        );
 
         res.json({ message: 'Data saved successfully' });
     } catch (err) {

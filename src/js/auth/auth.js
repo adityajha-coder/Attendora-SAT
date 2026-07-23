@@ -68,6 +68,14 @@ export const signInWithGoogle = async () => {
                             const cloudData = await loadFromCloud();
                             if (cloudData) {
                                 mergeCloudData(state, cloudData);
+                            } else {
+                                const backup = localStorage.getItem('attendoraState_backup');
+                                if (backup && (!state.schedule || state.schedule.length === 0)) {
+                                    try {
+                                        const parsed = JSON.parse(backup);
+                                        Object.assign(state, parsed);
+                                    } catch (e) {}
+                                }
                             }
                         } catch (syncErr) {
                             console.warn('[Sync] Cloud restore error on login:', syncErr);
@@ -112,6 +120,10 @@ export const logoutUser = async () => {
     try {
         await logoutUserApi();
         localStorage.removeItem('loggedIn');
+        const currentState = localStorage.getItem('attendoraState');
+        if (currentState) {
+            localStorage.setItem('attendoraState_backup', currentState);
+        }
         localStorage.removeItem('attendoraState');
         window.location.reload();
     } catch (error) {

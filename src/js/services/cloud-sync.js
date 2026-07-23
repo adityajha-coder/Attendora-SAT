@@ -85,6 +85,14 @@ function extractPersistableState(state) {
 export function schedulCloudSync(state) {
     if (syncTimeoutId) clearTimeout(syncTimeoutId);
 
+    // Safeguard
+    const hasDataToSync = (state.schedule && state.schedule.length > 0) ||
+                          (state.history && state.history.length > 0) ||
+                          (state.assignments && state.assignments.length > 0) ||
+                          (state.gpaCourses && state.gpaCourses.length > 0);
+
+    if (!hasDataToSync) return;
+
     syncTimeoutId = setTimeout(async () => {
         const user = await getCurrentUser();
         if (!user) return; 
@@ -95,7 +103,7 @@ export function schedulCloudSync(state) {
             await saveUserData(persistable);
             setSyncStatus('synced');
         } catch (error) {
-            console.error('[CloudSync] Failed to save to PostgreSQL:', error);
+            console.error('[CloudSync] Failed to save:', error);
             setSyncStatus('error');
         }
     }, SYNC_DEBOUNCE_MS);
@@ -117,7 +125,7 @@ export async function loadFromCloud() {
             return null;
         }
     } catch (error) {
-        console.error('[CloudSync] Failed to load from PostgreSQL:', error);
+        console.error('[CloudSync] Failed to load from cloud:', error);
         setSyncStatus('error');
         return null;
     }
@@ -128,51 +136,31 @@ export function mergeCloudData(state, cloudData) {
 
     let merged = false;
 
-    const localHasData = state.schedule.length > 0 || state.history.length > 0;
-    const cloudHasData = (cloudData.schedule?.length > 0) || (cloudData.history?.length > 0);
+    const cloudHasContent = 
+        (cloudData.schedule && cloudData.schedule.length > 0) ||
+        (cloudData.history && cloudData.history.length > 0) ||
+        (cloudData.assignments && cloudData.assignments.length > 0) ||
+        (cloudData.gpaCourses && cloudData.gpaCourses.length > 0) ||
+        (cloudData.archivedTerms && cloudData.archivedTerms.length > 0);
 
-    if (!localHasData && cloudHasData) {
-        PERSISTABLE_KEYS.forEach(key => {
-            if (cloudData[key] !== undefined) {
-                if (key === 'settings') {
-                    Object.assign(state[key], cloudData[key]);
-                } else if (key === 'achievements') {
-                    Object.assign(state[key], cloudData[key]);
-                } else {
-                    state[key] = cloudData[key];
+    if (!cloudHasContent) return false;
+
+    PERSISTABLE_KEYS.forEach(key => {
+        if (cloudData[key] !== undefined && cloudData[key] !== null) {
+            if (Array.isArray(cloudData[key])) {
+                if (!state[key] || state[key].length === 0 || cloudData[key].length >= state[key].length) {
+                    state[key] = JSON.parse(JSON.stringify(cloudData[key]));
+                    merged = true;
                 }
+            } else if (key === 'settings') {
+                Object.assign(state[key], cloudData[key]);
+                merged = true;
+            } else if (key === 'achievements') {
+                state[key] = { ...state[key], ...cloudData[key] };
+                merged = true;
             }
-        });
-        merged = true;
-    } else if (localHasData && cloudHasData) {
-        const localHistoryCount = state.history.length;
-        const cloudHistoryCount = cloudData.history?.length || 0;
-
-        if (cloudHistoryCount > localHistoryCount) {
-            PERSISTABLE_KEYS.forEach(key => {
-                if (cloudData[key] !== undefined) {
-                    if (key === 'settings') {
-                        Object.assign(state[key], cloudData[key]);
-                    } else if (key === 'achievements') {
-                        const mergedAchievements = { ...state[key] };
-                        Object.keys(cloudData[key] || {}).forEach(achKey => {
-                            const cloudAch = cloudData[key][achKey];
-                            const localAch = mergedAchievements[achKey];
-                            if (cloudAch?.unlocked && !localAch?.unlocked) {
-                                mergedAchievements[achKey] = cloudAch;
-                            } else if (cloudAch && !localAch) {
-                                mergedAchievements[achKey] = cloudAch;
-                            }
-                        });
-                        state[key] = mergedAchievements;
-                    } else {
-                        state[key] = cloudData[key];
-                    }
-                }
-            });
-            merged = true;
         }
-    }
+    });
 
     return merged;
 }
