@@ -39,10 +39,22 @@ export const signInWithGoogle = async () => {
     const btn = document.getElementById('google-signin-btn');
     const originalText = btn ? btn.innerHTML : '';
 
+    const resetButton = () => {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    };
+
     if (btn) {
         btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
         btn.disabled = true;
     }
+
+    let authTimeoutId = setTimeout(() => {
+        console.warn('[Auth] Sign-in prompt timed out or was dismissed.');
+        resetButton();
+    }, 12000);
 
     try {
         let googleClientId = getGoogleClientId();
@@ -56,6 +68,7 @@ export const signInWithGoogle = async () => {
             window.google.accounts.id.initialize({
                 client_id: googleClientId,
                 callback: async (response) => {
+                    clearTimeout(authTimeoutId);
                     try {
                         const result = await loginWithGoogleToken(response.credential);
                         showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
@@ -84,33 +97,29 @@ export const signInWithGoogle = async () => {
                     } catch (loginErr) {
                         showToast("Google Login Error: " + loginErr.message, "error");
                     } finally {
-                        if (btn) {
-                            btn.innerHTML = originalText;
-                            btn.disabled = false;
-                        }
+                        resetButton();
                     }
                 }
             });
 
             window.google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    console.log('[Auth] Prompt dismissed or skipped, attempting popup...');
+                if (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment()) {
+                    console.log('[Auth] Prompt dismissed, skipped, or not displayed:', 
+                        notification.getNotDisplayedReason?.() || notification.getSkippedReason?.() || notification.getDismissedReason?.());
+                    clearTimeout(authTimeoutId);
+                    resetButton();
                 }
             });
         } else {
+            clearTimeout(authTimeoutId);
             showToast("Google Client ID not configured in .env yet.", "info");
-            if (btn) {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            resetButton();
         }
     } catch (err) {
+        clearTimeout(authTimeoutId);
         console.error('[Auth] Sign-in exception:', err);
         showToast("Sign-in failed: " + err.message, "error");
-        if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
+        resetButton();
     }
 };
 

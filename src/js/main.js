@@ -69,7 +69,6 @@ const initializeAttendora = async () => {
                     const wasMerged = mergeCloudData(state, cloudData);
                     if (wasMerged) {
                         saveData();
-                        showToast('Restored your data from PostgreSQL cloud!', 'info');
                     } else {
                         forceCloudSave(state);
                     }
