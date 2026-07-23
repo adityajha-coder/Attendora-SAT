@@ -42,6 +42,15 @@ export const state = {
     _cacheVersion: 0
 };
 
+export function resetStateToDefaults() {
+    state.userProfile = { name: '', contact: '', course: '', year: '' };
+    state.schedule = [];
+    state.history = [];
+    state.assignments = [];
+    state.archivedTerms = [];
+    state._cacheVersion = (state._cacheVersion || 0) + 1;
+}
+
 export const saveData = () => {
     state._cacheVersion = (state._cacheVersion || 0) + 1;
     localStorage.setItem('attendoraState', JSON.stringify(state));

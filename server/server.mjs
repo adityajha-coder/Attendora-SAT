@@ -221,6 +221,16 @@ app.get('/api/data', authenticateToken, async (req, res) => {
                         settings: userData.settings || {}
                     }
                 });
+            } else {
+                return res.json({
+                    data: {
+                        schedule: [],
+                        history: [],
+                        assignments: [],
+                        archivedTerms: [],
+                        settings: {}
+                    }
+                });
             }
         }
 

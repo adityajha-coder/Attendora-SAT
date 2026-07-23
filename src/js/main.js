@@ -69,11 +69,7 @@ const initializeAttendora = async () => {
                     const wasMerged = mergeCloudData(state, cloudData);
                     if (wasMerged) {
                         saveData();
-                    } else {
-                        forceCloudSave(state);
                     }
-                } else {
-                    forceCloudSave(state);
                 }
             } catch (syncErr) {
                 console.warn('[Sync] Cloud restore warning:', syncErr);

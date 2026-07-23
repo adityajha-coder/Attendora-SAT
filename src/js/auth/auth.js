@@ -1,5 +1,5 @@
 // Handles user authentication, profile editing, and session management.
-import { state, saveData } from '../core/state.js';
+import { state, saveData, resetStateToDefaults } from '../core/state.js';
 import { showToast } from '../ui/ui.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig } from '../core/api-client.js';
@@ -80,6 +80,7 @@ export const signInWithGoogle = async () => {
                     clearTimeout(authTimeoutId);
                     try {
                         const result = await loginWithGoogleToken(response.credential);
+                        resetStateToDefaults();
                         showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
                         state.userProfile.name = result.user.name || state.userProfile.name;
                         state.userProfile.contact = result.user.email || state.userProfile.contact;
@@ -89,12 +90,15 @@ export const signInWithGoogle = async () => {
                             if (cloudData) {
                                 mergeCloudData(state, cloudData);
                             } else {
-                                const backup = localStorage.getItem('attendoraState_backup');
-                                if (backup && (!state.schedule || state.schedule.length === 0)) {
-                                    try {
-                                        const parsed = JSON.parse(backup);
-                                        Object.assign(state, parsed);
-                                    } catch (e) {}
+                                const userEmail = result.user.email;
+                                if (userEmail) {
+                                    const userBackup = localStorage.getItem(`attendoraState_backup_${userEmail}`);
+                                    if (userBackup && (!state.schedule || state.schedule.length === 0)) {
+                                        try {
+                                            const parsed = JSON.parse(userBackup);
+                                            Object.assign(state, parsed);
+                                        } catch (e) {}
+                                    }
                                 }
                             }
                         } catch (syncErr) {
@@ -161,13 +165,17 @@ export const signInWithGoogle = async () => {
 
 export const logoutUser = async () => {
     try {
+        const currentUser = state.userProfile?.contact;
+        if (currentUser) {
+            const currentState = localStorage.getItem('attendoraState');
+            if (currentState) {
+                localStorage.setItem(`attendoraState_backup_${currentUser}`, currentState);
+            }
+        }
         await logoutUserApi();
         localStorage.removeItem('loggedIn');
-        const currentState = localStorage.getItem('attendoraState');
-        if (currentState) {
-            localStorage.setItem('attendoraState_backup', currentState);
-        }
         localStorage.removeItem('attendoraState');
+        resetStateToDefaults();
         window.location.reload();
     } catch (error) {
         showToast("Error logging out: " + error.message, "error");
