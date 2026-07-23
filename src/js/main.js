@@ -17,6 +17,7 @@ import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
 import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './features/academics.js';
+import { generateSemesterWrapped, shareSemesterWrapped } from './features/gamification.js';
 
 export const showDashboard = () => {
     document.getElementById('auth-page').classList.add('hidden');
@@ -268,8 +269,10 @@ function setupEventListeners() {
 
     document.getElementById('export-data-btn').addEventListener('click', exportData);
     document.getElementById('import-data-input').addEventListener('change', importData);
-    document.getElementById('semester-wrapped-btn').addEventListener('click', generateSemesterWrapped);
-    document.getElementById('share-wrapped-btn').addEventListener('click', shareSemesterWrapped);
+    const wrappedBtn = document.getElementById('semester-wrapped-btn');
+    if (wrappedBtn) wrappedBtn.addEventListener('click', generateSemesterWrapped);
+    const shareWrappedBtn = document.getElementById('share-wrapped-btn');
+    if (shareWrappedBtn) shareWrappedBtn.addEventListener('click', shareSemesterWrapped);
 
     document.getElementById('save-term-dates-btn').addEventListener('click', saveTermDates);
     document.getElementById('archive-term-btn-danger').addEventListener('click', archiveCurrentTerm);
