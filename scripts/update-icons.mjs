@@ -3,8 +3,8 @@ import path from 'node:path';
 
 const iconSource = 'assets/images/fevicon.png';
 const logoRoundedSource = 'assets/images/logo-rounded.png';
-const icon192Source = 'assets/images/fevicon-192.png';
-const fevicon512Source = 'assets/images/fevicon-512.png';
+const icon192Source = 'assets/images/fevicon.png';
+const fevicon512Source = 'assets/images/fevicon.png';
 
 const resDir = 'android/app/src/main/res';
 

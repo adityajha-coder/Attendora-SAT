@@ -1,5 +1,6 @@
 import { showToast } from './ui.js';
 import { state, saveData } from '../core/state.js';
+import { getApiUrl } from '../core/api-client.js';
 
 export function checkNotificationStatus() {
     const toggle = document.getElementById('notification-toggle');
