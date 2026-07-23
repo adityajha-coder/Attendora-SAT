@@ -64,11 +64,15 @@ app.post('/api/auth/google', async (req, res) => {
 
         let payload;
         try {
-            const ticket = await googleClient.verifyIdToken({
-                idToken: tokenToVerify,
-                audience: GOOGLE_CLIENT_ID
-            });
-            payload = ticket.getPayload();
+            if (GOOGLE_CLIENT_ID) {
+                const ticket = await googleClient.verifyIdToken({
+                    idToken: tokenToVerify,
+                    audience: GOOGLE_CLIENT_ID
+                });
+                payload = ticket.getPayload();
+            } else {
+                payload = jwt.decode(tokenToVerify);
+            }
         } catch (authErr) {
             console.warn('[Auth] Google Token verification warning:', authErr.message);
             const decoded = jwt.decode(tokenToVerify);
@@ -79,38 +83,60 @@ app.post('/api/auth/google', async (req, res) => {
             }
         }
 
-        const { sub: googleId, email, name, picture } = payload;
-
-        if (!email) {
+        if (!payload || !payload.email) {
             return res.status(400).json({ error: 'Email not provided by Google' });
         }
 
-        // Find or create User document in MongoDB
-        let user = await User.findOne({ email });
-        if (!user) {
-            user = await User.create({
-                googleId,
-                email,
-                name: name || '',
-                avatarUrl: picture || ''
-            });
-        } else {
-            if (googleId) user.googleId = googleId;
-            if (name && !user.name) user.name = name;
-            if (picture) user.avatarUrl = picture;
-            await user.save();
-        }
+        const { sub: googleId, email, name, picture } = payload;
+        let userData = {
+            id: googleId || email,
+            googleId: googleId || '',
+            email,
+            name: name || '',
+            avatarUrl: picture || ''
+        };
 
-        // Ensure UserData document exists
-        await UserData.findOneAndUpdate(
-            { userId: user._id },
-            { $setOnInsert: { userId: user._id } },
-            { upsert: true, returnDocument: 'after' }
-        );
+        if (mongoose.connection.readyState === 1) {
+            try {
+                let user = await User.findOne({ email });
+                if (!user) {
+                    user = await User.create({
+                        googleId,
+                        email,
+                        name: name || '',
+                        avatarUrl: picture || ''
+                    });
+                } else {
+                    if (googleId) user.googleId = googleId;
+                    if (name && !user.name) user.name = name;
+                    if (picture) user.avatarUrl = picture;
+                    await user.save();
+                }
+
+                await UserData.findOneAndUpdate(
+                    { userId: user._id },
+                    { $setOnInsert: { userId: user._id } },
+                    { upsert: true, returnDocument: 'after' }
+                );
+
+                userData = {
+                    id: user._id.toString(),
+                    googleId: user.googleId,
+                    email: user.email,
+                    name: user.name,
+                    course: user.course || '',
+                    year: user.year || '',
+                    contact: user.contact || '',
+                    avatarUrl: user.avatarUrl || ''
+                };
+            } catch (dbErr) {
+                console.warn('[DB] MongoDB write skipped:', dbErr.message);
+            }
+        }
 
         // Generate 7-day JWT token
         const jwtToken = jwt.sign(
-            { id: user._id.toString(), email: user.email, name: user.name },
+            { id: userData.id, email: userData.email, name: userData.name },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -125,16 +151,7 @@ app.post('/api/auth/google', async (req, res) => {
         res.json({
             message: 'Authentication successful',
             token: jwtToken,
-            user: {
-                id: user._id,
-                googleId: user.googleId,
-                email: user.email,
-                name: user.name,
-                course: user.course,
-                year: user.year,
-                contact: user.contact,
-                avatarUrl: user.avatarUrl
-            }
+            user: userData
         });
 
     } catch (err) {
@@ -145,24 +162,38 @@ app.post('/api/auth/google', async (req, res) => {
 
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        if (mongoose.connection.readyState === 1) {
+            const user = await User.findById(req.user.id);
+            if (user) {
+                return res.json({
+                    user: {
+                        id: user._id,
+                        googleId: user.googleId,
+                        email: user.email,
+                        name: user.name,
+                        course: user.course,
+                        year: user.year,
+                        contact: user.contact,
+                        avatarUrl: user.avatarUrl
+                    }
+                });
+            }
         }
         res.json({
             user: {
-                id: user._id,
-                googleId: user.googleId,
-                email: user.email,
-                name: user.name,
-                course: user.course,
-                year: user.year,
-                contact: user.contact,
-                avatarUrl: user.avatarUrl
+                id: req.user.id,
+                email: req.user.email,
+                name: req.user.name
             }
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.json({
+            user: {
+                id: req.user.id,
+                email: req.user.email,
+                name: req.user.name
+            }
+        });
     }
 });
 
