@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --env-file=server/.env server/server.mjs",
     "start": "node --env-file=server/.env server/server.mjs",
-    "build": "powershell -Command \"Remove-Item -Path 'www' -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Path 'www' -Force; Copy-Item -Path 'index.html', 'src', 'assets', 'pwa' -Destination 'www' -Recurse -Force\""
+    "build": "node scripts/build.mjs"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
