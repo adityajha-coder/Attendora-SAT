@@ -29,8 +29,15 @@ export async function loginWithGoogleToken(credential) {
     });
 
     if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Auth failed' }));
-        throw new Error(err.error || 'Failed to authenticate with Google');
+        const text = await res.text().catch(() => '');
+        let errMessage = `HTTP ${res.status}`;
+        try {
+            const json = JSON.parse(text);
+            if (json.error) errMessage = json.error;
+        } catch (e) {
+            if (text) errMessage += `: ${text.substring(0, 100)}`;
+        }
+        throw new Error(errMessage);
     }
 
     return await res.json();
