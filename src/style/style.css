@@ -525,3 +525,14 @@ select option {
     animation: spin-fast 0.6s linear infinite;
     margin-right: 0.5rem;
 }
+
+/* Touch Optimizations */
+button, a, select, input {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 150px;
+}

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
+import compression from 'compression';
 import { User, UserData, initDatabase } from './db/index.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +21,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const app = express();
 
+app.use(compression());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
@@ -313,7 +315,11 @@ app.post('/api/scan', async (req, res) => {
     }
 });
 
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..'), {
+    maxAge: '1d',
+    etag: true,
+    lastModified: true
+}));
 
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, '..', 'index.html'));

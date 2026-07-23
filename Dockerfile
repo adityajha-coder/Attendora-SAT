@@ -1,20 +1,20 @@
-# Use an official lightweight Node.js runtime as a parent image
+# Use official lightweight Node.js runtime
 FROM node:20-alpine
 
-# Set the working directory in the container
+# Set working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package manifests
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install production dependencies
+RUN npm install --omit=dev
 
-# Copy the rest of the application code
+# Copy application source code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 3000
+# Expose backend server port
+EXPOSE 3010
 
-# Define the command to run the app
-CMD ["npm", "run", "start"]
+# Define start command
+CMD ["npm", "start"]
