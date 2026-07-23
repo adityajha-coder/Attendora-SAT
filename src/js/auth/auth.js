@@ -5,6 +5,7 @@ import { calculateGpa } from '../features/academics.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { ALL_ACHIEVEMENTS } from '../features/gamification.js';
 import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig } from '../core/api-client.js';
+import { loadFromCloud, mergeCloudData } from '../services/cloud-sync.js';
 import { showDashboard } from '../main.js';
 
 export function setupAuthListener() {
@@ -62,6 +63,16 @@ export const signInWithGoogle = async () => {
                         showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
                         state.userProfile.name = result.user.name || state.userProfile.name;
                         state.userProfile.contact = result.user.email || state.userProfile.contact;
+                        
+                        try {
+                            const cloudData = await loadFromCloud();
+                            if (cloudData) {
+                                mergeCloudData(state, cloudData);
+                            }
+                        } catch (syncErr) {
+                            console.warn('[Sync] Cloud restore error on login:', syncErr);
+                        }
+
                         saveData();
                         showDashboard();
                     } catch (loginErr) {
