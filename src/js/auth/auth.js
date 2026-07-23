@@ -52,9 +52,9 @@ export const signInWithGoogle = async () => {
     }
 
     let authTimeoutId = setTimeout(() => {
-        console.warn('[Auth] Sign-in prompt timed out or was dismissed.');
+        console.warn('[Auth] Sign-in prompt timed out.');
         resetButton();
-    }, 12000);
+    }, 15000);
 
     try {
         let googleClientId = getGoogleClientId();
@@ -62,11 +62,20 @@ export const signInWithGoogle = async () => {
             const config = await loadApiConfig();
             googleClientId = config.googleClientId;
         }
+
+        if (!googleClientId) {
+            clearTimeout(authTimeoutId);
+            showToast("Google Client ID not configured in environment variables.", "error");
+            resetButton();
+            return;
+        }
+
         const sdkLoaded = await loadGoogleGsiSdk();
 
-        if (sdkLoaded && googleClientId && window.google?.accounts?.id) {
+        if (sdkLoaded && window.google?.accounts?.id) {
             window.google.accounts.id.initialize({
                 client_id: googleClientId,
+                auto_select: false,
                 callback: async (response) => {
                     clearTimeout(authTimeoutId);
                     try {
@@ -102,17 +111,44 @@ export const signInWithGoogle = async () => {
                 }
             });
 
+            let hiddenContainer = document.getElementById('hidden-gsi-container');
+            if (!hiddenContainer) {
+                hiddenContainer = document.createElement('div');
+                hiddenContainer.id = 'hidden-gsi-container';
+                hiddenContainer.style.position = 'fixed';
+                hiddenContainer.style.top = '-9999px';
+                hiddenContainer.style.left = '-9999px';
+                hiddenContainer.style.opacity = '0.01';
+                document.body.appendChild(hiddenContainer);
+            }
+            hiddenContainer.innerHTML = '';
+            window.google.accounts.id.renderButton(hiddenContainer, { type: 'standard', size: 'large' });
+
+            setTimeout(() => {
+                const targetBtn = hiddenContainer.querySelector('div[role="button"]') || hiddenContainer.querySelector('iframe');
+                if (targetBtn) {
+                    try {
+                        targetBtn.click();
+                    } catch (e) {
+                        console.log('[Auth] Fallback button click:', e);
+                    }
+                }
+            }, 300);
+
             window.google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment()) {
-                    console.log('[Auth] Prompt dismissed, skipped, or not displayed:', 
-                        notification.getNotDisplayedReason?.() || notification.getSkippedReason?.() || notification.getDismissedReason?.());
-                    clearTimeout(authTimeoutId);
-                    resetButton();
+                if (notification.isNotDisplayed()) {
+                    const reason = notification.getNotDisplayedReason?.() || '';
+                    console.log('[Auth] One-Tap prompt not displayed:', reason);
+                    if (reason === 'unregistered_origin') {
+                        clearTimeout(authTimeoutId);
+                        showToast("This domain is not added to Authorized JavaScript Origins in Google Cloud Console.", "error");
+                        resetButton();
+                    }
                 }
             });
         } else {
             clearTimeout(authTimeoutId);
-            showToast("Google Client ID not configured in .env yet.", "info");
+            showToast("Failed to load Google SDK. Check your internet connection.", "error");
             resetButton();
         }
     } catch (err) {
