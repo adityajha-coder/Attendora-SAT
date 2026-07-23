@@ -260,7 +260,7 @@ app.post('/api/scan', async (req, res) => {
                     headers: {
                         'Authorization': `Bearer ${openRouterApiKey}`,
                         'Content-Type': 'application/json',
-                        'HTTP-Referer': 'http://localhost:3000',
+                        'HTTP-Referer': 'https://attendora-sat.vercel.app',
                         'X-Title': 'Attendora'
                     },
                     body: JSON.stringify({
