@@ -4,10 +4,12 @@
   "description": "Smart Attendance Tracker",
   "main": "index.html",
   "scripts": {
-    "dev": "node --env-file=server/.env server/server.mjs",
-    "start": "node --env-file=server/.env server/server.mjs"
+    "dev": "nodemon --env-file=server/.env server/server.mjs",
+    "start": "node --env-file=server/.env server/server.mjs",
+    "build": "powershell -Command \"Remove-Item -Path 'www' -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Path 'www' -Force; Copy-Item -Path 'index.html', 'src', 'assets', 'pwa' -Destination 'www' -Recurse -Force\""
   },
   "devDependencies": {
+    "nodemon": "^3.1.14",
     "vercel": "^39.0.0",
     "web-push": "^3.6.7"
   },
@@ -19,7 +21,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "google-auth-library": "^10.9.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.9.0"
   }
 }

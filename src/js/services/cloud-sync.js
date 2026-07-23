@@ -1,5 +1,4 @@
-import { supabase } from '../core/supabase.js';
-import { showToast } from '../ui/ui.js';
+import { fetchUserData, saveUserData, getCurrentUser } from '../core/api-client.js';
 
 let syncTimeoutId = null;
 const SYNC_DEBOUNCE_MS = 2000; 
@@ -87,61 +86,38 @@ export function schedulCloudSync(state) {
     if (syncTimeoutId) clearTimeout(syncTimeoutId);
 
     syncTimeoutId = setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
+        const user = await getCurrentUser();
         if (!user) return; 
 
         try {
             setSyncStatus('syncing');
             const persistable = extractPersistableState(state);
-            await supabase.from('user_data').upsert({
-                id: user.id,
-                email: user.email,
-                user_profile: persistable.userProfile,
-                schedule: persistable.schedule,
-                history: persistable.history,
-                assignments: persistable.assignments,
-                gpa_courses: persistable.gpaCourses,
-                archived_terms: persistable.archivedTerms,
-                achievements: persistable.achievements,
-                settings: persistable.settings,
-                last_synced_at: new Date().toISOString()
-            });
+            await saveUserData(persistable);
             setSyncStatus('synced');
         } catch (error) {
-            console.error('[CloudSync] Failed to save to Supabase:', error);
+            console.error('[CloudSync] Failed to save to PostgreSQL:', error);
             setSyncStatus('error');
         }
     }, SYNC_DEBOUNCE_MS);
 }
 
 export async function loadFromCloud() {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    const user = await getCurrentUser();
     if (!user) return null;
 
     try {
         setSyncStatus('syncing');
-        const { data: docSnap, error } = await supabase.from('user_data').select('*').eq('id', user.id).single();
+        const cloudData = await fetchUserData();
         
-        if (docSnap) {
+        if (cloudData) {
             setSyncStatus('synced');
-            return {
-                userProfile: docSnap.user_profile,
-                schedule: docSnap.schedule,
-                history: docSnap.history,
-                assignments: docSnap.assignments,
-                gpaCourses: docSnap.gpa_courses,
-                archivedTerms: docSnap.archived_terms,
-                achievements: docSnap.achievements,
-                settings: docSnap.settings
-            };
+            return cloudData;
         } else {
             setSyncStatus('idle');
             return null;
         }
     } catch (error) {
-        console.error('[CloudSync] Failed to load from Supabase:', error);
+        console.error('[CloudSync] Failed to load from PostgreSQL:', error);
         setSyncStatus('error');
         return null;
     }
@@ -156,7 +132,6 @@ export function mergeCloudData(state, cloudData) {
     const cloudHasData = (cloudData.schedule?.length > 0) || (cloudData.history?.length > 0);
 
     if (!localHasData && cloudHasData) {
-        
         PERSISTABLE_KEYS.forEach(key => {
             if (cloudData[key] !== undefined) {
                 if (key === 'settings') {
@@ -170,7 +145,6 @@ export function mergeCloudData(state, cloudData) {
         });
         merged = true;
     } else if (localHasData && cloudHasData) {
-        
         const localHistoryCount = state.history.length;
         const cloudHistoryCount = cloudData.history?.length || 0;
 
@@ -180,7 +154,6 @@ export function mergeCloudData(state, cloudData) {
                     if (key === 'settings') {
                         Object.assign(state[key], cloudData[key]);
                     } else if (key === 'achievements') {
-                        
                         const mergedAchievements = { ...state[key] };
                         Object.keys(cloudData[key] || {}).forEach(achKey => {
                             const cloudAch = cloudData[key][achKey];
@@ -199,35 +172,19 @@ export function mergeCloudData(state, cloudData) {
             });
             merged = true;
         }
-        
-    } else if (!cloudHasData && localHasData) {
-        
     }
 
     return merged;
 }
 
 export async function forceCloudSave(state) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    const user = await getCurrentUser();
     if (!user) return;
 
     try {
         setSyncStatus('syncing');
         const persistable = extractPersistableState(state);
-        await supabase.from('user_data').upsert({
-            id: user.id,
-            email: user.email,
-            user_profile: persistable.userProfile,
-            schedule: persistable.schedule,
-            history: persistable.history,
-            assignments: persistable.assignments,
-            gpa_courses: persistable.gpaCourses,
-            archived_terms: persistable.archivedTerms,
-            achievements: persistable.achievements,
-            settings: persistable.settings,
-            last_synced_at: new Date().toISOString()
-        });
+        await saveUserData(persistable);
         setSyncStatus('synced');
     } catch (error) {
         console.error('[CloudSync] Force save failed:', error);

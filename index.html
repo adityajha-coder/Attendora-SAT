@@ -64,9 +64,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Attendora" />
 
-    <!-- Module Preloads to eliminate ESM waterfall delay -->
-    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm" />
-    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/auth-js@2.110.2/+esm" />
+    <!-- Font Preconnect & Performance Hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Module Preloads for Fast App Loading -->
+    <link rel="modulepreload" href="src/js/main.js" />
+    <link rel="modulepreload" href="src/js/core/api-client.js" />
 
     <script src="https://cdn.tailwindcss.com"></script>
 

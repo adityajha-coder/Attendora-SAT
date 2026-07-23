@@ -1,12 +1,28 @@
 services:
-  attendora:
+  # Attendora Express Backend & Static Server
+  attendora-app:
     build: .
     container_name: attendora-app
     ports:
-      - "3005:3000"
+      - "3015:3010"
     environment:
-      - PORT=3000
-    # Mount the .env file directly into the container so the server can read it
-    volumes:
-      - ./server/.env:/usr/src/app/server/.env
+      - PORT=3010
+      - MONGODB_URI=mongodb://mongodb:27017/attendora
+    env_file:
+      - ./server/.env
+    depends_on:
+      - mongodb
     restart: unless-stopped
+
+  # Local MongoDB Container
+  mongodb:
+    image: mongo:latest
+    container_name: attendora-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

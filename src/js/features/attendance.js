@@ -256,7 +256,7 @@ export function renderCourses() {
             else if (stats.percentage >= 75) percentageColorClass = 'text-yellow-400';
             else percentageColorClass = 'text-red-400';
             const courseCard = document.createElement('button');
-            courseCard.className = 'card course-card-clickable p-6 rounded-xl text-left';
+            courseCard.className = 'card no-hover course-card-clickable p-6 rounded-xl text-left';
             courseCard.dataset.courseName = courseName;
             courseCard.dataset.searchContent = courseName.toLowerCase();
             courseCard.setAttribute('role', 'button'); 

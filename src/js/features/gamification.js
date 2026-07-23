@@ -124,7 +124,7 @@ export const renderAchievements = () => {
             progressDisplay = `Progress: ${data.progress || 0}/${achievement.goal}`;
         }
         const badge = document.createElement('div');
-        badge.className = `card p-4 text-center achievement-badge ${!data.unlocked ? 'locked' : ''} ${achievement.type === 'hard' ? 'border-yellow-500/50' : achievement.type === 'medium' ? 'border-blue-500/50' : 'border-green-500/50'}`;
+        badge.className = `card no-hover p-4 text-center achievement-badge ${!data.unlocked ? 'locked' : ''} ${achievement.type === 'hard' ? 'border-yellow-500/50' : achievement.type === 'medium' ? 'border-blue-500/50' : 'border-green-500/50'}`;
         badge.innerHTML = `
             <div class="text-5xl mb-2">${achievement.icon}</div>
             <h3 class="font-bold">${achievement.title}</h3>

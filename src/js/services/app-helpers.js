@@ -242,7 +242,7 @@ export function renderOverviewCards() {
     if (!grid) return;
     const cardHTML = {
         'overview-card-attendance': `
-            <div id="overview-card-attendance" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
+            <div id="overview-card-attendance" class="card no-hover p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
                 <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Attendance Score</h3>
                 <div class="flex items-baseline gap-2">
                     <p id="overview-attendance" class="text-5xl font-black text-green-400">-%</p>
@@ -253,7 +253,7 @@ export function renderOverviewCards() {
                 </div>
             </div>`,
         'overview-card-classes': `
-            <div id="overview-card-classes" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
+            <div id="overview-card-classes" class="card no-hover p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
                 <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Academic Load</h3>
                 <div class="flex items-baseline gap-2">
                     <p id="overview-total-classes" class="text-5xl font-black text-white">0</p>
@@ -274,7 +274,7 @@ export function renderOverviewCards() {
                 </div>
             </div>`,
         'overview-card-countdown': `
-            <div id="overview-card-countdown" class="card p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
+            <div id="overview-card-countdown" class="card no-hover p-6 rounded-2xl overview-card relative overflow-hidden" draggable="true">
                 <h3 class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--text-secondary);">Upcoming</h3>
                 <p id="overview-countdown" class="text-4xl font-black text-cyan-400 truncate tracking-tighter">Preparing...</p>
                 <div class="flex items-center gap-2 mt-6">
