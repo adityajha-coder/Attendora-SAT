@@ -72,6 +72,72 @@ export async function googleLogin(req, res) {
     });
 }
 
+export async function googleCallback(req, res) {
+    const credential = req.body?.credential || req.query?.credential;
+    if (!credential) {
+        return res.redirect('/?error=no_credential');
+    }
+
+    try {
+        const googleUser = await verifyGoogleToken(credential);
+
+        let userData = {
+            id: googleUser.googleId || googleUser.email,
+            googleId: googleUser.googleId,
+            email: googleUser.email,
+            name: googleUser.name,
+            avatarUrl: googleUser.picture,
+        };
+
+        if (isDbConnected()) {
+            try {
+                let user = await User.findOne({ email: googleUser.email });
+
+                if (!user) {
+                    user = await User.create({
+                        googleId: googleUser.googleId,
+                        email: googleUser.email,
+                        name: googleUser.name,
+                        avatarUrl: googleUser.picture,
+                    });
+                } else {
+                    if (googleUser.googleId) user.googleId = googleUser.googleId;
+                    if (googleUser.name && !user.name) user.name = googleUser.name;
+                    if (googleUser.picture) user.avatarUrl = googleUser.picture;
+                    await user.save();
+                }
+
+                await UserData.findOneAndUpdate(
+                    { userId: user._id },
+                    { $setOnInsert: { userId: user._id } },
+                    { upsert: true, returnDocument: 'after' }
+                );
+
+                userData = {
+                    id: user._id.toString(),
+                    googleId: user.googleId,
+                    email: user.email,
+                    name: user.name,
+                    course: user.course || '',
+                    year: user.year || '',
+                    contact: user.contact || '',
+                    avatarUrl: user.avatarUrl || '',
+                };
+            } catch (dbErr) {
+                console.warn('[Auth] MongoDB write skipped:', dbErr.message);
+            }
+        }
+
+        const jwtToken = generateToken(userData);
+        setAuthCookie(res, jwtToken);
+
+        return res.redirect('/');
+    } catch (err) {
+        console.error('[Auth] Google callback error:', err.message);
+        return res.redirect('/?error=' + encodeURIComponent(err.message));
+    }
+}
+
 export async function getCurrentUser(req, res) {
     if (isDbConnected()) {
         try {

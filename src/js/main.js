@@ -59,6 +59,13 @@ const initializeAttendora = async () => {
     setupEventListeners();
     initGoogleAuth();
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const authError = urlParams.get('error');
+    if (authError) {
+        showToast("Login Error: " + decodeURIComponent(authError), "error");
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     try {
         const user = await getCurrentUser();
         if (user) {

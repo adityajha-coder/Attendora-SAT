@@ -2,7 +2,7 @@
 import { state, saveData, resetStateToDefaults } from '../core/state.js';
 import { showToast } from '../ui/ui.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
-import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig } from '../core/api-client.js';
+import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig, getApiUrl } from '../core/api-client.js';
 import { loadFromCloud, mergeCloudData } from '../services/cloud-sync.js';
 import { showDashboard } from '../main.js';
 
@@ -91,11 +91,23 @@ export async function initGoogleAuth() {
 
         const sdkLoaded = await loadGoogleGsiSdk();
         if (sdkLoaded && window.google?.accounts?.id) {
-            window.google.accounts.id.initialize({
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+            const initConfig = {
                 client_id: googleClientId,
                 auto_select: false,
-                callback: handleGoogleAuthResponse
-            });
+            };
+
+            if (isMobile) {
+                const callbackPath = getApiUrl('/api/auth/google/callback');
+                initConfig.ux_mode = 'redirect';
+                initConfig.login_uri = callbackPath.startsWith('http') ? callbackPath : (window.location.origin + callbackPath);
+            } else {
+                initConfig.ux_mode = 'popup';
+                initConfig.callback = handleGoogleAuthResponse;
+            }
+
+            window.google.accounts.id.initialize(initConfig);
 
             container.innerHTML = '';
             window.google.accounts.id.renderButton(container, {
