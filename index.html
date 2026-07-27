@@ -152,6 +152,15 @@
         Loading your dashboard...
       </p>
     </div>
+    <script>
+      setTimeout(function() {
+        var loader = document.getElementById('app-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(function() { if (loader.parentNode) loader.remove(); }, 500);
+        }
+      }, 1500);
+    </script>
     <style>
       @keyframes spin {
         0% {

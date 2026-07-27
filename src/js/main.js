@@ -57,7 +57,9 @@ const initializeAttendora = async () => {
 
     loadData();
     setupEventListeners();
-    initGoogleAuth();
+
+    // Safety fallback: ensure loader is dismissed even if network or API hangs
+    setTimeout(() => dismissLoader(), 3500);
 
     const urlParams = new URLSearchParams(window.location.search);
     const authError = urlParams.get('error');
@@ -90,6 +92,9 @@ const initializeAttendora = async () => {
     } catch (error) {
         console.warn('[Auth] Auth check failed:', error);
         showLandingPage();
+    } finally {
+        dismissLoader();
+        initGoogleAuth();
     }
 };
 
@@ -167,6 +172,11 @@ function updateAssignmentBtnState() {
 }
 
 function setupEventListeners() {
+    const addListener = (id, event, handler) => {
+        const el = typeof id === 'string' ? document.getElementById(id) : id;
+        if (el) el.addEventListener(event, handler);
+    };
+
     let pendingRenderFrame = null;
     window.addEventListener('attendora-update-ui', () => {
         if (pendingRenderFrame) cancelAnimationFrame(pendingRenderFrame);
@@ -176,11 +186,11 @@ function setupEventListeners() {
         });
     });
 
-    document.getElementById('go-to-login-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(); });
-    document.getElementById('go-to-login-landing-btn').addEventListener('click', (e) => { e.preventDefault(); showAuthPage(); });
-    document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
+    addListener('go-to-login-btn', 'click', (e) => { e.preventDefault(); showAuthPage(); });
+    addListener('go-to-login-landing-btn', 'click', (e) => { e.preventDefault(); showAuthPage(); });
+    addListener('google-signin-btn', 'click', signInWithGoogle);
 
-    document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileSidebar);
+    addListener('mobile-menu-btn', 'click', toggleMobileSidebar);
     const bottomMobileMenuBtn = document.querySelector('#mobile-bottom-nav #mobile-menu-btn');
     if (bottomMobileMenuBtn) {
         bottomMobileMenuBtn.addEventListener('click', toggleMobileSidebar);
@@ -191,8 +201,8 @@ function setupEventListeners() {
         mobileBottomNav.addEventListener('click', handleSidebarNav);
     }
 
-    document.getElementById('close-sidebar-btn').addEventListener('click', closeMobileSidebar);
-    document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
+    addListener('close-sidebar-btn', 'click', closeMobileSidebar);
+    addListener('sidebar-overlay', 'click', closeMobileSidebar);
 
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('.close-modal-btn')) {
@@ -200,17 +210,17 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById('class-form').addEventListener('submit', handleClassFormSubmit);
-    document.getElementById('assignment-form').addEventListener('submit', handleAssignmentFormSubmit);
-    document.getElementById('notes-form').addEventListener('submit', handleNoteSubmit);
+    addListener('class-form', 'submit', handleClassFormSubmit);
+    addListener('assignment-form', 'submit', handleAssignmentFormSubmit);
+    addListener('notes-form', 'submit', handleNoteSubmit);
 
-    document.getElementById('start-time').addEventListener('input', updateDurationFeedback);
-    document.getElementById('end-time').addEventListener('input', updateDurationFeedback);
+    addListener('start-time', 'input', updateDurationFeedback);
+    addListener('end-time', 'input', updateDurationFeedback);
 
-    document.getElementById('add-class-btn').addEventListener('click', () => openClassModal(null, 'Class'));
-    document.getElementById('add-assignment-btn').addEventListener('click', () => openAssignmentModal());
+    addListener('add-class-btn', 'click', () => openClassModal(null, 'Class'));
+    addListener('add-assignment-btn', 'click', () => openAssignmentModal());
 
-    document.getElementById('settings-btn').addEventListener('click', () => {
+    addListener('settings-btn', 'click', () => {
         updateTermDatesUI();
         renderArchivedTermsList();
 
@@ -222,8 +232,7 @@ function setupEventListeners() {
         toggleModal(document.getElementById('settings-modal'), true);
     });
 
-    document.getElementById('profile-btn').addEventListener('click', () => {
-        
+    addListener('profile-btn', 'click', () => {
         const overviewTabBtn = document.querySelector('.profile-tab-btn[data-tab="profile-overview"]');
         if (overviewTabBtn) {
             overviewTabBtn.click();
@@ -271,19 +280,19 @@ function setupEventListeners() {
         btn.addEventListener('click', openEditProfileModal);
     });
 
-    document.getElementById('export-data-btn').addEventListener('click', exportData);
-    document.getElementById('import-data-input').addEventListener('change', importData);
+    addListener('export-data-btn', 'click', exportData);
+    addListener('import-data-input', 'change', importData);
     const wrappedBtn = document.getElementById('semester-wrapped-btn');
     if (wrappedBtn) wrappedBtn.addEventListener('click', generateSemesterWrapped);
     const shareWrappedBtn = document.getElementById('share-wrapped-btn');
     if (shareWrappedBtn) shareWrappedBtn.addEventListener('click', shareSemesterWrapped);
 
-    document.getElementById('save-term-dates-btn').addEventListener('click', saveTermDates);
-    document.getElementById('archive-term-btn-danger').addEventListener('click', archiveCurrentTerm);
-    document.getElementById('reports-filter').addEventListener('change', renderReports);
-    document.getElementById('view-archived-terms-btn').addEventListener('click', toggleArchivedTermsList);
+    addListener('save-term-dates-btn', 'click', saveTermDates);
+    addListener('archive-term-btn-danger', 'click', archiveCurrentTerm);
+    addListener('reports-filter', 'change', renderReports);
+    addListener('view-archived-terms-btn', 'click', toggleArchivedTermsList);
 
-    document.getElementById('schedule-view').addEventListener('click', (e) => {
+    addListener('schedule-view', 'click', (e) => {
         if (e.target.closest('#scan-timetable-btn') || e.target.closest('#scan-timetable-prompt-btn')) {
             openTimetableScanner();
         }
@@ -291,10 +300,10 @@ function setupEventListeners() {
             openClassModal();
         }
     });
-    document.getElementById('timetable-file-input').addEventListener('change', handleTimetableScan);
-    document.getElementById('save-scanned-schedule-btn').addEventListener('click', handleSaveScannedSchedule);
+    addListener('timetable-file-input', 'change', handleTimetableScan);
+    addListener('save-scanned-schedule-btn', 'click', handleSaveScannedSchedule);
 
-    document.getElementById('settings-modal').addEventListener('click', (e) => {
+    addListener('settings-modal', 'click', (e) => {
         const swatch = e.target.closest('#theme-picker button');
         if (swatch) {
             applyTheme(swatch.dataset.theme);
@@ -329,12 +338,12 @@ function setupEventListeners() {
         });
     });
 
-    document.getElementById('theme-toggle').addEventListener('change', (e) => {
+    addListener('theme-toggle', 'change', (e) => {
         applyLightMode(e.target.checked);
         saveData();
     });
 
-    document.getElementById('dashboard-app').addEventListener('click', e => {
+    addListener('dashboard-app', 'click', e => {
         const courseCard = e.target.closest('#courses-grid .course-card-clickable');
         if (courseCard) {
             showCourseDetails(courseCard.dataset.courseName);
@@ -384,14 +393,14 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById('course-details-modal').addEventListener('click', (e) => {
+    addListener('course-details-modal', 'click', (e) => {
         const noteBtn = e.target.closest('.add-note-btn');
         if (noteBtn) {
             openNoteModal(parseInt(noteBtn.dataset.historyId));
         }
     });
 
-    document.getElementById('edit-attendance-modal').addEventListener('click', (e) => {
+    addListener('edit-attendance-modal', 'click', (e) => {
         const actionBtn = e.target.closest('.edit-attendance-action-btn');
         if (actionBtn) {
             const newStatus = actionBtn.dataset.status;
@@ -405,10 +414,10 @@ function setupEventListeners() {
     const debouncedFilterCourses = debounce((searchTerm) => filterGrid(searchTerm, '#courses-grid', '.course-card-clickable'), 300);
     const debouncedFilterAssignments = debounce((searchTerm) => filterGrid(searchTerm, '#assignments-list', '.assignment-item'), 300);
 
-    document.getElementById('courses-search').addEventListener('keyup', (e) => debouncedFilterCourses(e.target.value));
-    document.getElementById('assignments-search').addEventListener('keyup', (e) => debouncedFilterAssignments(e.target.value));
+    addListener('courses-search', 'keyup', (e) => debouncedFilterCourses(e.target.value));
+    addListener('assignments-search', 'keyup', (e) => debouncedFilterAssignments(e.target.value));
 
-    document.getElementById('prev-month-btn').addEventListener('click', () => {
+    addListener('prev-month-btn', 'click', () => {
         if (!(state.currentCalendarDate instanceof Date) || isNaN(state.currentCalendarDate.getTime())) {
             state.currentCalendarDate = new Date(state.currentCalendarDate || Date.now());
         }
@@ -416,7 +425,7 @@ function setupEventListeners() {
         renderCalendar();
         saveData();
     });
-    document.getElementById('next-month-btn').addEventListener('click', () => {
+    addListener('next-month-btn', 'click', () => {
         if (!(state.currentCalendarDate instanceof Date) || isNaN(state.currentCalendarDate.getTime())) {
             state.currentCalendarDate = new Date(state.currentCalendarDate || Date.now());
         }
@@ -425,12 +434,11 @@ function setupEventListeners() {
         saveData();
     });
 
-    document.getElementById('notification-toggle').addEventListener('change', handleNotificationToggle);
-    document.getElementById('sidebar-nav').addEventListener('click', handleSidebarNav);
+    addListener('notification-toggle', 'change', handleNotificationToggle);
+    addListener('sidebar-nav', 'click', handleSidebarNav);
 
-    document.getElementById('logout-btn').addEventListener('click', logoutUser);
-    document.getElementById('mobile-logout-btn').addEventListener('click', logoutUser);
-
+    addListener('logout-btn', 'click', logoutUser);
+    addListener('mobile-logout-btn', 'click', logoutUser);
 }
 
 if ('serviceWorker' in navigator) {

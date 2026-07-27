@@ -13,7 +13,10 @@ export function getApiUrl(path) {
 
 export async function loadApiConfig() {
     try {
-        const response = await fetch(getApiUrl('/api/config'));
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const response = await fetch(getApiUrl('/api/config'), { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (response.ok) {
             const config = await response.json();
             if (config.googleClientId) googleClientId = config.googleClientId;
@@ -56,7 +59,13 @@ export async function loginWithGoogleToken(credential) {
 // Get Current Logged In User
 export async function getCurrentUser() {
     try {
-        const res = await fetch(getApiUrl('/api/auth/me'), { credentials: 'include' });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(getApiUrl('/api/auth/me'), {
+            credentials: 'include',
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         if (!res.ok) return null;
         const data = await res.json();
         return data.user;
