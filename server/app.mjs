@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.routes.mjs';
 import dataRoutes from './routes/data.routes.mjs';
 import scanRoutes from './routes/scan.routes.mjs';
 import healthRoutes from './routes/health.routes.mjs';
+import notificationRoutes from './routes/notification.routes.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(express.static(path.join(__dirname, '..'), {
     maxAge: '1d',

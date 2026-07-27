@@ -1,10 +1,3 @@
-/**
- * Centralized Configuration Module
- * 
- * All environment variables are sourced and validated here.
- * Fail fast on startup if required config is missing.
- */
-
 const requiredVars = ['MONGODB_URI', 'JWT_SECRET', 'GOOGLE_CLIENT_ID'];
 
 function validateEnv() {
@@ -30,7 +23,7 @@ const config = {
     // Google OAuth
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
 
-    // AI / OpenRouter
+    // AI Scanner
     openRouterApiKey: process.env.OPENROUTER_API_KEY || '',
     openRouterModels: [
         'openai/gpt-4o-mini',
@@ -38,13 +31,12 @@ const config = {
         'google/gemini-2.0-flash-lite-preview-02-05:free'
     ],
 
-    // VAPID (Push Notifications)
-    vapidPublicKey: process.env.VITE_VAPID_PUBLIC_KEY || '',
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY || '',
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+    vapidSubject: process.env.VAPID_SUBJECT || 'mailto:support@attendora-sat.vercel.app',
 
-    // CORS
     corsOrigin: true,
 
-    // Rate Limiting (requests per window)
     rateLimit: {
         windowMs: 60 * 1000, // 1 minute
         auth: 10,
@@ -53,7 +45,6 @@ const config = {
         general: 100
     },
 
-    // Helpers
     get isProduction() {
         return this.nodeEnv === 'production';
     }

@@ -2,12 +2,15 @@
 import app from './app.mjs';
 import config from './config/index.mjs';
 import { connectDatabase, closeDatabase } from './db/connection.mjs';
+import { startReminderService } from './services/reminder.service.mjs';
 
 let server;
 
 async function start() {
-
     await connectDatabase();
+
+    // 10m and 5m push alerts
+    startReminderService();
 
     server = app.listen(config.port, () => {
         console.log(`\n Attendora Server running at http://localhost:${config.port}`);
