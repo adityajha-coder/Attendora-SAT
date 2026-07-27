@@ -133,23 +133,38 @@ export function mergeCloudData(state, cloudData) {
 
     let merged = false;
 
-    const cloudHasContent = 
-        (cloudData.schedule && cloudData.schedule.length > 0) ||
-        (cloudData.history && cloudData.history.length > 0) ||
-        (cloudData.assignments && cloudData.assignments.length > 0) ||
-        (cloudData.archivedTerms && cloudData.archivedTerms.length > 0);
-
-    if (!cloudHasContent) return false;
-
     PERSISTABLE_KEYS.forEach(key => {
         if (cloudData[key] !== undefined && cloudData[key] !== null) {
             if (Array.isArray(cloudData[key])) {
-                if (!state[key] || state[key].length === 0 || cloudData[key].length >= state[key].length) {
-                    state[key] = JSON.parse(JSON.stringify(cloudData[key]));
-                    merged = true;
+                if (!state[key] || state[key].length === 0) {
+                    if (cloudData[key].length > 0) {
+                        state[key] = JSON.parse(JSON.stringify(cloudData[key]));
+                        merged = true;
+                    }
+                } else if (cloudData[key].length > 0) {
+                    // Combine and deduplicate local + cloud array items
+                    const existingMap = new Map();
+                    const getKey = (item) => item.id || item._id || (item.courseName ? `${item.courseName}-${item.dayOfWeek || item.day || ''}-${item.startTime || ''}` : JSON.stringify(item));
+
+                    state[key].forEach(item => {
+                        existingMap.set(getKey(item), item);
+                    });
+
+                    cloudData[key].forEach(item => {
+                        const itemKey = getKey(item);
+                        if (!existingMap.has(itemKey)) {
+                            existingMap.set(itemKey, item);
+                            merged = true;
+                        }
+                    });
+
+                    state[key] = Array.from(existingMap.values());
                 }
             } else if (key === 'settings') {
                 Object.assign(state[key], cloudData[key]);
+                merged = true;
+            } else if (key === 'userProfile') {
+                state[key] = { ...state[key], ...cloudData[key] };
                 merged = true;
             } else if (key === 'achievements') {
                 state[key] = { ...state[key], ...cloudData[key] };

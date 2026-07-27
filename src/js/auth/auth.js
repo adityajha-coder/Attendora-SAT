@@ -3,7 +3,7 @@ import { state, saveData, resetStateToDefaults } from '../core/state.js';
 import { showToast } from '../ui/ui.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
 import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig, getApiUrl } from '../core/api-client.js';
-import { loadFromCloud, mergeCloudData } from '../services/cloud-sync.js';
+import { loadFromCloud, mergeCloudData, forceCloudSave } from '../services/cloud-sync.js';
 import { showDashboard } from '../main.js';
 
 export function setupAuthListener() {
@@ -39,7 +39,6 @@ let isGsiInitialized = false;
 async function handleGoogleAuthResponse(response) {
     try {
         const result = await loginWithGoogleToken(response.credential);
-        resetStateToDefaults();
         showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
         state.userProfile.name = result.user.name || state.userProfile.name;
         state.userProfile.contact = result.user.email || state.userProfile.contact;
@@ -48,18 +47,8 @@ async function handleGoogleAuthResponse(response) {
             const cloudData = await loadFromCloud();
             if (cloudData) {
                 mergeCloudData(state, cloudData);
-            } else {
-                const userEmail = result.user.email;
-                if (userEmail) {
-                    const userBackup = localStorage.getItem(`attendoraState_backup_${userEmail}`);
-                    if (userBackup && (!state.schedule || state.schedule.length === 0)) {
-                        try {
-                            const parsed = JSON.parse(userBackup);
-                            Object.assign(state, parsed);
-                        } catch (e) {}
-                    }
-                }
             }
+            await forceCloudSave(state);
         } catch (syncErr) {
             console.warn('[Sync] Cloud restore error on login:', syncErr);
         }
