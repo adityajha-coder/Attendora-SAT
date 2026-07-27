@@ -95,4 +95,37 @@ export async function saveUserData(dataPayload) {
     return await res.json();
 }
 
+// Push Notifications — Subscribe
+export async function subscribePushNotification(subscription) {
+    const res = await fetch(getApiUrl('/api/notifications/subscribe'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription),
+        credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Push subscription failed');
+    return await res.json();
+}
+
+// Push Notifications — Unsubscribe
+export async function unsubscribePushNotification(endpoint) {
+    await fetch(getApiUrl('/api/notifications/unsubscribe'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint }),
+        credentials: 'include'
+    });
+}
+
+export async function fetchVapidPublicKey() {
+    try {
+        const res = await fetch(getApiUrl('/api/notifications/vapid-key'));
+        if (res.ok) {
+            const data = await res.json();
+            return data.vapidPublicKey;
+        }
+    } catch (err) {}
+    return vapidPublicKey;
+}
+
 loadApiConfig();
