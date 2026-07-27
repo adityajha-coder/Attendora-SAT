@@ -44,17 +44,7 @@ app.use(express.static(path.join(__dirname, '..'), {
     lastModified: true,
 }));
 
-app.post('/', asyncHandler(async (req, res, next) => {
-    if (req.body && req.body.credential) {
-        return googleCallback(req, res, next);
-    }
-    res.sendFile(path.join(__dirname, '..', 'index.html'));
-}));
-
 app.use((req, res) => {
-    if (req.method === 'POST' && req.body && req.body.credential) {
-        return googleCallback(req, res);
-    }
     res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 

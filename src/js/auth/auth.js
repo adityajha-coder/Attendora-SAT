@@ -100,7 +100,7 @@ export async function initGoogleAuth() {
 
             if (isMobile) {
                 initConfig.ux_mode = 'redirect';
-                initConfig.login_uri = window.location.origin;
+                initConfig.login_uri = new URL('/api/auth/google/callback', window.location.origin).href;
             } else {
                 initConfig.ux_mode = 'popup';
                 initConfig.callback = handleGoogleAuthResponse;
