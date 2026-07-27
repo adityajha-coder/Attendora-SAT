@@ -34,27 +34,46 @@ function loadGoogleGsiSdk() {
     });
 }
 
-// Google Sign-In
-export const signInWithGoogle = async () => {
-    const btn = document.getElementById('google-signin-btn');
-    const originalText = btn ? btn.innerHTML : '';
+let isGsiInitialized = false;
 
-    const resetButton = () => {
-        if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+async function handleGoogleAuthResponse(response) {
+    try {
+        const result = await loginWithGoogleToken(response.credential);
+        resetStateToDefaults();
+        showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
+        state.userProfile.name = result.user.name || state.userProfile.name;
+        state.userProfile.contact = result.user.email || state.userProfile.contact;
+        
+        try {
+            const cloudData = await loadFromCloud();
+            if (cloudData) {
+                mergeCloudData(state, cloudData);
+            } else {
+                const userEmail = result.user.email;
+                if (userEmail) {
+                    const userBackup = localStorage.getItem(`attendoraState_backup_${userEmail}`);
+                    if (userBackup && (!state.schedule || state.schedule.length === 0)) {
+                        try {
+                            const parsed = JSON.parse(userBackup);
+                            Object.assign(state, parsed);
+                        } catch (e) {}
+                    }
+                }
+            }
+        } catch (syncErr) {
+            console.warn('[Sync] Cloud restore error on login:', syncErr);
         }
-    };
 
-    if (btn) {
-        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Connecting...`;
-        btn.disabled = true;
+        saveData();
+        showDashboard();
+    } catch (loginErr) {
+        showToast("Google Login Error: " + loginErr.message, "error");
     }
+}
 
-    let authTimeoutId = setTimeout(() => {
-        console.warn('[Auth] Sign-in prompt timed out.');
-        resetButton();
-    }, 15000);
+export async function initGoogleAuth() {
+    const container = document.getElementById('google-signin-container');
+    if (!container) return;
 
     try {
         let googleClientId = getGoogleClientId();
@@ -64,102 +83,63 @@ export const signInWithGoogle = async () => {
         }
 
         if (!googleClientId) {
-            clearTimeout(authTimeoutId);
-            showToast("Google Client ID not configured in environment variables.", "error");
-            resetButton();
+            console.warn('[Auth] Google Client ID not available.');
+            const fallbackBtn = document.getElementById('google-signin-btn');
+            if (fallbackBtn) fallbackBtn.classList.remove('hidden');
             return;
         }
 
         const sdkLoaded = await loadGoogleGsiSdk();
-
         if (sdkLoaded && window.google?.accounts?.id) {
             window.google.accounts.id.initialize({
                 client_id: googleClientId,
                 auto_select: false,
-                callback: async (response) => {
-                    clearTimeout(authTimeoutId);
-                    try {
-                        const result = await loginWithGoogleToken(response.credential);
-                        resetStateToDefaults();
-                        showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
-                        state.userProfile.name = result.user.name || state.userProfile.name;
-                        state.userProfile.contact = result.user.email || state.userProfile.contact;
-                        
-                        try {
-                            const cloudData = await loadFromCloud();
-                            if (cloudData) {
-                                mergeCloudData(state, cloudData);
-                            } else {
-                                const userEmail = result.user.email;
-                                if (userEmail) {
-                                    const userBackup = localStorage.getItem(`attendoraState_backup_${userEmail}`);
-                                    if (userBackup && (!state.schedule || state.schedule.length === 0)) {
-                                        try {
-                                            const parsed = JSON.parse(userBackup);
-                                            Object.assign(state, parsed);
-                                        } catch (e) {}
-                                    }
-                                }
-                            }
-                        } catch (syncErr) {
-                            console.warn('[Sync] Cloud restore error on login:', syncErr);
-                        }
-
-                        saveData();
-                        showDashboard();
-                    } catch (loginErr) {
-                        showToast("Google Login Error: " + loginErr.message, "error");
-                    } finally {
-                        resetButton();
-                    }
-                }
+                callback: handleGoogleAuthResponse
             });
 
-            let hiddenContainer = document.getElementById('hidden-gsi-container');
-            if (!hiddenContainer) {
-                hiddenContainer = document.createElement('div');
-                hiddenContainer.id = 'hidden-gsi-container';
-                hiddenContainer.style.position = 'fixed';
-                hiddenContainer.style.top = '-9999px';
-                hiddenContainer.style.left = '-9999px';
-                hiddenContainer.style.opacity = '0.01';
-                document.body.appendChild(hiddenContainer);
-            }
-            hiddenContainer.innerHTML = '';
-            window.google.accounts.id.renderButton(hiddenContainer, { type: 'standard', size: 'large' });
+            container.innerHTML = '';
+            window.google.accounts.id.renderButton(container, {
+                type: 'standard',
+                theme: 'outline',
+                size: 'large',
+                text: 'signin_with',
+                shape: 'rectangular',
+                width: 400
+            });
 
-            setTimeout(() => {
-                const targetBtn = hiddenContainer.querySelector('div[role="button"]') || hiddenContainer.querySelector('iframe');
-                if (targetBtn) {
-                    try {
-                        targetBtn.click();
-                    } catch (e) {
-                        console.log('[Auth] Fallback button click:', e);
-                    }
-                }
-            }, 300);
+            isGsiInitialized = true;
 
             window.google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed()) {
-                    const reason = notification.getNotDisplayedReason?.() || '';
-                    console.log('[Auth] One-Tap prompt not displayed:', reason);
-                    if (reason === 'unregistered_origin') {
-                        clearTimeout(authTimeoutId);
-                        showToast("This domain is not added to Authorized JavaScript Origins in Google Cloud Console.", "error");
-                        resetButton();
-                    }
+                    console.log('[Auth] One-Tap prompt reason:', notification.getNotDisplayedReason?.());
                 }
             });
         } else {
-            clearTimeout(authTimeoutId);
-            showToast("Failed to load Google SDK. Check your internet connection.", "error");
-            resetButton();
+            const fallbackBtn = document.getElementById('google-signin-btn');
+            if (fallbackBtn) fallbackBtn.classList.remove('hidden');
         }
     } catch (err) {
-        clearTimeout(authTimeoutId);
-        console.error('[Auth] Sign-in exception:', err);
-        showToast("Sign-in failed: " + err.message, "error");
-        resetButton();
+        console.error('[Auth] initGoogleAuth exception:', err);
+        const fallbackBtn = document.getElementById('google-signin-btn');
+        if (fallbackBtn) fallbackBtn.classList.remove('hidden');
+    }
+}
+
+// Google Sign-In
+export const signInWithGoogle = async () => {
+    if (!isGsiInitialized) {
+        await initGoogleAuth();
+    }
+    const container = document.getElementById('google-signin-container');
+    const targetBtn = container?.querySelector('div[role="button"]') || container?.querySelector('iframe');
+    if (targetBtn) {
+        try {
+            targetBtn.click();
+        } catch (e) {
+            console.log('[Auth] Fallback button click error:', e);
+        }
+    } else {
+        showToast("Please tap the Google Sign-In button above.", "info");
     }
 };
 
@@ -226,7 +206,7 @@ function closeEditProfile() {
 export function renderProfile() {
     state._cacheVersion = (state._cacheVersion || 0) + 1;
     const profile = state.userProfile || {};
-    const contact = profile.contact || 'user@example.com';
+    const contact = profile.contact || '';
     const stats = calculateOverallAttendance();
     const pct = stats.percentage;
 
@@ -234,10 +214,11 @@ export function renderProfile() {
     if (pct >= 90) { tier = 'High Performer'; cls = 'bg-green-500/20 text-green-400'; }
     else if (pct >= 75) { tier = 'On Track'; cls = 'bg-yellow-500/20 text-yellow-400'; }
 
+    const displayName = profile.name || (contact ? contact.split('@')[0] : 'Student');
     const el = (id) => document.getElementById(id);
-    if (el('profile-name-display')) el('profile-name-display').textContent = profile.name || contact.split('@')[0];
-    if (el('profile-email')) el('profile-email').textContent = contact;
-    if (el('profile-mobile')) el('profile-mobile').textContent = contact;
+    if (el('profile-name-display')) el('profile-name-display').textContent = displayName;
+    if (el('profile-email')) el('profile-email').textContent = contact || 'Not logged in';
+    if (el('profile-mobile')) el('profile-mobile').textContent = contact || 'Not set';
     if (el('profile-img')) el('profile-img').src = `assets/images/fevicon.png`;
     if (el('profile-status-tier')) {
         el('profile-status-tier').textContent = `Attendance Tier: ${tier}`;
@@ -252,5 +233,5 @@ export function renderProfile() {
     if (el('profile-total-absent')) el('profile-total-absent').textContent = stats.absent;
 
     if (el('profile-attendance-bar')) el('profile-attendance-bar').style.width = `${pct}%`;
-    if (el('welcome-message')) el('welcome-message').textContent = `Welcome, ${(profile.name || '').split(' ')[0] || contact.split('@')[0]}!`;
+    if (el('welcome-message')) el('welcome-message').textContent = `Welcome, ${displayName.split(' ')[0]}!`;
 }

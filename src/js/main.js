@@ -10,7 +10,7 @@ import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle } from './auth/auth.js';
+import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle, initGoogleAuth } from './auth/auth.js';
 import { getCurrentUser } from './core/api-client.js';
 
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
@@ -49,6 +49,7 @@ const showAuthPage = () => {
     document.getElementById('login-form').classList.remove('hidden');
     document.getElementById('edit-profile-form').classList.add('hidden');
     dismissLoader();
+    initGoogleAuth();
 };
 
 const initializeAttendora = async () => {
@@ -56,6 +57,7 @@ const initializeAttendora = async () => {
 
     loadData();
     setupEventListeners();
+    initGoogleAuth();
 
     try {
         const user = await getCurrentUser();
