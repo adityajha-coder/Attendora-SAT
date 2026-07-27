@@ -81,6 +81,7 @@ export async function initGoogleAuth() {
             window.google.accounts.id.initialize({
                 client_id: googleClientId,
                 auto_select: false,
+                ux_mode: 'popup',
                 callback: handleGoogleAuthResponse
             });
 
@@ -95,12 +96,6 @@ export async function initGoogleAuth() {
             });
 
             isGsiInitialized = true;
-
-            window.google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed()) {
-                    console.log('[Auth] One-Tap prompt reason:', notification.getNotDisplayedReason?.());
-                }
-            });
         }
     } catch (err) {
         console.error('[Auth] initGoogleAuth exception:', err);
