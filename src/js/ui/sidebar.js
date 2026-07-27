@@ -3,13 +3,16 @@ import { renderReports } from '../features/attendance.js';
 import { setCurrentView, dirtyViews, renderView } from '../main.js';
 
 export function handleSidebarNav(e) {
-    e.preventDefault();
-    const link = e.target.closest('a.sidebar-link') || e.target.closest('a.bottom-nav-link');
+    const link = e.target.closest('a[href^="#"]');
     if (!link) return;
-    const viewId = link.getAttribute('href').substring(1);
+    const href = link.getAttribute('href');
+    if (!href || href === '#') return;
+    
+    e.preventDefault();
+    const viewId = href.substring(1);
     navigateTo(viewId);
     
-    if (window.innerWidth < 768 && e.target.closest('a.sidebar-link')) {
+    if (window.innerWidth < 768) {
         closeMobileSidebar();
     }
 }
