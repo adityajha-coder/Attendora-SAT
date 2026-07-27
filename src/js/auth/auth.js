@@ -84,38 +84,25 @@ export async function initGoogleAuth() {
 
         if (!googleClientId) {
             console.warn('[Auth] Google Client ID not available.');
-            const fallbackBtn = document.getElementById('google-signin-btn');
-            if (fallbackBtn) fallbackBtn.classList.remove('hidden');
             return;
         }
 
         const sdkLoaded = await loadGoogleGsiSdk();
         if (sdkLoaded && window.google?.accounts?.id) {
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-
-            const initConfig = {
+            window.google.accounts.id.initialize({
                 client_id: googleClientId,
                 auto_select: false,
-            };
-
-            if (isMobile) {
-                initConfig.ux_mode = 'redirect';
-                initConfig.login_uri = new URL('/api/auth/google/callback', window.location.origin).href;
-            } else {
-                initConfig.ux_mode = 'popup';
-                initConfig.callback = handleGoogleAuthResponse;
-            }
-
-            window.google.accounts.id.initialize(initConfig);
+                callback: handleGoogleAuthResponse
+            });
 
             container.innerHTML = '';
             window.google.accounts.id.renderButton(container, {
                 type: 'standard',
-                theme: 'outline',
+                theme: 'filled_blue',
                 size: 'large',
                 text: 'signin_with',
                 shape: 'rectangular',
-                width: 400
+                width: Math.min(320, window.innerWidth - 48)
             });
 
             isGsiInitialized = true;
@@ -125,14 +112,9 @@ export async function initGoogleAuth() {
                     console.log('[Auth] One-Tap prompt reason:', notification.getNotDisplayedReason?.());
                 }
             });
-        } else {
-            const fallbackBtn = document.getElementById('google-signin-btn');
-            if (fallbackBtn) fallbackBtn.classList.remove('hidden');
         }
     } catch (err) {
         console.error('[Auth] initGoogleAuth exception:', err);
-        const fallbackBtn = document.getElementById('google-signin-btn');
-        if (fallbackBtn) fallbackBtn.classList.remove('hidden');
     }
 }
 
@@ -140,17 +122,6 @@ export async function initGoogleAuth() {
 export const signInWithGoogle = async () => {
     if (!isGsiInitialized) {
         await initGoogleAuth();
-    }
-    const container = document.getElementById('google-signin-container');
-    const targetBtn = container?.querySelector('div[role="button"]') || container?.querySelector('iframe');
-    if (targetBtn) {
-        try {
-            targetBtn.click();
-        } catch (e) {
-            console.log('[Auth] Fallback button click error:', e);
-        }
-    } else {
-        showToast("Please tap the Google Sign-In button above.", "info");
     }
 };
 
