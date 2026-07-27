@@ -61,16 +61,21 @@ export async function requestNotificationPermission() {
                             });
                         }
 
-                        // Save push subscription via API client
-                        const { getCurrentUser } = await import('../core/api-client.js');
+                        // Save push subscription via API user
+                        const { getCurrentUser, subscribePushNotification } = await import('../core/api-client.js');
                         const user = await getCurrentUser();
-                        if (user) {
-                            console.log('[Notifications] Push notification subscription ready.');
+                        if (user && subscription) {
+                            try {
+                                await subscribePushNotification(subscription);
+                                console.log('[Notifications] Web push subscription saved to backend.');
+                            } catch (subErr) {
+                                console.warn('[Notifications] Failed to save push subscription to backend:', subErr.message);
+                            }
                         }
                     }
                 }
             } catch (pushError) {
-                console.warn("[Notifications] Push subscription setup failed. Local notifications will still function:", pushError);
+                console.warn("[Notifications] Push subscription setup failed:", pushError);
             }
 
             return true;
