@@ -1,6 +1,6 @@
 // Service Worker for Attendora Push Notifications & PWA Offline Caching
 
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = `attendora-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
@@ -64,8 +64,7 @@ self.addEventListener('fetch', (e) => {
 });
 
 self.addEventListener('push', function(event) {
-    console.log('[Service Worker] Push Received.');
-    let data = { title: 'Class Reminder', body: 'You have a class starting soon.', url: '/' };
+    let data = { title: 'Class Reminder', body: 'You have a class starting soon.', url: '/?view=schedule' };
     
     if (event.data) {
         try {
@@ -80,7 +79,9 @@ self.addEventListener('push', function(event) {
         body: data.body,
         icon: '/assets/images/fevicon.png',
         badge: '/assets/images/fevicon.png',
-        data: { url: data.url || '/' },
+        tag: 'attendora-class-reminder',
+        renotify: true,
+        data: { url: data.url || '/?view=schedule' },
         vibrate: [200, 100, 200, 100, 200, 100, 200]
     };
 
@@ -88,7 +89,6 @@ self.addEventListener('push', function(event) {
 });
 
 self.addEventListener('notificationclick', function(event) {
-    console.log('[Service Worker] Notification click Received.');
     event.notification.close();
     
     event.waitUntil(

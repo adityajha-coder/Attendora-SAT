@@ -8,6 +8,7 @@
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
   <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
   <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
 </div>
 
@@ -23,18 +24,22 @@ Managing university life is overwhelming. Between remembering which classes you 
 
 ## Technology Stack
 
-Attendora is built using modern web technologies to ensure a fast, responsive, and reliable experience across all devices.
 
-- **Frontend Structure:** Built using semantic JavaScript to deliver a fast, responsive, accessible user interface with intuitive interactions, and a maintainable architecture.
-- **Backend and Database:** Node.js, Express, and MongoDB for cloud synchronization, secure authentication, and robust data storage.
-- **AI Integration:** Gemini API for intelligently parsing timetable images.
-- **Architecture:** Fully compliant Progressive Web App, meaning it can be installed on any device and works entirely offline.
+- **Frontend Structure:** Built using semantic JavaScript to deliver a fast, responsive, accessible user interface with intuitive interactions and a maintainable architecture.
+- **Backend & Database:** Modular Node.js, Express, and MongoDB with Mongoose for cloud synchronization, secure authentication, rate limiting, and robust data storage.
+- **Background Push Alerts:** Automated 1 minute background reminder service using the Web Push protocol for 10 minute and 5 minute pre class push notifications directly to device OS banners.
+- **AI Integration:** OpenRouter API for intelligently parsing timetable images.
+- **Architecture:** Fully compliant Progressive Web App with offline caching, security hardened Express middleware (Helmet, CORS, JWT authentication), and modular layered architecture.
 
 ## Comprehensive Features
 
 ### Smart Attendance Tracking
 
 At the core of Attendora is a robust attendance tracking system. You can easily monitor your presence across various subjects and clinical rotations. The system calculates your overall attendance percentage in real time, giving you a clear picture of where you stand in each course.
+
+### Live Background Class Reminders
+
+Never miss a class again. Attendora features automated background Web Push notifications that deliver native alerts directly to your mobile phone or computer lock screen **10 minutes** and **5 minutes** before any scheduled class starts, even when the browser or website is completely closed.
 
 ### Advanced Goal Setting
 
