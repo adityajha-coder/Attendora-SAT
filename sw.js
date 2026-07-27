@@ -1,6 +1,6 @@
 // Service Worker for Attendora Push Notifications & PWA Offline Caching
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `attendora-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
@@ -11,6 +11,7 @@ const urlsToCache = [
   '/src/js/main.js',
   '/src/js/core/state.js',
   '/src/js/core/utils.js',
+  '/src/js/core/api-client.js',
   '/src/js/core/cache.js',
   '/src/js/ui/ui.js',
   '/src/js/ui/sidebar.js',
@@ -50,7 +51,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  // Network-first: try fresh content, fall back to cache for offline
+  if (url.pathname.startsWith('/api/')) return;
+
   e.respondWith(
     fetch(e.request).then(res => {
       return caches.open(CACHE_NAME).then(cache => {
