@@ -5,12 +5,8 @@ export function getApiUrl(path) {
     if (!path) return '';
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
 
-    const isCapacitorOrNative = window.Capacitor?.isNativePlatform?.() || 
-                                window.location.protocol === 'capacitor:' || 
-                                window.location.protocol === 'file:' ||
-                                (window.location.hostname === 'localhost' && window.location.port === '');
-
-    const baseUrl = isCapacitorOrNative ? 'https://attendora-sat.vercel.app' : '';
+    const isStandaloneFile = window.location.protocol === 'file:';
+    const baseUrl = isStandaloneFile ? 'https://attendora-sat.vercel.app' : '';
     const cleanPath = path.startsWith('/') ? path : '/' + path;
     return baseUrl + cleanPath;
 }

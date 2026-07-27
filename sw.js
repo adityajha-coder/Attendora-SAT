@@ -11,7 +11,6 @@ const urlsToCache = [
   '/src/js/main.js',
   '/src/js/core/state.js',
   '/src/js/core/utils.js',
-  '/src/js/core/supabase.js',
   '/src/js/core/cache.js',
   '/src/js/ui/ui.js',
   '/src/js/ui/sidebar.js',

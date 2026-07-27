@@ -40,11 +40,4 @@ yarn-error.log*
 # IDE & Editor Settings
 .vscode/
 *.code-workspace
-
-# Supabase CLI
-supabase/.temp/
-.supabase/
-
-# Planning Files
 plan.md
-m-plan.md

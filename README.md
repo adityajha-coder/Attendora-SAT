@@ -6,7 +6,8 @@
 
 <div align="center">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
-  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
   <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
 </div>
 
@@ -24,9 +25,9 @@ Managing university life is overwhelming. Between remembering which classes you 
 
 Attendora is built using modern web technologies to ensure a fast, responsive, and reliable experience across all devices.
 
-- **Frontend Structure:** Built using semantic HTML5, Tailwind CSS & CSS3, and pure JavaScript to deliver a fast, responsive, accessible, and dependency free user interface with smooth animations, intuitive interactions, and a maintainable architecture.
-- **Backend and Database:** Supabase for real time cloud synchronization, secure authentication, and robust data storage.
-- **AI Integration:** Google Gemini API for intelligently parsing timetable images.
+- **Frontend Structure:** Built using semantic JavaScript to deliver a fast, responsive, accessible user interface with intuitive interactions, and a maintainable architecture.
+- **Backend and Database:** Node.js, Express, and MongoDB for cloud synchronization, secure authentication, and robust data storage.
+- **AI Integration:** Gemini API for intelligently parsing timetable images.
 - **Architecture:** Fully compliant Progressive Web App, meaning it can be installed on any device and works entirely offline.
 
 ## Comprehensive Features
