@@ -12,9 +12,6 @@ const UserSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-// for faster lookups
-UserSchema.index({ email: 1 });
-UserSchema.index({ googleId: 1 });
 
 const User = mongoose.model('User', UserSchema);
 

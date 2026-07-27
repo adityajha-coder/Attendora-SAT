@@ -19,8 +19,6 @@ const UserDataSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-// for fast lookup by userId
-UserDataSchema.index({ userId: 1 });
 
 const UserData = mongoose.model('UserData', UserDataSchema);
 

@@ -6,6 +6,9 @@ const RETRY_DELAY_MS = 3000;
 
 // Connect to MongoDB with exponential backoff retry.
 export async function connectDatabase() {
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+        return;
+    }
     let retries = 0;
 
     while (retries < MAX_RETRIES) {
