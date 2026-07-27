@@ -8,6 +8,7 @@ export function securityMiddleware() {
         helmet({
             contentSecurityPolicy: false, //Disabled inline scripts/styles
             crossOriginEmbedderPolicy: false,
+            crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
         }),
         cors({
             origin: config.corsOrigin,
