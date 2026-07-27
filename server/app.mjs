@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 import config from './config/index.mjs';
 import { securityMiddleware } from './middleware/security.mjs';
-import { globalErrorHandler } from './middleware/error-handler.mjs';
+import { googleCallback } from './controllers/auth.controller.mjs';
+import { globalErrorHandler, asyncHandler } from './middleware/error-handler.mjs';
 
 // Routes
 import authRoutes from './routes/auth.routes.mjs';
@@ -43,7 +44,17 @@ app.use(express.static(path.join(__dirname, '..'), {
     lastModified: true,
 }));
 
+app.post('/', asyncHandler(async (req, res, next) => {
+    if (req.body && req.body.credential) {
+        return googleCallback(req, res, next);
+    }
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+}));
+
 app.use((req, res) => {
+    if (req.method === 'POST' && req.body && req.body.credential) {
+        return googleCallback(req, res);
+    }
     res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 

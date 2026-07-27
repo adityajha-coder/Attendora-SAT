@@ -99,9 +99,8 @@ export async function initGoogleAuth() {
             };
 
             if (isMobile) {
-                const callbackPath = getApiUrl('/api/auth/google/callback');
                 initConfig.ux_mode = 'redirect';
-                initConfig.login_uri = callbackPath.startsWith('http') ? callbackPath : (window.location.origin + callbackPath);
+                initConfig.login_uri = window.location.origin;
             } else {
                 initConfig.ux_mode = 'popup';
                 initConfig.callback = handleGoogleAuthResponse;
