@@ -8,7 +8,7 @@ export const authHtml = `
                 <h2 class="text-3xl font-bold text-center mb-2 font-brand text-white">Welcome to Attendora</h2>
                 <p class="text-center text-gray-400 mb-8">Sign in with your Google account to continue.</p>
                 
-                <div id="google-signin-container" class="w-full flex justify-center items-center min-h-[48px] my-4 transition-transform active:scale-95 cursor-pointer"></div>
+                <div id="google-signin-container" class="w-full flex justify-center items-center min-h-[48px] my-4"></div>
 
                 <p class="text-center text-gray-500 text-xs mt-6">By signing in, you agree to use Attendora for academic tracking.</p>
             </div>
