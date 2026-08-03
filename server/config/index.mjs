@@ -20,6 +20,10 @@ const config = {
     jwtExpiresIn: '7d',
     cookieMaxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
 
+    // Clerk Authentication
+    clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '',
+    clerkSecretKey: process.env.CLERK_SECRET_KEY || '',
+
     // Google OAuth
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
 

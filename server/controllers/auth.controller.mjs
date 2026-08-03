@@ -5,16 +5,7 @@ import { generateToken, setAuthCookie } from '../middleware/auth.mjs';
 import { isDbConnected } from '../db/connection.mjs';
 import { AppError } from '../middleware/error-handler.mjs';
 
-export async function googleLogin(req, res) {
-    const { credential, idToken } = req.body;
-    const tokenToVerify = credential || idToken;
-
-    if (!tokenToVerify) {
-        throw new AppError('Google credential/token is required', 400);
-    }
-
-    const googleUser = await verifyGoogleToken(tokenToVerify);
-
+async function _processGoogleUser(googleUser) {
     let userData = {
         id: googleUser.googleId || googleUser.email,
         googleId: googleUser.googleId,
@@ -62,6 +53,20 @@ export async function googleLogin(req, res) {
         }
     }
 
+    return userData;
+}
+
+export async function googleLogin(req, res) {
+    const { credential, idToken } = req.body;
+    const tokenToVerify = credential || idToken;
+
+    if (!tokenToVerify) {
+        throw new AppError('Google credential/token is required', 400);
+    }
+
+    const googleUser = await verifyGoogleToken(tokenToVerify);
+    const userData = await _processGoogleUser(googleUser);
+
     const jwtToken = generateToken(userData);
     setAuthCookie(res, jwtToken);
 
@@ -80,53 +85,7 @@ export async function googleCallback(req, res) {
 
     try {
         const googleUser = await verifyGoogleToken(credential);
-
-        let userData = {
-            id: googleUser.googleId || googleUser.email,
-            googleId: googleUser.googleId,
-            email: googleUser.email,
-            name: googleUser.name,
-            avatarUrl: googleUser.picture,
-        };
-
-        if (isDbConnected()) {
-            try {
-                let user = await User.findOne({ email: googleUser.email });
-
-                if (!user) {
-                    user = await User.create({
-                        googleId: googleUser.googleId,
-                        email: googleUser.email,
-                        name: googleUser.name,
-                        avatarUrl: googleUser.picture,
-                    });
-                } else {
-                    if (googleUser.googleId) user.googleId = googleUser.googleId;
-                    if (googleUser.name && !user.name) user.name = googleUser.name;
-                    if (googleUser.picture) user.avatarUrl = googleUser.picture;
-                    await user.save();
-                }
-
-                await UserData.findOneAndUpdate(
-                    { userId: user._id },
-                    { $setOnInsert: { userId: user._id } },
-                    { upsert: true, returnDocument: 'after' }
-                );
-
-                userData = {
-                    id: user._id.toString(),
-                    googleId: user.googleId,
-                    email: user.email,
-                    name: user.name,
-                    course: user.course || '',
-                    year: user.year || '',
-                    contact: user.contact || '',
-                    avatarUrl: user.avatarUrl || '',
-                };
-            } catch (dbErr) {
-                console.warn('[Auth] MongoDB write skipped:', dbErr.message);
-            }
-        }
+        const userData = await _processGoogleUser(googleUser);
 
         const jwtToken = generateToken(userData);
         setAuthCookie(res, jwtToken);
@@ -141,11 +100,40 @@ export async function googleCallback(req, res) {
 export async function getCurrentUser(req, res) {
     if (isDbConnected()) {
         try {
-            const user = await User.findById(req.user.id);
+            let user = null;
+            
+            // Try lookup by clerkUserId, mongo _id, or email
+            if (req.user.clerkUserId) {
+                user = await User.findOne({ clerkUserId: req.user.clerkUserId });
+            }
+            if (!user && req.user.id && req.user.id.length === 24) {
+                user = await User.findById(req.user.id).catch(() => null);
+            }
+            if (!user && req.user.email) {
+                user = await User.findOne({ email: req.user.email });
+            }
+
+            // If user logged in via Clerk but not in DB yet, create user record
+            if (!user && req.user.email) {
+                user = await User.create({
+                    clerkUserId: req.user.clerkUserId || req.user.id,
+                    email: req.user.email,
+                    name: req.user.name || '',
+                }).catch(() => null);
+            }
+
             if (user) {
+                // Ensure UserData exists
+                await UserData.findOneAndUpdate(
+                    { userId: user._id },
+                    { $setOnInsert: { userId: user._id } },
+                    { upsert: true, returnDocument: 'after' }
+                ).catch(() => {});
+
                 return res.json({
                     user: {
-                        id: user._id,
+                        id: user._id.toString(),
+                        clerkUserId: user.clerkUserId,
                         googleId: user.googleId,
                         email: user.email,
                         name: user.name,
@@ -156,12 +144,15 @@ export async function getCurrentUser(req, res) {
                     },
                 });
             }
-        } catch (err) {}
+        } catch (err) {
+            console.warn('[Auth] getCurrentUser DB lookup failed:', err.message);
+        }
     }
 
     res.json({
         user: {
             id: req.user.id,
+            clerkUserId: req.user.clerkUserId,
             email: req.user.email,
             name: req.user.name,
         },

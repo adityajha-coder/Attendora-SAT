@@ -4,10 +4,11 @@ import compression from 'compression';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { clerkMiddleware } from '@clerk/express';
+
 import config from './config/index.mjs';
 import { securityMiddleware } from './middleware/security.mjs';
-import { googleCallback } from './controllers/auth.controller.mjs';
-import { globalErrorHandler, asyncHandler } from './middleware/error-handler.mjs';
+import { globalErrorHandler } from './middleware/error-handler.mjs';
 
 // Routes
 import authRoutes from './routes/auth.routes.mjs';
@@ -24,9 +25,11 @@ const app = express();
 app.use(compression());
 app.use(cookieParser());
 app.use(...securityMiddleware());
+app.use(clerkMiddleware());
 
 app.get('/api/config', (req, res) => {
     res.json({
+        clerkPublishableKey: config.clerkPublishableKey,
         googleClientId: config.googleClientId,
         vapidPublicKey: config.vapidPublicKey,
     });
