@@ -1,5 +1,5 @@
 // Core state management. Holds global data (schedule, history, etc.) and handles LocalStorage saving/loading.
-import { schedulCloudSync } from '../services/cloud-sync.js';
+import { scheduleCloudSync } from '../services/cloud-sync.js';
 
 export const THEMES = {
     'sunset': { name: 'Sunset', start: '#f97316', end: '#ef4444' },
@@ -55,7 +55,7 @@ export const saveData = () => {
     state._cacheVersion = (state._cacheVersion || 0) + 1;
     localStorage.setItem('attendoraState', JSON.stringify(state));
     
-    schedulCloudSync(state);
+    scheduleCloudSync(state);
 };
 
 export const loadData = () => {

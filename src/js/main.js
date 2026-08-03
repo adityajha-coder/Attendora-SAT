@@ -6,11 +6,11 @@ import { updateOverviewStats, updateGoalOrientedCard, updateNextClassCountdown, 
 import { checkNotificationStatus, handleNotificationToggle } from './ui/notifications.js';
 import { exportData, importData } from './services/data.js';
 import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
-import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar } from './ui/sidebar.js';
+import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar, syncSidebarVisibility } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
 import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
-import { logoutUser, renderProfile, openEditProfileModal, signInWithGoogle, initGoogleAuth } from './auth/auth.js';
+import { logoutUser, renderProfile, openEditProfileModal, initClerkAuth, renderClerkSignIn } from './auth/auth.js';
 import { getCurrentUser } from './core/api-client.js';
 
 import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
@@ -23,6 +23,7 @@ export const showDashboard = () => {
     document.getElementById('auth-page').classList.add('hidden');
     document.getElementById('landing-page').classList.add('hidden');
     document.getElementById('dashboard-app').classList.remove('hidden');
+    syncSidebarVisibility();
     dismissLoader();
     initializeDashboard();
 };
@@ -47,13 +48,15 @@ const showAuthPage = () => {
     document.getElementById('landing-page').classList.add('hidden');
     document.getElementById('auth-page').classList.remove('hidden');
     document.getElementById('login-form').classList.remove('hidden');
-    document.getElementById('edit-profile-form').classList.add('hidden');
+    const editWrapper = document.getElementById('edit-profile-wrapper');
+    if (editWrapper) editWrapper.classList.add('hidden');
     dismissLoader();
-    initGoogleAuth();
+    renderClerkSignIn();
 };
 
 const initializeAttendora = async () => {
     document.getElementById('app').innerHTML = authHtml + landingHtml + dashboardHtml + modalsHtml;
+    syncSidebarVisibility();
 
     loadData();
     setupEventListeners();
@@ -74,18 +77,19 @@ const initializeAttendora = async () => {
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
 
-            try {
-                const cloudData = await loadFromCloud();
+            showDashboard();
+
+            loadFromCloud().then(cloudData => {
                 if (cloudData) {
                     const wasMerged = mergeCloudData(state, cloudData);
                     if (wasMerged) {
                         saveData();
+                        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
                     }
                 }
-            } catch (syncErr) {
+            }).catch(syncErr => {
                 console.warn('[Sync] Cloud restore warning:', syncErr);
-            }
-            showDashboard();
+            });
         } else {
             showLandingPage();
         }
@@ -94,7 +98,7 @@ const initializeAttendora = async () => {
         showLandingPage();
     } finally {
         dismissLoader();
-        initGoogleAuth();
+        initClerkAuth();
     }
 };
 
@@ -186,20 +190,42 @@ function setupEventListeners() {
         });
     });
 
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            import('./ui/sidebar.js').then(module => module.navigateTo(hash));
+        }
+    });
+
+    window.addEventListener('resize', syncSidebarVisibility);
+
     addListener('go-to-login-btn', 'click', (e) => { e.preventDefault(); showAuthPage(); });
     addListener('go-to-login-landing-btn', 'click', (e) => { e.preventDefault(); showAuthPage(); });
-    addListener('google-signin-btn', 'click', signInWithGoogle);
 
-    addListener('mobile-menu-btn', 'click', toggleMobileSidebar);
+
+    addListener('mobile-menu-btn', 'click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        toggleMobileSidebar();
+    });
+
     const bottomMobileMenuBtn = document.querySelector('#mobile-bottom-nav #mobile-menu-btn');
     if (bottomMobileMenuBtn) {
-        bottomMobileMenuBtn.addEventListener('click', toggleMobileSidebar);
+        bottomMobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleMobileSidebar();
+        });
     }
     
     const mobileBottomNav = document.getElementById('mobile-bottom-nav');
     if (mobileBottomNav) {
         mobileBottomNav.addEventListener('click', handleSidebarNav);
     }
+
+    document.querySelectorAll('#mobile-bottom-nav .bottom-nav-link').forEach(btn => {
+        btn.addEventListener('click', handleSidebarNav);
+    });
 
     addListener('close-sidebar-btn', 'click', closeMobileSidebar);
     addListener('sidebar-overlay', 'click', closeMobileSidebar);
@@ -361,12 +387,12 @@ function setupEventListeners() {
             return;
         }
 
-        const attendanceBtn = e.target.closest('#upcoming-classes-list button[data-status]');
+        const attendanceBtn = e.target.closest('button[data-status]');
         if (attendanceBtn) {
             handleAttendanceAction(parseFloat(attendanceBtn.dataset.classId), attendanceBtn.dataset.status);
             return;
         }
-        const editStatusBtn = e.target.closest('#upcoming-classes-list button.edit-status-btn');
+        const editStatusBtn = e.target.closest('button.edit-status-btn');
         if (editStatusBtn) {
             const classId = parseFloat(editStatusBtn.dataset.classId);
             const historyId = parseFloat(editStatusBtn.dataset.historyId);
@@ -436,6 +462,9 @@ function setupEventListeners() {
 
     addListener('notification-toggle', 'change', handleNotificationToggle);
     addListener('sidebar-nav', 'click', handleSidebarNav);
+    document.querySelectorAll('#sidebar-nav .sidebar-link[data-view], #sidebar-nav .sidebar-link[href^="#"]').forEach(btn => {
+        btn.addEventListener('click', handleSidebarNav);
+    });
 
     addListener('logout-btn', 'click', logoutUser);
     addListener('mobile-logout-btn', 'click', logoutUser);

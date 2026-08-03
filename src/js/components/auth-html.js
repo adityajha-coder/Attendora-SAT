@@ -1,20 +1,14 @@
 export const authHtml = `
-    <div id="auth-page" class="min-h-screen flex items-center justify-center p-4 relative hidden">
+    <div id="auth-page" class="min-h-screen flex items-center justify-center p-4 relative hidden z-50">
 
-        <div class="card max-w-md w-full p-6 sm:p-8 rounded-2xl z-10 no-hover">
+        <!-- LOGIN (Clerk Auth) -->
+        <div id="login-form" class="w-full max-w-md flex flex-col items-center">
+            <div id="clerk-auth-container" class="w-full flex justify-center items-center min-h-[380px]"></div>
+        </div>
 
-            <!-- LOGIN (Google only) -->
-            <div id="login-form">
-                <h2 class="text-3xl font-bold text-center mb-2 font-brand text-white">Welcome to Attendora</h2>
-                <p class="text-center text-gray-400 mb-8">Sign in with your Google account to continue.</p>
-                
-                <div id="google-signin-container" class="w-full flex justify-center items-center min-h-[48px] my-4"></div>
-
-                <p class="text-center text-gray-500 text-xs mt-6">By signing in, you agree to use Attendora for academic tracking.</p>
-            </div>
-
-            <!-- EDIT PROFILE (shown via JS) -->
-            <form id="edit-profile-form" class="hidden">
+        <!-- EDIT PROFILE (shown via JS) -->
+        <div id="edit-profile-wrapper" class="card max-w-md w-full p-6 sm:p-8 rounded-2xl z-10 no-hover hidden">
+            <form id="edit-profile-form">
                 <h2 class="text-3xl font-bold text-center mb-2 font-brand text-white">Edit Profile</h2>
                 <p class="text-center text-gray-400 mb-6">Update your personal information.</p>
                 
@@ -37,7 +31,6 @@ export const authHtml = `
                 <button type="submit" class="w-full btn-primary text-white font-bold py-3 px-6 rounded-lg">Save Changes</button>
                 <button type="button" id="cancel-edit-profile-btn" class="w-full bg-white/10 text-white font-bold py-3 px-6 rounded-lg mt-3 border border-white/20 hover:bg-white/20 transition-colors">Cancel</button>
             </form>
-
         </div>
     </div>
 `;

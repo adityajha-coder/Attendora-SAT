@@ -80,15 +80,8 @@ function extractPersistableState(state) {
     return data;
 }
 
-export function schedulCloudSync(state) {
+export function scheduleCloudSync(state) {
     if (syncTimeoutId) clearTimeout(syncTimeoutId);
-
-    // Safeguard
-    const hasDataToSync = (state.schedule && state.schedule.length > 0) ||
-                          (state.history && state.history.length > 0) ||
-                          (state.assignments && state.assignments.length > 0);
-
-    if (!hasDataToSync) return;
 
     syncTimeoutId = setTimeout(async () => {
         const user = await getCurrentUser();
@@ -107,9 +100,6 @@ export function schedulCloudSync(state) {
 }
 
 export async function loadFromCloud() {
-    const user = await getCurrentUser();
-    if (!user) return null;
-
     try {
         setSyncStatus('syncing');
         const cloudData = await fetchUserData();
@@ -122,7 +112,7 @@ export async function loadFromCloud() {
             return null;
         }
     } catch (error) {
-        console.error('[CloudSync] Failed to load from cloud:', error);
+        console.warn('[CloudSync] Failed to load from cloud:', error.message);
         setSyncStatus('error');
         return null;
     }
@@ -142,26 +132,32 @@ export function mergeCloudData(state, cloudData) {
                         merged = true;
                     }
                 } else if (cloudData[key].length > 0) {
-                    // Combine and deduplicate local + cloud array items
                     const existingMap = new Map();
-                    const getKey = (item) => item.id || item._id || (item.courseName ? `${item.courseName}-${item.dayOfWeek || item.day || ''}-${item.startTime || ''}` : JSON.stringify(item));
+                    const getKey = (item) => {
+                        if (item.id !== undefined && item.id !== null) return String(item.id);
+                        if (item._id !== undefined && item._id !== null) return String(item._id);
+                        if (item.historyId !== undefined && item.historyId !== null) return String(item.historyId);
+                        if (item.name && item.day && item.start) return `${item.name}-${item.day}-${item.start}`;
+                        if (item.courseName && item.date) return `${item.courseName}-${item.date}-${item.classId || ''}`;
+                        if (item.title && item.dueDate) return `${item.title}-${item.dueDate}`;
+                        return JSON.stringify(item);
+                    };
 
+                    // First add all cloud items
+                    cloudData[key].forEach(item => {
+                        existingMap.set(getKey(item), item);
+                    });
+
+                    // Then merge with local items
                     state[key].forEach(item => {
                         existingMap.set(getKey(item), item);
                     });
 
-                    cloudData[key].forEach(item => {
-                        const itemKey = getKey(item);
-                        if (!existingMap.has(itemKey)) {
-                            existingMap.set(itemKey, item);
-                            merged = true;
-                        }
-                    });
-
                     state[key] = Array.from(existingMap.values());
+                    merged = true;
                 }
             } else if (key === 'settings') {
-                Object.assign(state[key], cloudData[key]);
+                state[key] = { ...state[key], ...cloudData[key] };
                 merged = true;
             } else if (key === 'userProfile') {
                 state[key] = { ...state[key], ...cloudData[key] };
@@ -177,16 +173,13 @@ export function mergeCloudData(state, cloudData) {
 }
 
 export async function forceCloudSave(state) {
-    const user = await getCurrentUser();
-    if (!user) return;
-
     try {
         setSyncStatus('syncing');
         const persistable = extractPersistableState(state);
         await saveUserData(persistable);
         setSyncStatus('synced');
     } catch (error) {
-        console.error('[CloudSync] Force save failed:', error);
+        console.warn('[CloudSync] Force save failed:', error.message);
         setSyncStatus('error');
     }
 }

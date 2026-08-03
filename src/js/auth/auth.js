@@ -2,112 +2,133 @@
 import { state, saveData, resetStateToDefaults } from '../core/state.js';
 import { showToast } from '../ui/ui.js';
 import { calculateOverallAttendance } from '../features/attendance.js';
-import { loginWithGoogleToken, getCurrentUser, logoutUserApi, getGoogleClientId, loadApiConfig, getApiUrl } from '../core/api-client.js';
+import { getClerkPublishableKey, getCurrentUser, logoutUserApi, loadApiConfig, clearAuthCache } from '../core/api-client.js';
 import { loadFromCloud, mergeCloudData, forceCloudSave } from '../services/cloud-sync.js';
 import { showDashboard } from '../main.js';
 
-export function setupAuthListener() {
-    getCurrentUser().then(user => {
-        if (user) {
-            state.userProfile.name = user.name || state.userProfile.name;
-            state.userProfile.contact = user.email || state.userProfile.contact;
-            state.userProfile.course = user.course || state.userProfile.course;
-            state.userProfile.year = user.year || state.userProfile.year;
-            saveData();
-            showDashboard();
-        }
-    }).catch(err => {
-        console.log('[Auth] No active session:', err.message);
-    });
-}
+let isClerkSdkLoaded = false;
+let clerkLoadPromise = null;
+let isHandlingLogin = false;
 
-function loadGoogleGsiSdk() {
+function loadClerkSdk(publishableKey) {
     return new Promise((resolve) => {
-        if (window.google?.accounts?.id) return resolve(true);
+        if (window.Clerk) return resolve(true);
         const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
+        script.setAttribute('data-clerk-publishable-key', publishableKey);
+        script.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
         script.async = true;
-        script.defer = true;
+        script.crossOrigin = 'anonymous';
         script.onload = () => resolve(true);
         script.onerror = () => resolve(false);
         document.head.appendChild(script);
     });
 }
 
-let isGsiInitialized = false;
+export async function initClerkAuth() {
+    const config = await loadApiConfig();
+    const pubKey = config.clerkPublishableKey || getClerkPublishableKey();
 
-async function handleGoogleAuthResponse(response) {
-    try {
-        const result = await loginWithGoogleToken(response.credential);
-        showToast(`Welcome back, ${result.user.name || 'User'}!`, "success");
-        state.userProfile.name = result.user.name || state.userProfile.name;
-        state.userProfile.contact = result.user.email || state.userProfile.contact;
-        
-        try {
-            const cloudData = await loadFromCloud();
-            if (cloudData) {
-                mergeCloudData(state, cloudData);
-            }
-            await forceCloudSave(state);
-        } catch (syncErr) {
-            console.warn('[Sync] Cloud restore error on login:', syncErr);
+    if (!pubKey) {
+        console.warn('[Clerk] No Clerk publishable key found.');
+        return null;
+    }
+
+    if (!isClerkSdkLoaded) {
+        if (!clerkLoadPromise) {
+            clerkLoadPromise = (async () => {
+                const loaded = await loadClerkSdk(pubKey);
+                if (!loaded || !window.Clerk) {
+                    throw new Error('Failed to load Clerk SDK script');
+                }
+                await window.Clerk.load();
+                isClerkSdkLoaded = true;
+
+                window.Clerk.addListener(({ user }) => {
+                    if (user) {
+                        handleClerkUserLoggedIn(user);
+                    }
+                });
+                return window.Clerk;
+            })();
         }
+        try {
+            await clerkLoadPromise;
+        } catch (err) {
+            console.error('[Clerk] SDK load error:', err);
+            clerkLoadPromise = null;
+            return null;
+        }
+    }
+
+    return window.Clerk;
+}
+
+export async function renderClerkSignIn() {
+    const clerk = await initClerkAuth();
+    if (!clerk) return;
+
+    if (clerk.user) {
+        handleClerkUserLoggedIn(clerk.user);
+        return;
+    }
+
+    const container = document.getElementById('clerk-auth-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    try {
+        clerk.mountSignIn(container);
+    } catch (err) {
+        console.error('[Clerk] Error mounting sign in component:', err);
+    }
+}
+
+async function handleClerkUserLoggedIn(clerkUser) {
+    // Guard against re-entrant calls
+    if (isHandlingLogin) return;
+    isHandlingLogin = true;
+
+    try {
+        const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+        const fullName = clerkUser.fullName || clerkUser.firstName || primaryEmail.split('@')[0] || 'User';
+
+        state.userProfile.name = fullName;
+        if (primaryEmail) state.userProfile.contact = primaryEmail;
 
         saveData();
         showDashboard();
-    } catch (loginErr) {
-        showToast("Google Login Error: " + loginErr.message, "error");
-    }
-}
+        (async () => {
+            try {
+                clearAuthCache();
+                const [user, cloudData] = await Promise.all([
+                    getCurrentUser(),
+                    loadFromCloud()
+                ]);
 
-export async function initGoogleAuth() {
-    const container = document.getElementById('google-signin-container');
-    if (!container) return;
+                if (user) {
+                    state.userProfile.name = user.name || state.userProfile.name;
+                    state.userProfile.contact = user.email || state.userProfile.contact;
+                    if (user.course) state.userProfile.course = user.course;
+                    if (user.year) state.userProfile.year = user.year;
+                }
 
-    try {
-        let googleClientId = getGoogleClientId();
-        if (!googleClientId) {
-            const config = await loadApiConfig();
-            googleClientId = config.googleClientId;
-        }
+                if (cloudData) {
+                    mergeCloudData(state, cloudData);
+                }
 
-        if (!googleClientId) {
-            console.warn('[Auth] Google Client ID not available.');
-            return;
-        }
-
-        const sdkLoaded = await loadGoogleGsiSdk();
-        if (sdkLoaded && window.google?.accounts?.id) {
-            window.google.accounts.id.initialize({
-                client_id: googleClientId,
-                auto_select: false,
-                ux_mode: 'popup',
-                callback: handleGoogleAuthResponse
-            });
-
-            container.innerHTML = '';
-            window.google.accounts.id.renderButton(container, {
-                type: 'standard',
-                theme: 'filled_blue',
-                size: 'large',
-                text: 'signin_with',
-                shape: 'rectangular',
-                width: Math.min(320, window.innerWidth - 48)
-            });
-
-            isGsiInitialized = true;
-        }
+                saveData();
+                window.dispatchEvent(new CustomEvent('attendora-update-ui'));
+                forceCloudSave(state).catch(() => {});
+            } catch (syncErr) {
+                console.warn('[Sync] Background sync error after login:', syncErr);
+            }
+        })();
     } catch (err) {
-        console.error('[Auth] initGoogleAuth exception:', err);
+        console.error('[Clerk] Error handling logged in user:', err);
+    } finally {
+        isHandlingLogin = false;
     }
 }
-
-// Google Sign-In
-export const signInWithGoogle = async () => {
-    if (!isGsiInitialized) {
-        await initGoogleAuth();
-    }
-};
 
 export const logoutUser = async () => {
     try {
@@ -118,6 +139,11 @@ export const logoutUser = async () => {
                 localStorage.setItem(`attendoraState_backup_${currentUser}`, currentState);
             }
         }
+        await forceCloudSave(state).catch(() => {});
+        if (window.Clerk) {
+            await window.Clerk.signOut().catch(() => {});
+        }
+        clearAuthCache();
         await logoutUserApi();
         localStorage.removeItem('loggedIn');
         localStorage.removeItem('attendoraState');
@@ -135,7 +161,8 @@ export async function openEditProfileModal() {
     document.getElementById('auth-page').classList.remove('hidden');
     document.getElementById('dashboard-app').classList.add('hidden');
     document.getElementById('login-form').classList.add('hidden');
-    document.getElementById('edit-profile-form').classList.remove('hidden');
+    const wrapper = document.getElementById('edit-profile-wrapper');
+    if (wrapper) wrapper.classList.remove('hidden');
 
     document.getElementById('edit-name').value = state.userProfile.name || user.name || '';
     document.getElementById('edit-course').value = state.userProfile.course || user.course || '';
@@ -164,7 +191,9 @@ export async function openEditProfileModal() {
 }
 
 function closeEditProfile() {
-    document.getElementById('edit-profile-form').classList.add('hidden');
+    const wrapper = document.getElementById('edit-profile-wrapper');
+    if (wrapper) wrapper.classList.add('hidden');
+    document.getElementById('login-form').classList.remove('hidden');
     document.getElementById('auth-page').classList.add('hidden');
     document.getElementById('dashboard-app').classList.remove('hidden');
 }
