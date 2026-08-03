@@ -1,5 +1,12 @@
 let googleClientId = '';
+let clerkPublishableKey = '';
 let vapidPublicKey = '';
+let configPromise = null;
+
+// Auth state cache to prevent repeated /api/auth/me calls when not logged in
+let cachedUser = undefined; // undefined = not checked yet, null = not logged in, object = logged in
+let cachedUserTimestamp = 0;
+const AUTH_CACHE_TTL_MS = 30_000; // Re-check after 30s if not logged in
 
 export function getApiUrl(path) {
     if (!path) return '';
@@ -11,77 +18,104 @@ export function getApiUrl(path) {
     return baseUrl + cleanPath;
 }
 
-export async function loadApiConfig() {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-        const response = await fetch(getApiUrl('/api/config'), { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (response.ok) {
-            const config = await response.json();
-            if (config.googleClientId) googleClientId = config.googleClientId;
-            if (config.vapidPublicKey) vapidPublicKey = config.vapidPublicKey;
-        }
-    } catch (err) {
-        console.error('[API Client] Failed to fetch config:', err);
-    }
-    return { googleClientId, vapidPublicKey };
-}
-
-export function getGoogleClientId() {
-    return googleClientId;
-}
-
-// Google Login
-export async function loginWithGoogleToken(credential) {
-    const res = await fetch(getApiUrl('/api/auth/google'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
-        credentials: 'include'
-    });
-
-    if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        let errMessage = `HTTP ${res.status}`;
+export async function getAuthHeaders(customHeaders = {}) {
+    const headers = { ...customHeaders };
+    if (window.Clerk?.session) {
         try {
-            const json = JSON.parse(text);
-            if (json.error) errMessage = json.error;
-        } catch (e) {
-            if (text) errMessage += `: ${text.substring(0, 100)}`;
+            const token = await window.Clerk.session.getToken();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        } catch (err) {
+            console.warn('[API Client] Failed to get Clerk session token:', err);
         }
-        throw new Error(errMessage);
     }
-
-    return await res.json();
+    return headers;
 }
 
-// Get Current Logged In User
+export async function loadApiConfig() {
+    // Cache: only fetch once
+    if (configPromise) return configPromise;
+
+    configPromise = (async () => {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const response = await fetch(getApiUrl('/api/config'), { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (response.ok) {
+                const config = await response.json();
+                if (config.clerkPublishableKey) clerkPublishableKey = config.clerkPublishableKey;
+                if (config.googleClientId) googleClientId = config.googleClientId;
+                if (config.vapidPublicKey) vapidPublicKey = config.vapidPublicKey;
+            }
+        } catch (err) {
+            console.error('[API Client] Failed to fetch config:', err);
+        }
+        return { clerkPublishableKey, googleClientId, vapidPublicKey };
+    })();
+
+    return configPromise;
+}
+
+export function getClerkPublishableKey() {
+    return clerkPublishableKey;
+}
+
+// Clear auth cache (call after login/logout to force fresh check)
+export function clearAuthCache() {
+    cachedUser = undefined;
+    cachedUserTimestamp = 0;
+}
+
+// Get Current Logged In User (with caching to avoid repeated 401s)
 export async function getCurrentUser() {
+    const now = Date.now();
+
+    // Return cached result if still valid
+    if (cachedUser !== undefined) {
+        // If logged in, always return cached user (until cleared)
+        if (cachedUser !== null) return cachedUser;
+        // If not logged in, respect TTL before retrying
+        if (now - cachedUserTimestamp < AUTH_CACHE_TTL_MS) return null;
+    }
+
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const headers = await getAuthHeaders();
         const res = await fetch(getApiUrl('/api/auth/me'), {
+            headers,
             credentials: 'include',
             signal: controller.signal
         });
         clearTimeout(timeoutId);
-        if (!res.ok) return null;
+        if (!res.ok) {
+            cachedUser = null;
+            cachedUserTimestamp = now;
+            return null;
+        }
         const data = await res.json();
+        cachedUser = data.user;
+        cachedUserTimestamp = now;
         return data.user;
     } catch (err) {
+        cachedUser = null;
+        cachedUserTimestamp = now;
         return null;
     }
 }
 
 // Logout
 export async function logoutUserApi() {
-    await fetch(getApiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
+    const headers = await getAuthHeaders();
+    await fetch(getApiUrl('/api/auth/logout'), { method: 'POST', headers, credentials: 'include' });
 }
 
 // Fetch Data from Cloud
 export async function fetchUserData() {
-    const res = await fetch(getApiUrl('/api/data'), { credentials: 'include' });
+    const headers = await getAuthHeaders();
+    const res = await fetch(getApiUrl('/api/data'), { headers, credentials: 'include' });
     if (!res.ok) throw new Error('Failed to fetch user data');
     const json = await res.json();
     return json.data;
@@ -89,9 +123,10 @@ export async function fetchUserData() {
 
 // Save/Sync Data to Cloud
 export async function saveUserData(dataPayload) {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     const res = await fetch(getApiUrl('/api/data'), {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(dataPayload),
         credentials: 'include'
     });
@@ -136,5 +171,3 @@ export async function fetchVapidPublicKey() {
     } catch (err) {}
     return vapidPublicKey;
 }
-
-loadApiConfig();

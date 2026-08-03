@@ -1,6 +1,7 @@
 import { showToast, toggleModal } from '../ui/ui.js';
 import { state, saveData } from '../core/state.js';
 import { checkAchievements } from './gamification.js';
+import { getApiUrl } from '../core/api-client.js';
 
 export function openTimetableScanner() {
     const scanTimetableModal = document.getElementById('scan-timetable-modal');
@@ -42,7 +43,7 @@ export async function handleTimetableScan(event) {
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
             try {
-                const response = await fetch('/api/scan', {
+                const response = await fetch(getApiUrl('/api/scan'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

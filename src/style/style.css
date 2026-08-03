@@ -64,14 +64,12 @@ body {
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease, background-color 0.3s ease;
     backface-visibility: hidden;
 }
 
 .card:not(.no-hover):hover {
     border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.05);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
 }
 
@@ -290,7 +288,7 @@ select option {
     height: 6px;
     border-radius: 50%;
     background-color: #f59e0b;
-    box-shadow: 0 0 10px #f59e0b;
+
 }
 
 .achievement-badge.locked {
@@ -317,11 +315,9 @@ select option {
 .light-mode .card {
     background: #ffffff !important;
     border-color: rgba(0, 0, 0, 0.05) !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
 }
 
 .light-mode .card:not(.no-hover):hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1) !important;
     transform: translateY(-4px) !important;
 }
 
@@ -420,7 +416,6 @@ select option {
 
 .light-mode .modal-content {
     background-color: #f7f5f2;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
 .light-mode .form-input {
@@ -429,9 +424,7 @@ select option {
     color: var(--text-primary);
 }
 
-.light-mode .btn-primary {
-    box-shadow: 0 2px 8px rgba(79, 111, 224, 0.25);
-}
+
 
 .light-mode #toast {
     color: #fff !important;
@@ -526,13 +519,59 @@ select option {
     margin-right: 0.5rem;
 }
 
-/* Touch Optimizations */
+/* Touch & Mobile UX Optimizations */
 button, a, select, input {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 
-.cv-auto {
-    content-visibility: auto;
-    contain-intrinsic-size: 150px;
+button, .sidebar-link, .bottom-nav-link, .attendance-btn, .edit-attendance-action-btn {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.custom-scrollbar, .overflow-y-auto, .overflow-x-auto, .modal-content {
+    -webkit-overflow-scrolling: touch;
+}
+
+.pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+}
+
+/* Responsive Mobile Layout Rules */
+@media (max-width: 767px) {
+    /* Prevent iOS Safari auto-zoom on input focus */
+    input, select, textarea, .form-input, .search-input {
+        font-size: 16px !important;
+    }
+
+    #sidebar {
+        z-index: 40;
+    }
+    #sidebar-overlay {
+        z-index: 30;
+    }
+}
+
+@media (max-width: 640px) {
+    .calendar-grid {
+        gap: 4px;
+    }
+    .calendar-day {
+        aspect-ratio: 1 / 1;
+        border-radius: 8px;
+        padding: 2px;
+    }
+    .day-number {
+        font-size: 0.85rem;
+    }
+    .calendar-day-header {
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        padding-bottom: 4px;
+    }
+    .modal-content {
+        max-height: 90vh;
+        border-radius: 20px;
+    }
 }

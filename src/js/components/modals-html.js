@@ -263,7 +263,7 @@ export const modalsHtml = `
                          <div class="bg-red-500/10 rounded-2xl border border-red-500/20 p-6 relative overflow-hidden">
 
                              <p class="text-sm text-red-300 mb-6 relative z-10">Actions here are permanent and will affect your current progress.</p>
-                             <button id="archive-term-btn-danger" class="w-full bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 font-semibold py-3.5 rounded-xl transition-colors relative z-10 shadow-lg" aria-label="Archive current term">Archive Current Term & Start New</button>
+                             <button id="archive-term-btn-danger" class="w-full bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 font-semibold py-3.5 rounded-xl transition-colors relative z-10" aria-label="Archive current term">Archive Current Term & Start New</button>
                          </div>
                      </div>
                  </div>
@@ -496,7 +496,7 @@ export const modalsHtml = `
                  <div id="profile-personal" class="profile-tab-content hidden space-y-8 animate-fade-in">
                      <div class="flex flex-col items-center text-center space-y-6 pt-4">
                          <div class="relative">
-                             <img id="profile-img" class="h-32 w-32 rounded-full object-cover border-4 border-white/10 shadow-xl" src="https://placehold.co/128x128/3b82f6/FFFFFF?text=A" alt="Profile picture" loading="lazy">
+                             <img id="profile-img" class="h-32 w-32 rounded-full object-cover border-4 border-white/10" src="https://placehold.co/128x128/3b82f6/FFFFFF?text=A" alt="Profile picture" loading="lazy">
                          </div>
                          <div>
                              <h2 id="profile-name-display" class="text-3xl font-bold text-white mb-2">User Name</h2>
@@ -691,7 +691,7 @@ export const modalsHtml = `
                  <div id="profile-personal" class="profile-tab-content hidden space-y-8 animate-fade-in">
                      <div class="flex flex-col items-center text-center space-y-6 pt-4">
                          <div class="relative">
-                             <img id="profile-img" class="h-32 w-32 rounded-full object-cover border-4 border-white/10 shadow-xl" src="https://placehold.co/128x128/3b82f6/FFFFFF?text=A" alt="Profile picture" loading="lazy">
+                             <img id="profile-img" class="h-32 w-32 rounded-full object-cover border-4 border-white/10" src="https://placehold.co/128x128/3b82f6/FFFFFF?text=A" alt="Profile picture" loading="lazy">
                          </div>
                          <div>
                              <h2 id="profile-name-display" class="text-3xl font-bold text-white mb-2">User Name</h2>

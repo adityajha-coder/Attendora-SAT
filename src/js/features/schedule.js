@@ -14,7 +14,7 @@ export function renderSchedule() {
         scheduleEmptyPrompt.classList.remove('hidden');
         scheduleEmptyPrompt.innerHTML = `
             <div class="py-20 px-6 text-center">
-                <div class="mb-8 inline-flex p-6 rounded-full bg-cyan-500/10 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
+                <div class="mb-8 inline-flex p-6 rounded-full bg-cyan-500/10">
                     <svg class="h-16 w-16 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2.25 2.25 0 002.25-2.25V7a2.25 2.25 0 00-2.25-2.25H5A2.25 2.25 0 002.75 7v11.75A2.25 2.25 0 005 21z" />
                     </svg>
@@ -22,7 +22,7 @@ export function renderSchedule() {
                 <h3 class="text-4xl font-black text-white mb-4 tracking-tight">Build your Weekly Schedule</h3>
                 <p class="text-gray-400 text-lg mb-10 max-w-md mx-auto leading-relaxed">Upload a photo of your timetable or add your classes manually to start tracking.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button id="scan-timetable-prompt-btn" class="btn-primary text-white font-bold py-3.5 px-8 rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.3)] transition-all hover:scale-105 active:scale-95 animate-bounce">
+                    <button id="scan-timetable-prompt-btn" class="btn-primary text-white font-bold py-3.5 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 animate-bounce">
                         Scan Timetable (AI)
                     </button>
                     <button id="add-class-prompt-btn" class="px-8 py-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-white hover:scale-105 active:scale-95">
@@ -44,7 +44,7 @@ export function renderSchedule() {
         const isToday = day === today;
 
         const dayCol = document.createElement('div');
-        dayCol.className = `space-y-3 p-2 sm:p-3 rounded-xl border border-white/5 bg-white/[0.02] ${isToday ? 'bg-white/5 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : ''}`;
+        dayCol.className = `space-y-3 p-2 sm:p-3 rounded-xl border border-white/5 bg-white/[0.02] ${isToday ? 'bg-white/5 border-blue-500/30' : ''}`;
         dayCol.innerHTML = `<h3 class="text-sm sm:text-base font-bold text-center border-b border-white/10 pb-2 mb-3 text-white tracking-wide">${day}</h3>`;
         
         if (classesForDay.length > 0) {
@@ -54,7 +54,7 @@ export function renderSchedule() {
                 else if (c.type === 'Class & Lab') typeIndicator = `<div class="absolute top-2 left-2 text-[10px] uppercase font-bold bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full tracking-wider border border-purple-500/20">Hybrid</div>`;
                 
                 const classCard = document.createElement('div');
-                classCard.className = 'p-4 bg-black/40 hover:bg-white/5 border border-white/5 hover:border-white/10 rounded-xl relative group transition-all duration-200';
+                classCard.className = 'p-4 bg-black/40 border border-white/5 rounded-xl relative group transition-all duration-200';
                 
                 classCard.innerHTML = `
                     ${typeIndicator}

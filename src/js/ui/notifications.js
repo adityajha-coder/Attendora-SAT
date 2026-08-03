@@ -28,7 +28,7 @@ export async function requestNotificationPermission() {
             state.settings.notifications = true;
             saveData();
             try {
-                const configRes = await fetch('/api/config');
+                const configRes = await fetch(getApiUrl('/api/config'));
                 let PUBLIC_VAPID_KEY = '';
                 if (configRes.ok) {
                     const configData = await configRes.json();

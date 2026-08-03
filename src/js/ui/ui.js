@@ -30,7 +30,7 @@ export const showToast = (message, type = 'success') => {
 
     toast.innerHTML = `<div class="flex items-center gap-3">${icon}<span>${message}</span></div>`;
     
-    toast.className = 'fixed bottom-[90px] md:bottom-8 right-4 md:right-8 p-4 rounded-xl text-white font-bold shadow-2xl z-50 flex items-center toast-enter'; 
+    toast.className = 'fixed bottom-[90px] md:bottom-8 right-4 md:right-8 p-4 rounded-xl text-white font-bold z-50 flex items-center toast-enter'; 
     
     if (type === 'success') {
         toast.classList.add('bg-gradient-to-r', 'from-green-500', 'to-emerald-600');

@@ -164,86 +164,156 @@ export async function renderReports() {
         return;
     }
 
-    const filterType = document.getElementById('reports-filter').value;
-    const filteredHistory = getFilteredHistory(filterType);
-    Object.values(chartInstances).forEach(chart => {
-        if(chart && typeof chart.destroy === 'function') chart.destroy();
+    const filterElement = document.getElementById('reports-filter');
+    if (!filterElement) return;
+    const filterType = filterElement.value;
+
+    const trendsCanvas = document.getElementById('trends-chart');
+    if (!trendsCanvas) return;
+
+    if (chartInstances.trends) {
+        chartInstances.trends.destroy();
+        delete chartInstances.trends;
+    }
+
+    const trendsCtx = trendsCanvas.getContext('2d');
+    const gridTextColor = getComputedStyle(document.body).getPropertyValue('--text-secondary').trim() || '#94a3b8';
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color-start').trim() || '#3b82f6';
+
+    const validHistory = state.history.filter(h => {
+        if (h.status !== 'Present' && h.status !== 'Absent') return false;
+        if (!h.date) return false;
+        return dateIsWithinTerm(h.date);
     });
-    chartInstances = {};
-    const uniqueCourses = [...new Set(state.schedule.map(item => item.name))];
-    if(uniqueCourses.length === 0) {
-        const trendsCtx = document.getElementById('trends-chart').getContext('2d');
-        if(chartInstances.trends) chartInstances.trends.destroy();
-        trendsCtx.clearRect(0, 0, trendsCtx.canvas.width, trendsCtx.canvas.height);
+
+    if (validHistory.length === 0) {
+        trendsCtx.clearRect(0, 0, trendsCanvas.width, trendsCanvas.height);
         return;
     }
-    const gridTextColor = getComputedStyle(document.body).getPropertyValue('--text-secondary');
-    const chartBorderColor = getComputedStyle(document.body).getPropertyValue('--background-color');
-    const trendsCtx = document.getElementById('trends-chart').getContext('2d');
-    const historyByDate = filteredHistory.reduce((acc, h) => {
-        if (h.status === 'Present' || h.status === 'Absent') {
-            (acc[h.date] = acc[h.date] || []).push(h.status);
-        }
+
+    const historyByDate = validHistory.reduce((acc, h) => {
+        if (!acc[h.date]) acc[h.date] = { present: 0, absent: 0 };
+        if (h.status === 'Present') acc[h.date].present++;
+        else if (h.status === 'Absent') acc[h.date].absent++;
         return acc;
     }, {});
-    const sortedDates = Object.keys(historyByDate).sort((a,b) => new Date(a) - new Date(b));
+
+    const allSortedDates = Object.keys(historyByDate).sort((a, b) => a.localeCompare(b));
+
+    const now = new Date();
+    let filterCutoffDateStr = null;
+    if (filterType === 'week') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 7);
+        filterCutoffDateStr = d.toISOString().slice(0, 10);
+    } else if (filterType === 'month') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 30);
+        filterCutoffDateStr = d.toISOString().slice(0, 10);
+    } else if (filterType === 'term') {
+        filterCutoffDateStr = state.settings.termStartDate || null;
+    }
+
+    let cumulativePresent = 0;
+    let cumulativeAbsent = 0;
     const trendData = [];
-    let p = 0, a = 0;
-    sortedDates.forEach(date => {
-        const presentToday = historyByDate[date].filter(s => s === 'Present').length;
-        const absentToday = historyByDate[date].filter(s => s === 'Absent').length;
-        p += presentToday;
-        a += absentToday;
-        trendData.push({ x: date, y: (p + a) === 0 ? 100 : Math.round((p / (p + a)) * 100) });
+
+    allSortedDates.forEach(dateStr => {
+        const dayCounts = historyByDate[dateStr];
+        cumulativePresent += dayCounts.present;
+        cumulativeAbsent += dayCounts.absent;
+
+        if (!filterCutoffDateStr || dateStr >= filterCutoffDateStr) {
+            const total = cumulativePresent + cumulativeAbsent;
+            const percentage = total === 0 ? 100 : Math.round((cumulativePresent / total) * 100);
+            
+            trendData.push({
+                x: new Date(dateStr + 'T00:00:00'),
+                y: percentage,
+                dateStr: dateStr,
+                dayPresent: dayCounts.present,
+                dayAbsent: dayCounts.absent,
+                totalPresent: cumulativePresent,
+                totalClasses: total
+            });
+        }
     });
-    if(chartInstances.trends) chartInstances.trends.destroy();
+
+    if (trendData.length === 0) {
+        trendsCtx.clearRect(0, 0, trendsCanvas.width, trendsCanvas.height);
+        return;
+    }
+
+    const gradient = trendsCtx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, primaryColor + '33');
+    gradient.addColorStop(1, primaryColor + '00');
+
     chartInstances.trends = new Chart(trendsCtx, {
         type: 'line',
         data: {
             datasets: [{
                 label: 'Overall Attendance %',
                 data: trendData,
-                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color-start'),
-                tension: 0.1
+                borderColor: primaryColor,
+                backgroundColor: gradient,
+                fill: true,
+                borderWidth: 2.5,
+                pointRadius: trendData.length > 30 ? 2 : 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: primaryColor,
+                tension: 0.2
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: true,
             scales: {
                 x: { 
                     type: 'time', 
-                    time: { unit: filterType === 'week' ? 'day' : (filterType === 'month' ? 'week' : 'month') }, 
-                    grid: { color: gridTextColor+'30' }, 
-                    ticks: { color: gridTextColor } 
+                    time: { 
+                        unit: filterType === 'week' ? 'day' : (filterType === 'month' ? 'day' : 'week'),
+                        tooltipFormat: 'MMM d, yyyy'
+                    }, 
+                    grid: { color: gridTextColor + '15' }, 
+                    ticks: { color: gridTextColor, maxRotation: 0 } 
                 },
-                y: { beginAtZero: true, max: 100, min: 0, grid: { color: gridTextColor+'30' }, ticks: { color: gridTextColor } }
+                y: { 
+                    beginAtZero: true, 
+                    max: 100, 
+                    min: 0, 
+                    grid: { color: gridTextColor + '15' }, 
+                    ticks: { 
+                        color: gridTextColor,
+                        callback: (value) => value + '%'
+                    } 
+                }
             },
-            plugins: { legend: { labels: { color: gridTextColor } } }
+            plugins: { 
+                legend: { 
+                    display: true,
+                    labels: { color: gridTextColor, font: { weight: 'bold' } } 
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const point = context.raw;
+                            if (point && point.totalClasses !== undefined) {
+                                return ` Attendance: ${point.y}% (${point.totalPresent}/${point.totalClasses} classes)`;
+                            }
+                            return ` Attendance: ${context.parsed.y}%`;
+                        },
+                        afterLabel: function(context) {
+                            const point = context.raw;
+                            if (point && (point.dayPresent !== undefined || point.dayAbsent !== undefined)) {
+                                return `On ${point.dateStr}: +${point.dayPresent} Present, +${point.dayAbsent} Absent`;
+                            }
+                            return '';
+                        }
+                    }
+                }
+            }
         }
     });
-}
-
-function getFilteredHistory(filterType) {
-    const now = new Date();
-    let filterDate = null;
-    if (filterType === 'week') {
-        filterDate = new Date();
-        filterDate.setDate(now.getDate() - 7);
-    } else if (filterType === 'month') {
-        filterDate = new Date();
-        filterDate.setDate(now.getDate() - 30);
-    } else if (filterType === 'term') {
-        filterDate = new Date(state.settings.termStartDate + 'T00:00:00');
-    }
-    const filterDateStr = filterDate ? filterDate.toISOString().slice(0, 10) : null;
-    const history = state.history.filter(h => {
-        const hDate = new Date(h.date + 'T00:00:00');
-        const endDate = new Date(state.settings.termEndDate + 'T23:59:59');
-        if (filterType === 'cumulative') return true;
-        if (filterDateStr && h.date < filterDateStr) return false;
-        if (hDate > endDate) return false;
-        return true;
-    });
-    return history;
 }
 
 export function renderCourses() {

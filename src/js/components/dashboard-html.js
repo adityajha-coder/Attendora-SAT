@@ -6,7 +6,7 @@ export const dashboardHtml = `
             <aside id="sidebar" class="w-64 flex-shrink-0 sidebar-theme border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 transform -translate-x-full transition-all duration-300 ease-in-out">
                 <div class="h-20 flex items-center justify-between border-b border-white/5 px-6">
                      <a href="#" class="flex items-center gap-3">
-                        <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border-2 border-white/10 shadow-md">
+                        <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border-2 border-white/10">
                         <span class="text-2xl font-bold text-white font-brand">ATTENDORA</span>
                     </a>
                     <button id="close-sidebar-btn" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors text-white" aria-label="Close sidebar">
@@ -14,12 +14,12 @@ export const dashboardHtml = `
                     </button>
                 </div>
                 <nav id="sidebar-nav" class="px-4 pt-6 pb-2 space-y-2 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                    <a href="#overview" class="sidebar-link active flex items-center gap-3 px-4 py-3" aria-label="Overview"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg><span>Overview</span></a>
-                    <a href="#schedule" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Schedule"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>My Schedule</span></a>
-                    <a href="#courses" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Courses"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg><span>My Courses</span></a>
-                    <a href="#assignments" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Assignments"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg><span>Assignments</span></a>
-                    <a href="#calendar" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Calendar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Calendar</span></a>
-                    <a href="#reports" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Reports"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg><span>Reports</span></a>
+                    <a href="#overview" data-view="overview" class="sidebar-link active flex items-center gap-3 px-4 py-3" aria-label="Overview"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg><span>Overview</span></a>
+                    <a href="#schedule" data-view="schedule" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Schedule"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>My Schedule</span></a>
+                    <a href="#courses" data-view="courses" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="My Courses"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg><span>My Courses</span></a>
+                    <a href="#assignments" data-view="assignments" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Assignments"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg><span>Assignments</span></a>
+                    <a href="#calendar" data-view="calendar" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Calendar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Calendar</span></a>
+                    <a href="#reports" data-view="reports" class="sidebar-link flex items-center gap-3 px-4 py-3" aria-label="Reports"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg><span>Reports</span></a>
                     <button id="profile-btn" class="w-full text-left sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white" aria-label="My Profile"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span>My Profile</span></button>
                 </nav>
                 <div class="px-4 py-4 border-t border-white/10 space-y-1">
@@ -39,15 +39,15 @@ export const dashboardHtml = `
             </aside>
 
             <main class="flex-1 min-w-0 p-4 sm:p-6 lg:py-8 lg:px-6 overflow-y-auto pb-24 md:pb-6">
-                <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-4 py-3 bg-black/40 backdrop-blur-xl border-b border-white/5 mb-4 shadow-sm">
+                <div class="md:hidden flex justify-between items-center sticky top-0 z-30 px-4 py-3 bg-black/40 backdrop-blur-xl border-b border-white/5 mb-4">
                     <a href="#" class="flex items-center gap-2">
                         <img src="assets/images/fevicon.png" alt="Attendora Logo" class="w-8 h-8 rounded-full border border-white/20">
                         <span class="text-xl font-bold font-brand text-white tracking-wide">ATTENDORA</span>
                     </a>
                     <div class="flex items-center gap-3">
-                        <div id="mobile-top-streak-indicator" class="inline-flex md:hidden items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs shadow-sm backdrop-blur-md" style="display: none;">
+                        <div id="mobile-top-streak-indicator" class="inline-flex md:hidden items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs backdrop-blur-md" style="display: none;">
                             <span id="mobile-top-streak-count" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
-                            <span class="text-sm filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                            <span class="text-sm">🔥</span>
                         </div>
                         <button id="mobile-logout-btn" class="p-2 rounded-lg hover:bg-red-500/20 transition-colors text-red-400" aria-label="Logout">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
@@ -58,14 +58,14 @@ export const dashboardHtml = `
                 <div id="overview-view" class="dashboard-view active">
                     <div class="relative flex flex-col items-center md:flex-row md:justify-between md:items-center text-center md:text-left mb-6 pt-2 px-2 overflow-visible">
                         <div>
-                             <h1 id="welcome-message" class="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight drop-shadow-xl mb-1">Welcome!</h1>
+                             <h1 id="welcome-message" class="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-1">Welcome!</h1>
                              <p class="text-gray-400 text-sm sm:text-base max-w-md leading-relaxed hidden md:block">Here's your smart summary for today.</p>
                         </div>
                         
                         <!-- Desktop Streak Indicator -->
-                        <div id="top-streak-indicator" class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold shadow-sm backdrop-blur-md transition-transform hover:scale-105 active:scale-95">
+                        <div id="top-streak-indicator" class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold backdrop-blur-md transition-transform hover:scale-105 active:scale-95">
                             <span id="top-streak-count" class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-tr from-orange-400 to-orange-600">0</span>
-                            <span class="text-lg filter drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]">🔥</span>
+                            <span class="text-lg">🔥</span>
                         </div>
                     </div>
 
@@ -171,27 +171,27 @@ export const dashboardHtml = `
             </main>
             
             <!-- Mobile Bottom Nav -->
-            <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 z-50 flex justify-around items-center pb-safe h-[68px] px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 z-50 flex justify-around items-center pb-safe h-[68px] px-2">
                 <button id="mobile-menu-btn" class="flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="More Menu">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     <span class="text-[10px] font-medium tracking-wide pointer-events-none">Menu</span>
                 </button>
-                <a href="#overview" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-blue-400 active transition-colors" aria-label="Home">
+                <button data-view="overview" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-blue-400 active transition-colors" aria-label="Home">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                     <span class="text-[10px] font-medium tracking-wide pointer-events-none">Home</span>
-                </a>
-                <a href="#schedule" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Schedule">
+                </button>
+                <button data-view="schedule" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Schedule">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span class="text-[10px] font-medium tracking-wide pointer-events-none">Schedule</span>
-                </a>
-                <a href="#courses" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Courses">
+                </button>
+                <button data-view="courses" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Courses">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
                     <span class="text-[10px] font-medium tracking-wide pointer-events-none">Courses</span>
-                </a>
-                <a href="#calendar" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Calendar">
+                </button>
+                <button data-view="calendar" class="bottom-nav-link flex flex-col items-center justify-center w-16 h-full text-gray-400 hover:text-blue-300 transition-colors" aria-label="Calendar">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     <span class="text-[10px] font-medium tracking-wide pointer-events-none">Calendar</span>
-                </a>
+                </button>
             </nav>
         </div>
     </div>
