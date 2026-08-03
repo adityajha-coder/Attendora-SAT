@@ -141,9 +141,10 @@ export async function saveUserData(dataPayload) {
 
 // Push Notifications — Subscribe
 export async function subscribePushNotification(subscription) {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     const res = await fetch(getApiUrl('/api/notifications/subscribe'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(subscription),
         credentials: 'include'
     });
@@ -153,9 +154,10 @@ export async function subscribePushNotification(subscription) {
 
 // Push Notifications — Unsubscribe
 export async function unsubscribePushNotification(endpoint) {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     await fetch(getApiUrl('/api/notifications/unsubscribe'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ endpoint }),
         credentials: 'include'
     });

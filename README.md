@@ -24,7 +24,6 @@ Managing university life is overwhelming. Between remembering which classes you 
 
 ## Technology Stack
 
-
 - **Frontend Structure:** Built using semantic JavaScript to deliver a fast, responsive, accessible user interface with intuitive interactions and a maintainable architecture.
 - **Backend & Database:** Modular Node.js, Express, and MongoDB with Mongoose for cloud synchronization, secure authentication, rate limiting, and robust data storage.
 - **Background Push Alerts:** Automated 1 minute background reminder service using the Web Push protocol for 10 minute and 5 minute pre class push notifications directly to device OS banners.
