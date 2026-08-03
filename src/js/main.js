@@ -37,9 +37,13 @@ const showLandingPage = () => {
 
 function dismissLoader() {
     const loader = document.getElementById('app-loader');
-    if (loader) {
+    if (loader && !loader.dataset.dismissed) {
+        loader.dataset.dismissed = "true";
+        loader.style.transition = 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
         loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 500);
+        loader.style.transform = 'scale(1.02)';
+        loader.style.pointerEvents = 'none';
+        setTimeout(() => { if (loader.parentNode) loader.remove(); }, 360);
     }
 }
 
@@ -130,24 +134,35 @@ const initializeDashboard = () => {
     renderThemePicker();
     checkNotificationStatus();
     updateTermDatesUI();
-    fullRenderAllViews();
-};
-
-function fullRenderAllViews() {
+    
+    // Fast instant boot: render active overview view immediately
     renderOverviewCards();
-    renderSchedule();
     renderTodaysClasses();
-    renderCourses();
-    renderAssignments();
-    renderCalendar();
-    renderReports();
-    renderProfile();
     updateOverviewStats();
     updateGoalOrientedCard();
     updateNextClassCountdown();
     updateAssignmentBtnState();
-    dirtyViews.clear();
-}
+
+    ['schedule', 'courses', 'assignments', 'calendar', 'reports', 'profile'].forEach(v => dirtyViews.add(v));
+
+    const idleTasks = [renderSchedule, renderCourses, renderAssignments, renderCalendar, renderReports, renderProfile];
+    const scheduleNextIdle = () => {
+        if (idleTasks.length === 0) return;
+        const task = idleTasks.shift();
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                task();
+                scheduleNextIdle();
+            }, { timeout: 1500 });
+        } else {
+            setTimeout(() => {
+                task();
+                scheduleNextIdle();
+            }, 200);
+        }
+    };
+    setTimeout(scheduleNextIdle, 600);
+};
 
 export const updateAllViews = () => {
     updateOverviewStats();
@@ -197,7 +212,7 @@ function setupEventListeners() {
         }
     });
 
-    window.addEventListener('resize', syncSidebarVisibility);
+    window.addEventListener('resize', debounce(syncSidebarVisibility, 150));
 
     addListener('go-to-login-btn', 'click', (e) => { e.preventDefault(); showAuthPage(); });
     addListener('go-to-login-landing-btn', 'click', (e) => { e.preventDefault(); showAuthPage(); });

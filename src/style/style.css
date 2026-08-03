@@ -64,8 +64,10 @@ body {
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
-    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease, background-color 0.3s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, background-color 0.25s ease;
     backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: transform, border-color;
 }
 
 .card:not(.no-hover):hover {
@@ -73,34 +75,54 @@ body {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
 }
 
+.card:not(.no-hover):active {
+    transform: scale(0.99);
+    transition: transform 0.08s ease;
+}
+
 .btn-primary {
     background: linear-gradient(90deg, var(--primary-color-start), var(--primary-color-end));
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    transform: translateZ(0);
 }
 
 .btn-primary:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease;
 }
 
 .btn-danger {
     background-color: var(--danger-color);
     color: white;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .btn-danger:hover {
     background-color: color-mix(in srgb, var(--danger-color) 80%, black 20%);
 }
 
+.btn-danger:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease;
+}
+
 .sidebar-link {
     color: var(--text-secondary);
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
 }
 
 .sidebar-link:hover {
     background-color: color-mix(in srgb, var(--primary-color-start) 10%, transparent 90%);
     color: var(--text-primary);
+}
+
+.sidebar-link:active {
+    transform: scale(0.98);
 }
 
 .sidebar-link.active {
@@ -114,22 +136,25 @@ body {
     background-color: var(--sidebar-background);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    transition: background-color 0.4s ease, border-color 0.4s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transform: translateZ(0);
 }
 
 .dashboard-view {
     display: none;
+    contain: layout style;
 }
 
 .dashboard-view.active {
     display: block;
-    animation: fadeIn 0.5s ease-in-out;
+    animation: viewEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
 }
 
-@keyframes fadeIn {
+@keyframes viewEnter {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px);
     }
 
     to {
@@ -139,17 +164,18 @@ body {
 }
 
 .modal-overlay {
-    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     align-items: center;
     backdrop-filter: blur(8px);
-    will-change: opacity, backdrop-filter;
+    -webkit-backdrop-filter: blur(8px);
+    will-change: opacity;
 }
 
 .modal-content {
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     max-height: 85vh;
     overflow-y: auto;
-    will-change: transform;
+    will-change: transform, opacity;
 }
 
 .attendance-btn {
@@ -488,21 +514,22 @@ select option {
 }
 
 @keyframes fade-slide-up {
-    0% { opacity: 0; transform: translateY(15px); }
+    0% { opacity: 0; transform: translateY(8px); }
     100% { opacity: 1; transform: translateY(0); }
 }
 .stagger-item {
     opacity: 0;
-    animation: fade-slide-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: fade-slide-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
 }
-.stagger-item:nth-child(1) { animation-delay: 0.05s; }
-.stagger-item:nth-child(2) { animation-delay: 0.1s; }
-.stagger-item:nth-child(3) { animation-delay: 0.15s; }
-.stagger-item:nth-child(4) { animation-delay: 0.2s; }
-.stagger-item:nth-child(5) { animation-delay: 0.25s; }
-.stagger-item:nth-child(6) { animation-delay: 0.3s; }
-.stagger-item:nth-child(7) { animation-delay: 0.35s; }
-.stagger-item:nth-child(n+8) { animation-delay: 0.4s; }
+.stagger-item:nth-child(1) { animation-delay: 0.02s; }
+.stagger-item:nth-child(2) { animation-delay: 0.04s; }
+.stagger-item:nth-child(3) { animation-delay: 0.06s; }
+.stagger-item:nth-child(4) { animation-delay: 0.08s; }
+.stagger-item:nth-child(5) { animation-delay: 0.10s; }
+.stagger-item:nth-child(6) { animation-delay: 0.12s; }
+.stagger-item:nth-child(7) { animation-delay: 0.14s; }
+.stagger-item:nth-child(n+8) { animation-delay: 0.16s; }
 
 @keyframes spin-fast {
     0% { transform: rotate(0deg); }
@@ -573,5 +600,28 @@ button, .sidebar-link, .bottom-nav-link, .attendance-btn, .edit-attendance-actio
     .modal-content {
         max-height: 90vh;
         border-radius: 20px;
+    }
+
+    .card {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+    .sidebar-theme {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* Reduced Motion & Low Power Hardware Rules */
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .card, .sidebar-theme, .modal-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 }

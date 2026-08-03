@@ -4,14 +4,21 @@ import { renderReports } from '../features/attendance.js';
 
 export const toggleModal = (modal, show) => {
     if (!modal) return;
+    const content = modal.querySelector('.modal-content');
     if (show) {
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        modal.querySelector('.modal-content').classList.remove('scale-95');
-        const input = modal.querySelector('input');
-        if (input) setTimeout(() => input.focus(), 100);
+        modal.classList.remove('pointer-events-none');
+        requestAnimationFrame(() => {
+            modal.classList.remove('opacity-0');
+            if (content) content.classList.remove('scale-95');
+            const input = modal.querySelector('input');
+            if (input) setTimeout(() => input.focus(), 120);
+        });
     } else {
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        modal.querySelector('.modal-content').classList.add('scale-95');
+        modal.classList.add('opacity-0');
+        if (content) content.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('pointer-events-none');
+        }, 250);
     }
 };
 

@@ -48,22 +48,24 @@ export function navigateTo(viewId) {
     }
 
     const targetId = cleanId + '-view';
-    document.querySelectorAll('.dashboard-view').forEach(view => {
-        const isActive = view.id === targetId;
-        view.classList.toggle('active', isActive);
+    requestAnimationFrame(() => {
+        document.querySelectorAll('.dashboard-view').forEach(view => {
+            const isActive = view.id === targetId;
+            view.classList.toggle('active', isActive);
+        });
+
+        // Update lazy rendering
+        setCurrentView(cleanId);
+
+        if (dirtyViews.has(cleanId)) {
+            renderView(cleanId);
+        }
+        if (cleanId === 'reports' || cleanId === 'overview') {
+            setTimeout(() => {
+                renderReports();
+            }, 50);
+        }
     });
-
-    // Update lazy rendering
-    setCurrentView(cleanId);
-
-    if (dirtyViews.has(cleanId)) {
-        renderView(cleanId);
-    }
-    if (cleanId === 'reports' || cleanId === 'overview') {
-        setTimeout(() => {
-            renderReports();
-        }, 50);
-    }
 }
 
 export function syncSidebarVisibility() {
