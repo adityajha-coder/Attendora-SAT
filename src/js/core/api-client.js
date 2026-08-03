@@ -72,6 +72,12 @@ export function clearAuthCache() {
 export async function getCurrentUser() {
     const now = Date.now();
 
+    if (window.Clerk?.isReady && !window.Clerk?.user && !window.Clerk?.session) {
+        cachedUser = null;
+        cachedUserTimestamp = now;
+        return null;
+    }
+
     // Return cached result if still valid
     if (cachedUser !== undefined) {
         // If logged in, always return cached user (until cleared)

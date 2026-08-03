@@ -100,6 +100,12 @@ export function scheduleCloudSync(state) {
 }
 
 export async function loadFromCloud() {
+    const user = await getCurrentUser();
+    if (!user) {
+        setSyncStatus('idle');
+        return null;
+    }
+
     try {
         setSyncStatus('syncing');
         const cloudData = await fetchUserData();
@@ -173,13 +179,16 @@ export function mergeCloudData(state, cloudData) {
 }
 
 export async function forceCloudSave(state) {
+    const user = await getCurrentUser();
+    if (!user) return;
+
     try {
         setSyncStatus('syncing');
         const persistable = extractPersistableState(state);
         await saveUserData(persistable);
         setSyncStatus('synced');
     } catch (error) {
-        console.warn('[CloudSync] Force save failed:', error.message);
+        console.error('[CloudSync] Force save failed:', error);
         setSyncStatus('error');
     }
 }
