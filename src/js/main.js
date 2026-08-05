@@ -8,12 +8,12 @@ import { exportData, importData } from './services/data.js';
 import { openTimetableScanner, handleTimetableScan, handleSaveScannedSchedule } from './features/scanner.js';
 import { handleSidebarNav, toggleMobileSidebar, closeMobileSidebar, syncSidebarVisibility } from './ui/sidebar.js';
 import { debounce } from './core/utils.js';
-import { state, saveData, loadData, applyTheme, applyLightMode } from './core/state.js';
+import { state, saveData, loadData, resetStateToDefaults, applyTheme, applyLightMode } from './core/state.js';
 import { renderThemePicker, toggleModal, showToast, filterGrid, filterTable, renderCalendar } from './ui/ui.js';
 import { logoutUser, renderProfile, openEditProfileModal, initClerkAuth, renderClerkSignIn } from './auth/auth.js';
 import { getCurrentUser } from './core/api-client.js';
 
-import { loadFromCloud, mergeCloudData, forceCloudSave } from './services/cloud-sync.js';
+import { loadFromCloud, mergeCloudData, applyCloudDataToState, forceCloudSave } from './services/cloud-sync.js';
 import { renderSchedule, renderTodaysClasses, openClassModal, populateModalForEdit, handleDeleteClass, handleClassFormSubmit, updateDurationFeedback, handleDurationPreset } from './features/schedule.js';
 import { handleAttendanceAction, openEditAttendanceModal, autoMarkMissedClasses, renderReports, renderCourses } from './features/attendance.js';
 import { renderAssignments, handleAssignmentFormSubmit, handleDeleteAssignment, openAssignmentModal, openNoteModal, handleNoteSubmit, showCourseDetails } from './features/academics.js';
@@ -81,15 +81,26 @@ const initializeAttendora = async () => {
             const syncIndicator = document.getElementById('cloud-sync-indicator');
             if (syncIndicator) syncIndicator.style.display = 'flex';
 
+            const userEmail = (user.email || user.contact || '').toLowerCase();
+            const currentContact = (state.userProfile?.contact || '').toLowerCase();
+            if (currentContact && userEmail && currentContact !== userEmail) {
+                console.log(`[Auth] Account mismatch on startup (${currentContact} vs ${userEmail}). Resetting local state.`);
+                resetStateToDefaults();
+            }
+
+            state.userProfile.name = user.name || state.userProfile.name;
+            state.userProfile.contact = userEmail || state.userProfile.contact;
+            if (user.course) state.userProfile.course = user.course;
+            if (user.year) state.userProfile.year = user.year;
+
             showDashboard();
 
             loadFromCloud().then(cloudData => {
                 if (cloudData) {
-                    const wasMerged = mergeCloudData(state, cloudData);
-                    if (wasMerged) {
-                        saveData();
-                        window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-                    }
+                    mergeCloudData(state, cloudData);
+                    saveData();
+                    forceCloudSave(state);
+                    window.dispatchEvent(new CustomEvent('attendora-update-ui'));
                 }
             }).catch(syncErr => {
                 console.warn('[Sync] Cloud restore warning:', syncErr);

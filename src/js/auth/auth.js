@@ -89,14 +89,22 @@ async function handleClerkUserLoggedIn(clerkUser) {
     isHandlingLogin = true;
 
     try {
-        const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+        const primaryEmail = (clerkUser.primaryEmailAddress?.emailAddress || '').toLowerCase();
         const fullName = clerkUser.fullName || clerkUser.firstName || primaryEmail.split('@')[0] || 'User';
+
+        // Check if switching accounts or if current state belongs to a different email
+        const currentContact = (state.userProfile?.contact || '').toLowerCase();
+        if (currentContact && primaryEmail && currentContact !== primaryEmail) {
+            console.log(`[Auth] Resetting state for account switch from ${currentContact} to ${primaryEmail}`);
+            resetStateToDefaults();
+            localStorage.removeItem('attendoraState');
+        }
 
         state.userProfile.name = fullName;
         if (primaryEmail) state.userProfile.contact = primaryEmail;
 
-        saveData();
         showDashboard();
+
         (async () => {
             try {
                 clearAuthCache();
@@ -114,11 +122,16 @@ async function handleClerkUserLoggedIn(clerkUser) {
 
                 if (cloudData) {
                     mergeCloudData(state, cloudData);
+                    forceCloudSave(state);
+                } else if (currentContact && currentContact !== primaryEmail) {
+                    // Fresh cloud user: do not keep previous user's local schedule
+                    resetStateToDefaults();
+                    state.userProfile.name = fullName;
+                    state.userProfile.contact = primaryEmail;
                 }
 
                 saveData();
                 window.dispatchEvent(new CustomEvent('attendora-update-ui'));
-                forceCloudSave(state).catch(() => {});
             } catch (syncErr) {
                 console.warn('[Sync] Background sync error after login:', syncErr);
             }

@@ -209,8 +209,8 @@ export function showCourseDetails(courseName) {
         const logContainer = document.getElementById('course-log-container');
         logContainer.innerHTML = ''; 
         const courseInstances = state.schedule.filter(s => s.name === courseName);
-        const courseInstanceIds = courseInstances.map(i => i.id);
-        const historyForCourse = state.history.filter(h => courseInstanceIds.includes(h.classId) && dateIsWithinTerm(h.date)).sort((a,b) => new Date(b.date) - new Date(a.date));
+        const courseInstanceIds = courseInstances.map(i => String(i.id));
+        const historyForCourse = state.history.filter(h => courseInstanceIds.includes(String(h.classId)) && dateIsWithinTerm(h.date)).sort((a,b) => new Date(b.date) - new Date(a.date));
         if (historyForCourse.length > 0) {
             historyForCourse.forEach(h => {
                     let statusClass = h.status === 'Present' ? 'text-green-500' : 'text-red-500';

@@ -12,12 +12,12 @@ export function handleAttendanceAction(classId, status, historyId = null, reason
             showToast("Term has ended. Attendance marking is disabled.", "error");
             return;
     }
-    const classInfo = state.schedule.find(c => c.id === classId);
+    const classInfo = state.schedule.find(c => String(c.id) === String(classId));
     let alreadyMarkedIndex = -1;
     if (historyId) {
-        alreadyMarkedIndex = state.history.findIndex(entry => entry.id === historyId);
+        alreadyMarkedIndex = state.history.findIndex(entry => String(entry.id) === String(historyId));
     } else {
-        alreadyMarkedIndex = state.history.findIndex(entry => entry.classId === classId && entry.date === today);
+        alreadyMarkedIndex = state.history.findIndex(entry => String(entry.classId) === String(classId) && entry.date === today);
     }
     if (alreadyMarkedIndex > -1) {
         state.history[alreadyMarkedIndex].status = status;
@@ -35,7 +35,7 @@ export function openEditAttendanceModal(classId, historyId, courseName) {
     state.editingAttendance = { classId, historyId, courseName };
     const editAttendanceModal = document.getElementById('edit-attendance-modal');
     document.getElementById('edit-attendance-title').textContent = `Edit Attendance for ${courseName}`;
-    const historyEntry = state.history.find(h => h.id === historyId);
+    const historyEntry = state.history.find(h => String(h.id) === String(historyId));
     document.getElementById('absent-reason').value = historyEntry?.reason || '';
     const buttonContainer = editAttendanceModal.querySelector('.flex.justify-center');
     buttonContainer.innerHTML = `
@@ -55,7 +55,7 @@ export function autoMarkMissedClasses() {
     const yesterdayClasses = state.schedule.filter(c => c.day === yesterdayDayName);
     let missedCount = 0;
     yesterdayClasses.forEach(c => {
-        const isMarked = state.history.some(h => h.classId === c.id && h.date === yesterdayStr);
+        const isMarked = state.history.some(h => String(h.classId) === String(c.id) && h.date === yesterdayStr);
         if (!isMarked) {
             state.history.push({
                 id: Date.now(),
@@ -97,8 +97,8 @@ export function calculateAttendanceForCourse(courseName) {
     if (cached) return cached;
 
     const courseInstances = state.schedule.filter(s => s.name === courseName);
-    const courseInstanceIds = courseInstances.map(i => i.id);
-    const historyForCourse = state.history.filter(h => courseInstanceIds.includes(h.classId) && dateIsWithinTerm(h.date));
+    const courseInstanceIds = courseInstances.map(i => String(i.id));
+    const historyForCourse = state.history.filter(h => courseInstanceIds.includes(String(h.classId)) && dateIsWithinTerm(h.date));
     const presentCount = historyForCourse.filter(h => h.status === 'Present').length;
     const absentCount = historyForCourse.filter(h => h.status === 'Absent').length;
     const cancelledCount = historyForCourse.filter(h => h.status === 'Cancelled').length;
@@ -123,8 +123,8 @@ export function calculateStreak(courseName) {
     if (cached) return cached;
 
     const courseInstances = state.schedule.filter(s => s.name === courseName);
-    const courseInstanceIds = courseInstances.map(i => i.id);
-    const historyForCourse = state.history.filter(h => courseInstanceIds.includes(h.classId) && dateIsWithinTerm(h.date))
+    const courseInstanceIds = courseInstances.map(i => String(i.id));
+    const historyForCourse = state.history.filter(h => courseInstanceIds.includes(String(h.classId)) && dateIsWithinTerm(h.date))
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     let streak = 0;
     for (const record of historyForCourse) {

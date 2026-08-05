@@ -98,7 +98,7 @@ export function renderTodaysClasses() {
         upcomingClasses.forEach(c => {
             const li = document.createElement('li');
             li.className = 'flex flex-col sm:flex-row justify-between items-center gap-2 p-3 bg-white/5 rounded-lg';
-            const historyEntry = state.history.find(h => h.classId === c.id && h.date === todayDateStr);
+            const historyEntry = state.history.find(h => String(h.classId) === String(c.id) && h.date === todayDateStr);
             let statusHTML = '';
             if (historyEntry) {
                 let statusClass = '';
@@ -257,14 +257,14 @@ export function handleClassFormSubmit(e) {
 }
 
 export function handleDeleteClass(classId) {
-    const classToDelete = state.schedule.find(c => c.id === classId);
+    const classToDelete = state.schedule.find(c => String(c.id) === String(classId));
     if (!classToDelete) return;
     const title = `Delete '${classToDelete.name}'?`;
     const message = `Are you sure? This specific class entry will be deleted. If this is the last class for this course, all data associated with it will rely on the name alone.`;
     showConfirmationModal(title, message, () => {
         const courseName = classToDelete.name;
-        state.schedule = state.schedule.filter(c => c.id !== classId);
-        state.history = state.history.filter(h => h.classId !== classId); 
+        state.schedule = state.schedule.filter(c => String(c.id) !== String(classId));
+        state.history = state.history.filter(h => String(h.classId) !== String(classId)); 
         showToast(`Class from '${courseName}' deleted.`);
         saveData();
         window.dispatchEvent(new CustomEvent('attendora-update-ui'));

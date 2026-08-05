@@ -124,8 +124,32 @@ export async function loadFromCloud() {
     }
 }
 
+export function applyCloudDataToState(state, cloudData) {
+    if (!cloudData) return false;
+
+    PERSISTABLE_KEYS.forEach(key => {
+        if (cloudData[key] !== undefined && cloudData[key] !== null) {
+            if (Array.isArray(cloudData[key])) {
+                state[key] = JSON.parse(JSON.stringify(cloudData[key]));
+            } else if (typeof cloudData[key] === 'object') {
+                state[key] = { ...state[key], ...cloudData[key] };
+            }
+        }
+    });
+    return true;
+}
+
 export function mergeCloudData(state, cloudData) {
     if (!cloudData) return false;
+
+    // Strict account check: If local state profile belongs to a different email, do NOT merge old user data into new user data!
+    const localEmail = (state.userProfile?.contact || '').toLowerCase().trim();
+    const cloudEmail = (cloudData.userProfile?.contact || '').toLowerCase().trim();
+
+    if (localEmail && cloudEmail && localEmail !== cloudEmail) {
+        console.warn(`[CloudSync] Account mismatch detected (${localEmail} vs ${cloudEmail}). Overwriting local state with cloud data.`);
+        return applyCloudDataToState(state, cloudData);
+    }
 
     let merged = false;
 
@@ -140,6 +164,9 @@ export function mergeCloudData(state, cloudData) {
                 } else if (cloudData[key].length > 0) {
                     const existingMap = new Map();
                     const getKey = (item) => {
+                        if (key === 'history' && item.classId !== undefined && item.date) {
+                            return `${item.classId}-${item.date}`;
+                        }
                         if (item.id !== undefined && item.id !== null) return String(item.id);
                         if (item._id !== undefined && item._id !== null) return String(item._id);
                         if (item.historyId !== undefined && item.historyId !== null) return String(item.historyId);
@@ -154,7 +181,7 @@ export function mergeCloudData(state, cloudData) {
                         existingMap.set(getKey(item), item);
                     });
 
-                    // Then merge with local items
+                    // Then merge with local items (local items take precedence over cloud items)
                     state[key].forEach(item => {
                         existingMap.set(getKey(item), item);
                     });

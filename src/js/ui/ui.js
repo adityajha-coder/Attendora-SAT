@@ -210,7 +210,7 @@ export function showDayDetails(dateStr) {
     } else {
         dayLog.innerHTML = history.map(h => {
              const statusColor = h.status === 'Present' ? 'text-green-400' : (h.status === 'Absent' ? 'text-red-400' : 'text-gray-400');
-             const scheduleItem = state.schedule.find(s => s.id === h.classId);
+             const scheduleItem = state.schedule.find(s => String(s.id) === String(h.classId));
              const courseName = scheduleItem ? scheduleItem.name : 'Unknown Course';
              const type = scheduleItem ? scheduleItem.type : 'Class';
              
