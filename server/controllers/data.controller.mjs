@@ -2,6 +2,7 @@ import UserData from '../db/models/UserData.mjs';
 import User from '../db/models/User.mjs';
 import { isDbConnected } from '../db/connection.mjs';
 import { AppError } from '../middleware/error-handler.mjs';
+import { findOrCreateMongoUser } from '../services/user-lookup.service.mjs';
 
 const EMPTY_DATA = {
     schedule: [],
@@ -13,39 +14,12 @@ const EMPTY_DATA = {
     settings: {},
 };
 
-async function _getMongoUser(reqUser) {
-    if (!isDbConnected()) return null;
-    try {
-        let user = null;
-        if (reqUser.clerkUserId) {
-            user = await User.findOne({ clerkUserId: reqUser.clerkUserId });
-        }
-        if (!user && reqUser.id && reqUser.id.length === 24) {
-            user = await User.findById(reqUser.id).catch(() => null);
-        }
-        if (!user && reqUser.email) {
-            user = await User.findOne({ email: reqUser.email });
-        }
-        if (!user && (reqUser.clerkUserId || reqUser.email)) {
-            user = await User.create({
-                clerkUserId: reqUser.clerkUserId || reqUser.id,
-                email: reqUser.email || `${reqUser.clerkUserId}@clerk.user`,
-                name: reqUser.name || '',
-            }).catch(() => null);
-        }
-        return user;
-    } catch (err) {
-        console.warn('[DB] _getMongoUser lookup failed:', err.message);
-        return null;
-    }
-}
-
 export async function getUserData(req, res) {
     if (!isDbConnected()) {
         throw new AppError('Database is temporarily unavailable', 503);
     }
 
-    const user = await _getMongoUser(req.user);
+    const user = await findOrCreateMongoUser(req.user);
     if (!user) {
         return res.json({ data: { ...EMPTY_DATA, userProfile: { name: req.user.name || '', contact: req.user.email || '' } } });
     }
@@ -82,7 +56,7 @@ export async function saveUserData(req, res) {
         throw new AppError('Database is temporarily unavailable', 503);
     }
 
-    const user = await _getMongoUser(req.user);
+    const user = await findOrCreateMongoUser(req.user);
     if (!user) {
         throw new AppError('User record could not be found or created', 400);
     }

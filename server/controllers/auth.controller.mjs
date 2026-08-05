@@ -4,6 +4,7 @@ import { verifyGoogleToken } from '../services/google-auth.service.mjs';
 import { generateToken, setAuthCookie } from '../middleware/auth.mjs';
 import { isDbConnected } from '../db/connection.mjs';
 import { AppError } from '../middleware/error-handler.mjs';
+import { findOrCreateMongoUser } from '../services/user-lookup.service.mjs';
 
 async function _processGoogleUser(googleUser) {
     let userData = {
@@ -100,27 +101,7 @@ export async function googleCallback(req, res) {
 export async function getCurrentUser(req, res) {
     if (isDbConnected()) {
         try {
-            let user = null;
-            
-            // Try lookup by clerkUserId, mongo _id, or email
-            if (req.user.clerkUserId) {
-                user = await User.findOne({ clerkUserId: req.user.clerkUserId });
-            }
-            if (!user && req.user.id && req.user.id.length === 24) {
-                user = await User.findById(req.user.id).catch(() => null);
-            }
-            if (!user && req.user.email) {
-                user = await User.findOne({ email: req.user.email });
-            }
-
-            // If user logged in via Clerk but not in DB yet, create user record
-            if (!user && req.user.email) {
-                user = await User.create({
-                    clerkUserId: req.user.clerkUserId || req.user.id,
-                    email: req.user.email,
-                    name: req.user.name || '',
-                }).catch(() => null);
-            }
+            const user = await findOrCreateMongoUser(req.user);
 
             if (user) {
                 // Ensure UserData exists

@@ -25,7 +25,10 @@ const app = express();
 app.use(compression());
 app.use(cookieParser());
 app.use(...securityMiddleware());
-app.use(clerkMiddleware());
+app.use(clerkMiddleware({
+    publishableKey: config.clerkPublishableKey,
+    secretKey: config.clerkSecretKey,
+}));
 
 app.get('/api/config', (req, res) => {
     res.json({

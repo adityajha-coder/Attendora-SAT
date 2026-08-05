@@ -1,14 +1,37 @@
 import jwt from 'jsonwebtoken';
+import { getAuth } from '@clerk/express';
 import config from '../config/index.mjs';
 
 export function authenticateToken(req, res, next) {
     // 1. Check if Clerk authenticated the request
-    if (req.auth && req.auth.userId) {
+    let auth = null;
+    try {
+        if (typeof req.auth === 'function') {
+            auth = req.auth();
+        } else if (req.auth && typeof req.auth === 'object') {
+            auth = req.auth;
+        } else {
+            auth = getAuth(req);
+        }
+    } catch (err) {
+        auth = null;
+    }
+
+    if (auth && auth.userId) {
+        const email = auth.sessionClaims?.email ||
+                      auth.claims?.email ||
+                      auth.sessionClaims?.email_address ||
+                      auth.sessionClaims?.primary_email_address ||
+                      '';
+        const name = auth.sessionClaims?.name ||
+                     auth.claims?.name ||
+                     (auth.sessionClaims?.first_name ? `${auth.sessionClaims.first_name} ${auth.sessionClaims.last_name || ''}`.trim() : '') ||
+                     '';
         req.user = {
-            id: req.auth.userId,
-            email: req.auth.sessionClaims?.email || req.auth.claims?.email || '',
-            name: req.auth.sessionClaims?.name || req.auth.claims?.name || '',
-            clerkUserId: req.auth.userId
+            id: auth.userId,
+            email: email,
+            name: name,
+            clerkUserId: auth.userId
         };
         return next();
     }
